@@ -1,0 +1,15 @@
+﻿<Project Sdk="Microsoft.NET.Sdk">
+
+  <PropertyGroup>
+    <TargetFramework>net9.0</TargetFramework>
+    <ImplicitUsings>enable</ImplicitUsings>
+    <Nullable>enable</Nullable>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <ProjectReference Include="..\Alma.Core.Mongo\Alma.Core.Mongo.csproj" />
+    <ProjectReference Include="..\Alma.Core\Alma.Core.csproj" />
+    <ProjectReference Include="..\Alma.Flows.Monitoring\Alma.Flows.Monitoring.csproj" />
+  </ItemGroup>
+
+</Project>

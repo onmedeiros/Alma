@@ -1,0 +1,68 @@
+﻿@using Alma.Flows.Core.Description.Descriptors
+@using Alma.Flows.Definitions
+@using Alma.Flows.Design.Components.Parameters
+@using MudBlazor
+
+@inject IApprovalAndCheckRegistry Registry
+
+<MudDialog>
+
+    <DialogContent>
+        <MudStack Class="mb-4">
+
+            <MudStack Spacing="0">
+                <MudText Typo="Typo.h6">@_descriptor.DisplayName</MudText>
+                <MudText Typo="Typo.body2" Class="mud-text-secondary">@_descriptor.Description</MudText>
+            </MudStack>
+
+            <MudTextField Label="Nome"
+                          @bind-Value="@Definition.CustomName"
+                          Variant="Variant.Outlined" 
+                          Margin="Margin.Dense"
+                          Style="min-width: 250px;" />
+            
+            <MudDivider/>
+
+            <MudText Typo="Typo.body2"><b>Parâmetros</b></MudText>
+            @if (_descriptor is not null)
+            {
+                <ParameterEditor Parameters="@_descriptor.Parameters" Parameterizable="@Definition" />
+            }
+
+            <div class="d-flex flex-row justify-end">
+                <MudButton OnClick="@(() => Dialog.Close())" Variant="Variant.Filled" Color="Color.Primary">Finalizar</MudButton>
+            </div>
+
+        </MudStack>
+    </DialogContent>
+</MudDialog>
+
+@code {
+    #region Parameters
+
+    [CascadingParameter]
+    public IMudDialogInstance Dialog { get; set; } = null!;
+
+    [Parameter]
+    public ApprovalAndCheckDefinition Definition { get; set; } = null!;
+
+    #endregion
+
+    #region Private fields
+
+    ApprovalAndCheckDescriptor _descriptor = null!;
+
+    bool _isRenamable = false;
+
+    #endregion
+
+    protected override void OnInitialized()
+    {
+        _descriptor = Registry.GetApprovalAndCheckDescriptor(Definition.TypeName);
+
+        if (_descriptor is null)
+        {
+            throw new InvalidOperationException($"Approval and check descriptor not found for type '{Definition.TypeName}'.");
+        }
+    }
+}

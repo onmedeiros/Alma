@@ -1,0 +1,54 @@
+﻿<Project Sdk="Microsoft.NET.Sdk.Web">
+
+  <PropertyGroup>
+    <TargetFramework>net9.0</TargetFramework>
+    <Nullable>enable</Nullable>
+    <ImplicitUsings>enable</ImplicitUsings>
+    <UserSecretsId>aspnet-Alma.Blazor-e062b264-7317-4fdc-8f33-e7a3d5f2078f</UserSecretsId>
+  </PropertyGroup>
+
+
+  <ItemGroup>
+    <PackageReference Include="Hellang.Middleware.ProblemDetails" Version="6.5.1" />
+    <PackageReference Include="Microsoft.ApplicationInsights.AspNetCore" Version="2.23.0" />
+    <PackageReference Include="Microsoft.Extensions.Caching.Hybrid" Version="9.8.0" />
+		<PackageReference Include="AspNetCore.Identity.Mongo" Version="10.1.0" />
+		<PackageReference Include="BenchmarkDotNet" Version="0.15.2" />
+		<PackageReference Include="CsvHelper" Version="33.1.0" />
+		<PackageReference Include="Hangfire" Version="1.8.21" />
+		<PackageReference Include="Hangfire.Mongo" Version="1.12.0" />
+		<PackageReference Include="MediatR" Version="13.0.0" />
+		<PackageReference Include="MongoDB.Driver" Version="3.4.3" />
+		<PackageReference Include="OpenIddict.AspNetCore" Version="7.0.0" />
+		<PackageReference Include="OpenIddict.MongoDb" Version="7.0.0" />
+		<PackageReference Include="Serilog" Version="4.3.0" />
+		<PackageReference Include="Serilog.AspNetCore" Version="9.0.0" />
+		<PackageReference Include="Serilog.Extensions.Hosting" Version="9.0.0" />
+		<PackageReference Include="Serilog.Sinks.ApplicationInsights" Version="4.0.0" />
+		<PackageReference Include="Serilog.Sinks.Console" Version="6.0.0" />
+		<PackageReference Include="Serilog.Enrichers.ClientInfo" Version="2.4.0" />
+  </ItemGroup>
+
+
+  <ItemGroup>
+    <ProjectReference Include="..\Libs\Alma.Core.Mongo\Alma.Core.Mongo.csproj" />
+    <ProjectReference Include="..\Libs\Alma.Core\Alma.Core.csproj" />
+    <ProjectReference Include="..\Libs\Alma.Flows.Monitoring.Mongo\Alma.Flows.Monitoring.Mongo.csproj" />
+    <ProjectReference Include="..\Libs\Alma.Organizations\Alma.Organizations.csproj" />
+    <ProjectReference Include="..\Libs\Alma.Flows.Apis.AspNetCore\Alma.Flows.Apis.AspNetCore.csproj" />
+    <ProjectReference Include="..\Libs\Alma.Flows\Alma.Flows.csproj" />
+    <ProjectReference Include="..\Libs\Alma.Integrations\Alma.Integrations.csproj" />
+    <ProjectReference Include="..\Modules\Alma.Modules.Alerts\Alma.Modules.Alerts.csproj" />
+    <ProjectReference Include="..\Modules\Alma.Modules.Core\Alma.Modules.Core.csproj" />
+    <ProjectReference Include="..\Modules\Alma.Modules.Integrations\Alma.Modules.Integrations.csproj" />
+    <ProjectReference Include="..\Modules\Alma.Modules.Monitoring\Alma.Modules.Monitoring.csproj" />
+    <ProjectReference Include="..\Modules\Alma.Modules.Organization\Alma.Modules.Organizations.csproj" />
+    <ProjectReference Include="..\Modules\Alma.Modules.Flows\Alma.Modules.Flows.csproj" />
+  </ItemGroup>
+
+
+  <ItemGroup>
+    <Folder Include="Components\Shared\" />
+  </ItemGroup>
+
+</Project>

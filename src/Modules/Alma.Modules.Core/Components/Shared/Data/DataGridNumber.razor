@@ -1,0 +1,54 @@
+﻿@namespace MudBlazor
+@inherits TemplateColumn<T>
+@typeparam T
+
+@code {
+    [Parameter]
+    public string? Prefix { get; set; }
+
+    [Parameter]
+    public string? Suffix { get; set; }
+
+    [Parameter]
+    public required Func<CellContext<T>, object?> ValueSelector { get; set; }
+
+    [Parameter]
+    public RenderFragment<CellContext<T>>? ChildContent { get; set; }
+
+    protected override void OnInitialized()
+    {
+        base.OnInitialized();
+
+
+        base.CellTemplate = (context) => (builder) =>
+        {
+            string? value = string.Empty;
+
+            if (ValueSelector != null)
+                value = ValueSelector(context)?.ToString();
+
+            int seq = 0;
+
+            if (!string.IsNullOrEmpty(Prefix) && !string.IsNullOrEmpty(value))
+            {
+                builder.OpenElement(seq++, "span");
+                builder.AddAttribute(seq++, "style", "width: 32px;");
+                builder.AddContent(seq++, Prefix);
+                builder.CloseElement();
+            }
+
+            if (!string.IsNullOrEmpty(value))
+                builder.AddContent(seq++, value);
+            else
+                builder.AddContent(seq++, "-");
+
+            if (!string.IsNullOrEmpty(Suffix) && !string.IsNullOrEmpty(value))
+            {
+                builder.OpenElement(seq++, "span");
+                builder.AddAttribute(seq++, "style", "width: 32px;");
+                builder.AddContent(seq++, Suffix);
+                builder.CloseElement();
+            }
+        };
+    }
+}

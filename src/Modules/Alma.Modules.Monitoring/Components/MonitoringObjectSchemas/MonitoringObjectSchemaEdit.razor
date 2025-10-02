@@ -1,0 +1,204 @@
+﻿@page "/monitoring/objects/schemas/edit/{Id}"
+@using Alma.Flows.Monitoring.MonitoringObjectSchemas.Entities
+@using Alma.Flows.Monitoring.MonitoringObjectSchemas.Models
+@using Alma.Flows.Monitoring.MonitoringObjectSchemas.Services
+@using Alma.Modules.Monitoring.Components.MonitoringObjectSchemas.Dialogs
+@using EnumsNET
+@using Microsoft.Extensions.DependencyInjection
+
+@inherits EditComponentBase<MonitoringObjectSchema>
+
+@inject NavigationManager NavigationManager;
+
+<Page Title="Editar estrutura de objeto de monitoramento">
+    <PageContent>
+        @if (_model is null)
+        {
+            <LoadingCircle />
+        }
+        else
+        {
+            <EditForm Model="_model" OnSubmit="OnSubmit">
+                <MudStack Class="mud-width-full" Spacing="3">
+                    <FluentValidationValidator @ref="Validator" />
+                    
+                    <MudText Typo="Typo.h6">Informações da estrutura de objeto de monitoramento</MudText>
+                    
+                    <MudTextField @bind-Value="_model.Name" For="@(() => _model.Name)" Label="Nome" Variant="Variant.Outlined" Margin="Margin.Dense" />
+
+                    <MudCard Elevation="0" Outlined="true">
+                        <MudCardContent>
+                            <MudTable Elevation="0" Items="_model.Fields" Hover="true">
+
+                                <ToolBarContent>
+                                    <MudText Typo="Typo.h6">Campos</MudText>
+                                    <MudSpacer />
+                                    <MudButton OnClick="CreateField" Variant="Variant.Filled" StartIcon="@Icons.Material.Outlined.Add" Color="Color.Primary" Class="me-2">Criar campo</MudButton>
+                                </ToolBarContent>
+
+                                <HeaderContent>
+                                    <MudTh>Nome</MudTh>
+                                    <MudTh Style="width: 120px">Tipo</MudTh>
+                                    <MudTh Style="width: 60px">Ordem</MudTh>
+                                    <MudTh Style="width: 120px">Opções</MudTh>
+                                </HeaderContent>
+
+                                <RowTemplate Context="item">
+                                    <MudTd DataLabel="Name">
+                                        @if (_model.Fields.Count(x => x.Name == item.Name) == 1)
+                                        {
+                                            <MudText Typo="Typo.body1">@item.Name</MudText>
+                                        }
+                                        else
+                                        {
+                                            <MudText Typo="Typo.body1" Color="Color.Error">@item.Name (duplicado)</MudText>
+                                        }
+                                    </MudTd>
+                                    <MudTd DataLabel="Type">@item.Type.AsString(EnumFormat.Description)</MudTd>
+                                    <MudTd DataLabel="Order">#@item.Order</MudTd>
+                                    <MudTd>
+                                        <MudIconButton OnClick="@(async _ => await EditField(item.Name))" Icon="@Icons.Material.Outlined.Edit" Size="MudBlazor.Size.Small" />
+                                        <MudIconButton OnClick="@(async _ => await RemoveField(item.Name))" Icon="@Icons.Material.Outlined.Delete" Size="MudBlazor.Size.Small" Color="Color.Error" />
+                                    </MudTd>
+                                </RowTemplate>
+
+                                <NoRecordsContent>Este objeto não contém campos.</NoRecordsContent>
+                            </MudTable>
+                        </MudCardContent>
+                    </MudCard>
+
+                    <SubmitButton IsSaving="@IsSaving" />
+                </MudStack>
+            </EditForm>
+        }
+    </PageContent>
+</Page>
+
+@code {
+    [CascadingParameter]
+    public Organization Organization { get; set; } = null!;
+
+    [Parameter]
+    public string Id { get; set; } = string.Empty;
+
+    private MonitoringObjectSchemaEditModel _model = null!;
+
+    protected override async Task OnAfterRenderAsync(bool firstRender)
+    {
+        if (firstRender)
+            await Load();
+    }
+
+    private async ValueTask Load()
+    {
+        if (string.IsNullOrEmpty(Id))
+        {
+            await DialogService.ShowErrorDialog("ID da estrutura de objeto de monitoramento não informado.");
+            NavigationManager.NavigateTo("/monitoring/objects/schemas");
+        }
+
+        using var scope = ScopeFactory.CreateScope();
+        var apiService = scope.ServiceProvider.GetRequiredService<IMonitoringObjectSchemaService>();
+
+        var schema = await apiService.GetOneAsync(Id, Organization.Id);
+
+        if (schema is null)
+        {
+            await DialogService.ShowErrorDialog("Estrutura de objecto de monitoramento não encontrada.");
+            NavigationManager.NavigateTo("/monitoring/objects/schemas");
+
+            return;
+        }
+
+        _model = new MonitoringObjectSchemaEditModel
+        {
+            Id = schema.Id,
+            OrganizationId = schema.OrganizationId,
+            Name = schema.Name,
+            Fields = schema.Fields
+        };
+
+        StateHasChanged();
+    }
+
+    private async Task OnSubmit(EditContext context)
+    {
+        await TrySave(() =>
+        {
+            using var scope = ScopeFactory.CreateScope();
+            var apiService = scope.ServiceProvider.GetRequiredService<IMonitoringObjectSchemaService>();
+
+            return apiService.UpdateAsync(_model);
+        });
+    }
+
+    #region Fields
+
+    private async Task CreateField()
+    {
+        var dialog = await DialogService.ShowAsync<MonitoringObjectSchemaFieldEditDialog>("Criar novo campo");
+        var result = await dialog.Result;
+
+        if (result is null || result.Canceled)
+            return;
+
+        if (result.Data is Field field)
+        {
+            field.Order = _model.Fields.Count + 1;
+            _model.Fields.Add(field);
+
+            StateHasChanged();
+        }
+    }
+
+    private async Task EditField(string name)
+    {
+        var field = _model.Fields.First(x => x.Name == name);
+
+        var paramters = new DialogParameters<MonitoringObjectSchemaFieldEditDialog>
+        {
+            { x => x.Field, field }
+		};
+
+        var dialog = await DialogService.ShowAsync<MonitoringObjectSchemaFieldEditDialog>("Editar campo", paramters);
+        var result = await dialog.Result;
+
+        if (result is null || result.Canceled)
+            return;
+
+        if (result.Data is Field updatedField)
+        {
+            var index = _model.Fields.IndexOf(field);
+            if (index >= 0)
+            {
+                _model.Fields[index] = updatedField;
+                StateHasChanged();
+            }
+
+            // Reorder fields
+            for (int i = 0; i < _model.Fields.Count; i++)
+            {
+                _model.Fields[i].Order = i;
+            }
+        }
+    }
+
+    private async Task RemoveField(string name)
+    {
+        var result = await DialogService.ShowDeleteConfirmationDialog($"Tem certeza que deseja remover o campo '{name}'?");
+
+        if (result is null || result.Canceled)
+            return;
+
+        // Remove field
+        var field = _model.Fields.First(x => x.Name == name);
+        _model.Fields.Remove(field);
+
+        // Reorder fields
+        for (int i = 0; i < _model.Fields.Count; i++)
+        {
+			_model.Fields[i].Order = i;
+        }
+    }
+    #endregion
+}

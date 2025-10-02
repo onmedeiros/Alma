@@ -1,0 +1,76 @@
+﻿@using Alma.Modules.Core.Components.Shared.Dialogs.Models
+<MudDialog TitleClass="error-dialog-title">
+    <DialogContent>
+        <MudStack>
+
+            @if (!string.IsNullOrEmpty(Message))
+            {
+                <MudText Typo="Typo.body2" Class="mt-3">@Message</MudText>
+            }
+            else
+            {
+                <MudText>Verifique as informações e tente novamente.</MudText>
+            }
+
+            @if (Errors is not null && Errors.Any())
+            {
+                <MudDivider/>
+                <MudText Typo="Typo.body2">As seguintes informações não foram digitadas corretamente:</MudText>
+                @foreach(var errorGroup in Errors.GroupBy(x => x.PropertyName))
+                {
+                    <MudAlert Severity="Severity.Error" Dense="true">
+                        <MudText Typo="Typo.body2" Class="mud-text-secondary">@errorGroup.Key</MudText>
+                        <MudText Typo="Typo.body2">
+                            @foreach (var error in errorGroup)
+                            {
+                                <div class="mud-text-error">- @error.Message</div>
+                            }
+                        </MudText>
+                    </MudAlert>
+                }
+            }
+        </MudStack>
+    </DialogContent>
+    <DialogActions>
+        <MudButton Color="Color.Primary" OnClick="Ok">Ok</MudButton>
+    </DialogActions>
+</MudDialog>
+
+<style>
+    .error-dialog-title {
+        background-color: var(--mud-palette-error);
+        color: var(--mud-palette-error-text);
+    }
+</style>
+
+@code {
+    [CascadingParameter]
+    private IMudDialogInstance Dialog { get; set; } = null!;
+
+    [Parameter]
+    public string? Title { get; set; }
+
+    [Parameter]
+    public string? Message { get; set; }
+
+    [Parameter]
+    public IEnumerable<ValidationError>? Errors { get; set; }
+
+    protected override async Task OnParametersSetAsync()
+    {
+        if (!string.IsNullOrEmpty(Title))
+            await Dialog.SetTitleAsync(Title);
+        else
+            await Dialog.SetTitleAsync("Erro de validação");
+
+        await Dialog.SetOptionsAsync(new DialogOptions
+        {
+            MaxWidth = MaxWidth.Small,
+            FullWidth = true,
+            CloseButton = true,
+            CloseOnEscapeKey = true,
+        });
+    }
+
+    private void Ok() => Dialog.Close(DialogResult.Ok(true));
+}

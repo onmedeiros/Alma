@@ -1,0 +1,22 @@
+﻿@using Alma.Modules.Core.Components.Shared.Themes
+<CascadingValue Value="_theme">
+    @ChildContent
+</CascadingValue>
+
+@code {
+    [Parameter]
+    public required RenderFragment ChildContent { get; set; }
+
+    private AlmaTheme _theme = null!;
+
+    protected override void OnParametersSet()
+    {
+        _theme = new AlmaTheme
+        {
+            Form = new FormTheme
+            {
+                FieldVariant = Variant.Outlined
+            }
+        };
+    }
+}

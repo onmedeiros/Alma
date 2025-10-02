@@ -1,0 +1,27 @@
+﻿<Project Sdk="Microsoft.NET.Sdk.Razor">
+
+  <PropertyGroup>
+    <TargetFramework>net9.0</TargetFramework>
+    <Nullable>enable</Nullable>
+    <ImplicitUsings>enable</ImplicitUsings>
+    <AddRazorSupportForMvc>true</AddRazorSupportForMvc>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <FrameworkReference Include="Microsoft.AspNetCore.App" />
+    <PackageReference Include="Blazor-ApexCharts" Version="6.0.2" />
+    <PackageReference Include="Blazored.FluentValidation" Version="2.2.0" />
+    <PackageReference Include="MudBlazor" Version="8.11.0" />
+    <PackageReference Include="Extensions.MudBlazor.StaticInput" Version="3.2.1" />
+    <PackageReference Include="Z.Blazor.Diagrams" Version="3.0.3" />
+		<PackageReference Include="AspNetCore.Identity.Mongo" Version="10.1.0" />
+		<PackageReference Include="OpenIddict.MongoDb" Version="7.0.0" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <ProjectReference Include="..\..\Libs\Alma.Core.Mongo\Alma.Core.Mongo.csproj" />
+    <ProjectReference Include="..\..\Libs\Alma.Core\Alma.Core.csproj" />
+    <ProjectReference Include="..\..\Libs\Alma.Organizations\Alma.Organizations.csproj" />
+  </ItemGroup>
+
+</Project>

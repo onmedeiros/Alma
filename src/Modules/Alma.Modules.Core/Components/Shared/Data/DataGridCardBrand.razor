@@ -1,0 +1,17 @@
+﻿@* @using EnumsNET
+@using Alma.Core.Domain.Shared.Enums.Cards
+
+@if (CardBrand is not null)
+{
+    <text>@CardBrand.Value.AsString(EnumFormat.Description)</text>
+}
+else
+{
+    <text>-</text>
+}
+
+@code {
+    [Parameter]
+    public CardBrand? CardBrand { get; set; }
+}
+ *@

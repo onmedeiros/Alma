@@ -1,0 +1,122 @@
+﻿@using Alma.Flows.Monitoring.MonitoringObjectSchemas.Entities
+@using Alma.Flows.Monitoring.MonitoringObjectSchemas.Models
+@using EnumsNET
+
+@inject IDialogService DialogService;
+
+<MudDialog>
+	<DialogContent>
+		@if (_model is not null)
+		{
+			<EditForm Model="_model" OnSubmit="Save">
+				<FluentValidationValidator @ref="_validator" />
+
+				<MudStack Class="mud-width-full" Spacing="3">
+					
+					<MudText Class="mb-2">Informações da estrutura:</MudText>
+					
+					<MudTextField @bind-Value="_model.Name" For="@(() => _model.Name)" Label="Nome" Variant="Variant.Outlined" Margin="Margin.Dense" />
+					
+						<MudSelect T="Flows.Monitoring.MonitoringObjectSchemas.Entities.FieldType" Label="Tipo" @bind-Value="_model.Type" For="@(() => _model.Type)" Variant="Variant.Outlined" Margin="Margin.Dense">
+						@foreach (var type in Enum.GetValues<Flows.Monitoring.MonitoringObjectSchemas.Entities.FieldType>())
+						{
+							<MudSelectItem T="Flows.Monitoring.MonitoringObjectSchemas.Entities.FieldType" Value="type">@type.AsString(EnumFormat.Description)</MudSelectItem>
+						}
+					</MudSelect>
+
+					<MudSwitch @bind-Value="_model.IsPrimaryKey" Color="Color.Primary" Label="Chave primária" />
+					<MudSwitch @bind-Value="_model.IsTimestamp" Color="Color.Primary" Label="Timestamp" />
+					<MudSwitch @bind-Value="_model.IsRequired" Color="Color.Primary" Label="Obrigatório" />
+
+					<SubmitButton/>
+				
+				</MudStack>
+			</EditForm>
+		}
+
+	</DialogContent>
+</MudDialog>
+
+@code {
+	[CascadingParameter]
+	private IMudDialogInstance Dialog { get; set; } = default!;
+
+	[Parameter]
+	public Field? Field { get; set; }
+
+	private FluentValidationValidator _validator { get; set; } = default!;
+	private FieldEditModel _model = null!;
+
+	protected override async Task OnParametersSetAsync()
+	{
+		await Dialog.SetOptionsAsync(new DialogOptions
+		{
+			MaxWidth = MaxWidth.Small,
+			FullWidth = true,
+			CloseButton = true,
+			CloseOnEscapeKey = true,
+		});
+	}
+
+	protected override void OnAfterRender(bool firstRender)
+	{
+		if (firstRender)
+		{
+			if (Field is not null)
+			{
+				_model = new FieldEditModel
+				{
+					Name = Field.Name,
+					Type = Field.Type,
+					Order = Field.Order,
+					IsPrimaryKey = Field.IsPrimaryKey,
+					IsTimestamp = Field.IsTimestamp,
+					IsRequired = Field.IsRequired
+				};
+			}
+			else
+			{
+				_model = new FieldEditModel
+				{
+					Name = string.Empty,
+					Type = Flows.Monitoring.MonitoringObjectSchemas.Entities.FieldType.String,
+					Order = 0,
+					IsPrimaryKey = false,
+					IsTimestamp = false,
+					IsRequired = false
+				};
+			}
+			StateHasChanged();
+		}
+	}
+
+	private async Task Save()
+	{
+		if (await _validator.ValidateAsync())
+		{
+			if (Field is not null)
+			{
+				Field.Name = _model.Name;
+				Field.Type = _model.Type;
+				Field.Order = _model.Order;
+				Field.IsPrimaryKey = _model.IsPrimaryKey;
+				Field.IsTimestamp = _model.IsTimestamp;
+				Field.IsRequired = _model.IsRequired;
+			}
+			else
+			{
+				Field = new Field
+				{
+					Name = _model.Name,
+					Type = _model.Type,
+					Order = _model.Order,
+					IsPrimaryKey = _model.IsPrimaryKey,
+					IsTimestamp = _model.IsTimestamp,
+					IsRequired = _model.IsRequired
+				};
+			}
+
+			Dialog.Close(DialogResult.Ok(Field));
+		}
+	}
+}

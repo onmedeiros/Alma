@@ -1,0 +1,21 @@
+﻿@using Alma.Modules.Flows.Models.Activities
+@using Alma.Flows.Models.Activities
+
+<MudTextField Label="@Field.Label" @bind-Value="Value" Placeholder="@Field.Placeholder" Required="Field.Required" Variant="Variant.Outlined" Margin="Margin.Dense" Disabled="Disabled"/>
+
+@code {
+    [CascadingParameter]
+    private FormState FormState { get; set; } = default!;
+
+    [Parameter]
+    public FormField Field { get; set; } = default!;
+
+    [Parameter]
+    public bool Disabled { get; set; }
+
+    private string? Value
+    {
+        get => FormState.GetValue<string>(Field.Name);
+        set => FormState.SetValue(Field.Name, value);
+    }
+}

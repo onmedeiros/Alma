@@ -1,0 +1,91 @@
+﻿@using Alma.Integrations.Apis.Entities
+@using Alma.Integrations.Apis.Models
+@using Alma.Integrations.Apis.Services
+@using Microsoft.Extensions.DependencyInjection
+
+@inherits EditComponentBase<Api>
+
+@inject NavigationManager NavigationManager;
+
+@if(_model is null)
+{
+    <LoadingCircle />
+}
+else
+{
+    <EditForm Model="_model" OnSubmit="OnSubmit">
+        <MudStack Class="mud-width-full" Spacing="3">
+            <FluentValidationValidator @ref="Validator" />
+            <MudText Typo="Typo.h6">Informações da API</MudText>
+            <MudTextField @bind-Value="_model.Name" For="@(() => _model.Name)" Label="Nome" Variant="Variant.Outlined" Margin="Margin.Dense" />
+            <MudTextField @bind-Value="_model.Path" For="@(() => _model.Path)" Adornment="Adornment.Start" AdornmentText="/" AdornmentColor="Color.Primary" Label="Caminho base" Variant="Variant.Outlined" Margin="Margin.Dense" />
+            <MudSwitch @bind-Value="_model.IsActive" For="@(() => _model.IsActive)" Label="Ativa" Color="Color.Primary"/>
+            <SubmitButton IsSaving="@IsSaving" />
+        </MudStack>
+    </EditForm>
+}
+@code {
+    [CascadingParameter]
+    public Organization Organization { get; set; } = null!;
+
+    [Parameter]
+    public string Id { get; set; } = string.Empty;
+
+    private ApiEditModel _model = null!;
+
+    protected override async Task OnAfterRenderAsync(bool firstRender)
+    {
+        if (firstRender)
+            await Load();
+    }
+
+    private async ValueTask Load()
+    {
+        if (string.IsNullOrEmpty(Id))
+        {
+            await DialogService.ShowErrorDialog("ID da API não informado.");
+            NavigationManager.NavigateTo("/integrations/apis");
+        }
+
+        using var scope = ScopeFactory.CreateScope();
+        var apiService = scope.ServiceProvider.GetRequiredService<IApiService>();
+
+        var api = await apiService.GetOneAsync(Id, Organization.Id);
+
+        if (api is null)
+        {
+            await DialogService.ShowErrorDialog("API não encontrada.");
+            NavigationManager.NavigateTo("/integrations/apis");
+
+            return;
+        }
+
+        _model = new ApiEditModel
+        {
+            Id = api.Id,
+            OrganizationId = api.OrganizationId,
+            Name = api.Name,
+            Path = api.Path,
+            IsActive = api.IsActive
+        };
+
+        StateHasChanged();
+    }
+
+    private async Task OnSubmit(EditContext context)
+    {
+        if (!context.IsModified())
+        {
+            Snackbar.AddWarning("Nenhuma alteração a ser realizada.");
+            return;
+        }
+
+        await TrySave(() =>
+        {
+            using var scope = ScopeFactory.CreateScope();
+            var apiService = scope.ServiceProvider.GetRequiredService<IApiService>();
+
+            return apiService.UpdateAsync(_model);
+        });
+    }
+}

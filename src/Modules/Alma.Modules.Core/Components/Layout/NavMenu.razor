@@ -1,0 +1,81 @@
+﻿@using Alma.Organizations.Entities
+@using Microsoft.AspNetCore.Antiforgery
+@using EnumsNET;
+@using Alma.Core.Modules
+
+@implements IDisposable
+
+@rendermode InteractiveServer
+
+@attribute [RequireAntiforgeryToken]
+
+@inject NavigationManager NavigationManager
+@inject IModuleRegistry ModuleRegistry
+
+<MudNavMenu Bordered="true">
+    @if (_moduleCategories != null)
+    {
+        @foreach (var category in _moduleCategories)
+        {
+            <MudText Typo="Typo.body2" Class="px-4 pt-4 mud-text-secondary">@category.Key.AsString(EnumFormat.Description)</MudText>
+            @foreach (var module in category.OrderBy(x => x.Descriptor.Order))
+            {
+                if (module.Descriptor.Menu.Count() > 1)
+                {
+                    <MudNavGroup Icon="@module.Descriptor.Icon" Title="@module.Descriptor.DisplayName">
+                        @foreach (var item in module.Descriptor.Menu)
+                        {
+                            <MudNavLink Href="@item.Path" Disabled="!item.Enabled" Match="NavLinkMatch.Prefix">@item.DisplayName</MudNavLink>
+                        }
+                    </MudNavGroup>
+                }
+                else
+                {
+                    var item = module.Descriptor.Menu.FirstOrDefault();
+                    if (item is null) continue;
+
+                    <MudNavLink Href="@item.Path" Disabled="!item.Enabled" Match="@(item.Path == "/" ? NavLinkMatch.All : NavLinkMatch.Prefix)" Icon="@module.Descriptor.Icon">@item.DisplayName</MudNavLink>
+                }
+            }
+        }
+    }
+</MudNavMenu>
+
+
+@code {
+    private string? currentUrl;
+    private IEnumerable<IGrouping<ModuleCategory, IModule>>? _moduleCategories;
+
+    [CascadingParameter]
+    public required Organization Organization { get; set; }
+
+
+
+    protected override void OnInitialized()
+    {
+        currentUrl = NavigationManager.ToBaseRelativePath(NavigationManager.Uri);
+        NavigationManager.LocationChanged += OnLocationChanged;
+    }
+
+    protected override void OnAfterRender(bool firstRender)
+    {
+        if (firstRender)
+        {
+            _moduleCategories = ModuleRegistry.Modules.GroupBy(m => m.Descriptor.Category).OrderBy(x => x.Key);
+            StateHasChanged();
+        }
+    }
+
+    private void OnLocationChanged(object? sender, LocationChangedEventArgs e)
+    {
+        currentUrl = NavigationManager.ToBaseRelativePath(e.Location);
+        StateHasChanged();
+    }
+
+    public void Dispose()
+    {
+        NavigationManager.LocationChanged -= OnLocationChanged;
+    }
+}
+
+

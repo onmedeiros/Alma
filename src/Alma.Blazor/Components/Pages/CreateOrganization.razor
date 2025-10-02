@@ -1,0 +1,39 @@
+﻿@page "/organizations-create"
+@using Alma.Modules.Core.Components.Shared.Dialogs
+@using Alma.Modules.Core.Components.Shared.Pages
+@using Alma.Organizations.Models
+@using Alma.Organizations.Services
+
+@inject NavigationManager NavigationManager
+@inject IDialogService DialogService
+@inject IOrganizationService OrganizationService
+
+<Page Title="Cadastrar organização">
+    <PageContent>
+        <EditForm Model="@Model" OnValidSubmit="OnValidSubmit">
+            <DataAnnotationsValidator />
+            <MudTextField @bind-Value="Model.Name" For="@(() => Model.Name)" Label="Nome" Class="mb-2" />
+            <MudTextField @bind-Value="Model.Subdomain" For="@(() => Model.Subdomain)" Label="Subdomínio" Class="mb-2" />
+            <MudStack Row="true" Justify="Justify.FlexEnd" Class="mt-4">
+                <MudButton ButtonType="ButtonType.Submit" Variant="Variant.Filled" Color="Color.Primary" StartIcon="@Icons.Material.Outlined.Save">Salvar</MudButton>
+            </MudStack>
+        </EditForm>
+    </PageContent>
+</Page>
+
+@code {
+    private OrganizationCreateModel Model { get; set; } = new OrganizationCreateModel();
+
+    private async Task OnValidSubmit(EditContext context)
+    {
+        try
+        {
+            await OrganizationService.Create(Model);
+            NavigationManager.NavigateTo("/organizations-select");
+        }
+        catch (Exception ex)
+        {
+            await DialogService.ShowErrorDialog("Erro ao criar organização", ex.Message );
+        }
+    }
+}

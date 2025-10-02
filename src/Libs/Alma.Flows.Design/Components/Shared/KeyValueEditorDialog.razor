@@ -1,0 +1,25 @@
+﻿@using MudBlazor
+
+<MudDialog>
+    <DialogContent>
+        <MudTextField Label="Nome" @bind-Value="Key" Variant="Variant.Outlined" Margin="Margin.Dense" Class="mb-3"/>
+        <MudTextField Label="Valor" @bind-Value="Value" AutoGrow Lines="2" Variant="Variant.Outlined" Margin="Margin.Dense" Class="mb-3" />
+
+        <div class="d-flex flex-row justify-end">
+            <MudButton OnClick="@(() => Dialog.Cancel())" Class="ml-2">Cancelar</MudButton>
+            <MudButton OnClick="@(() => Dialog.Close(DialogResult.Ok(new KeyValuePair<string, string>(Key, Value))))" Variant="Variant.Filled" Color="Color.Primary">Salvar</MudButton>
+        </div>
+    </DialogContent>
+</MudDialog>
+
+@code {
+
+    [CascadingParameter]
+    public IMudDialogInstance Dialog { get; set; } = null!;
+
+    [Parameter]
+    public string Key { get; set; } = string.Empty;
+
+    [Parameter]
+    public string Value { get; set; } = string.Empty;
+}

@@ -1,0 +1,135 @@
+﻿@using Alma.Flows.Definitions
+@using Alma.Flows.Design.Enums
+@using MudBlazor
+
+<div class="flow-design-toolbar">
+    <MudPaper Elevation="8" Style="width: fit-content;">
+        <MudToolBar>
+
+            <MudTooltip Text="Ative para salvar automaticamente">
+                <MudSwitch Value="AutoSave" ValueChanged="AutoSaveChanged" Label="auto" Color="Color.Primary" />
+            </MudTooltip>
+
+            <MudTooltip Text="Salvar">
+                <MudIconButton OnClick="OnSaveClick" Icon="@Icons.Material.Outlined.Save" Color="Color.Primary"/>
+            </MudTooltip>
+
+            <MudTooltip Text="Publicar versão">
+                <MudIconButton OnClick="OnPublishClick" Icon="@Icons.Material.Outlined.Publish" Color="Color.Primary" />
+            </MudTooltip>
+
+            <MudDivider Vertical DividerType="DividerType.Middle" Class="mx-4"/>
+
+            <MudSelect Value="ExecutionMode" ValueChanged="ExecutionModeChanged" Label="Modo de execução" Style="width: 165px;" Variant="Variant.Outlined" Margin="Margin.Dense">
+                <MudSelectItem Value="ExecutionMode.Automatic">Automático</MudSelectItem>
+                <MudSelectItem Value="ExecutionMode.StepByStep">Passo a Passo</MudSelectItem>
+            </MudSelect>
+
+            <MudTooltip Text="Painel de execução">
+                <MudIconButton OnClick="OnExecutionPanelClick" Icon="@Icons.Material.Outlined.ChromeReaderMode"/>
+            </MudTooltip>
+
+            <MudTooltip Text="Executar">
+                <MudIconButton OnClick="OnPlayClick" Icon="@Icons.Material.Filled.PlayArrow" Color="Color.Success" Disabled="PlayDisabled()" />
+            </MudTooltip>
+
+            <MudTooltip Text="Executar próxima">
+                <MudIconButton OnClick="OnPlayNextClick" Icon="@Icons.Material.Filled.SkipNext" Color="Color.Success" Disabled="PlayNextDisabled()" />
+            </MudTooltip>
+
+            @* <MudTooltip Text="Pausar">
+                <MudIconButton OnClick="OnPauseClick" Icon="@Icons.Material.Filled.Pause" Color="Color.Warning" Disabled="PauseDisabled()" />
+            </MudTooltip> *@
+
+            <MudTooltip Text="Parar">
+                <MudIconButton OnClick="OnStopClick" Icon="@Icons.Material.Filled.Stop" Color="Color.Error" Disabled="StopDisabled()" />
+            </MudTooltip>
+
+        </MudToolBar>
+    </MudPaper>
+
+    <MudStack Row Class="mt-2">
+        @if (IsSaving)
+        {
+            <MudProgressCircular Color="Color.Primary" Indeterminate="true" Size="Size.Small" />
+            <MudText Typo="Typo.body2">Salvando...</MudText>
+        }
+        else
+        {
+            <MudText Typo="Typo.body2">Última modificação: @Definition.LastUpdate.ToString("dd/MM/yyyy HH:mm:ss")</MudText>
+        }
+    </MudStack>
+
+</div>
+
+@code {
+    #region Parameters
+
+    [CascadingParameter]
+    public FlowDefinition Definition { get; set; } = null!;
+
+    [Parameter]
+    public ExecutionMode ExecutionMode { get; set; }
+
+    [Parameter]
+    public EventCallback<ExecutionMode> ExecutionModeChanged { get; set; }
+
+    [Parameter]
+    public FlowDesignContextExecutionStatus ExecutionStatus { get; set; }
+
+    [Parameter]
+    public bool IsSaving { get; set; } = false;
+
+    [Parameter]
+    public bool AutoSave { get; set; }
+
+    [Parameter]
+    public EventCallback<bool> AutoSaveChanged { get; set; }
+
+    [Parameter]
+    public EventCallback OnSaveClick { get; set; }
+
+    [Parameter]
+    public EventCallback OnPublishClick { get; set; }
+
+    [Parameter]
+    public EventCallback OnPlayClick { get; set; }
+
+    [Parameter]
+    public EventCallback OnPlayNextClick { get; set; }
+
+    [Parameter]
+    public EventCallback OnPauseClick { get; set; }
+
+    [Parameter]
+    public EventCallback OnStopClick { get; set; }
+
+    [Parameter]
+    public EventCallback OnExecutionPanelClick { get; set; }
+
+    #endregion
+
+    #region Execution status
+
+    private bool PlayDisabled()
+    {
+        return ExecutionStatus != FlowDesignContextExecutionStatus.NotStarted && ExecutionStatus != FlowDesignContextExecutionStatus.Completed;
+    }
+
+    private bool PlayNextDisabled()
+    {
+        return ExecutionStatus != FlowDesignContextExecutionStatus.Executing && ExecutionStatus != FlowDesignContextExecutionStatus.Waiting;
+    }
+
+    private bool PauseDisabled()
+    {
+        return ExecutionStatus != FlowDesignContextExecutionStatus.Executing;
+    }
+
+    private bool StopDisabled()
+    {
+        return ExecutionStatus != FlowDesignContextExecutionStatus.Executing && ExecutionStatus != FlowDesignContextExecutionStatus.Waiting && ExecutionStatus != FlowDesignContextExecutionStatus.Completed;
+    }
+
+    #endregion
+}

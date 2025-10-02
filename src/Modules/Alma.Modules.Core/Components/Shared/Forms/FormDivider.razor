@@ -1,0 +1,11 @@
+﻿<MudDivider Class="@($"mt-6 {MarginBottom}")"/>
+@if (!string.IsNullOrEmpty(Title))
+{
+    <MudText Class="mb-4"><strong>@Title</strong></MudText>
+}
+@code {
+    [Parameter]
+    public string? Title { get; set; }
+
+    public string MarginBottom => string.IsNullOrEmpty(Title) ? "mb-6" : "mb-2";
+}

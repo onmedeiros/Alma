@@ -1,0 +1,33 @@
+﻿@* @namespace MudBlazor
+@using EnumsNET
+
+@inherits TemplateColumn<T>
+@typeparam T
+
+@code {
+    [Parameter]
+    public required Func<CellContext<T>, object?> ValueSelector { get; set; }
+
+    [Parameter]
+    public RenderFragment<CellContext<T>>? ChildContent { get; set; }
+
+    protected override void OnInitialized()
+    {
+        base.OnInitialized();
+
+        base.CellTemplate = (context) => (builder) =>
+        {
+            Enum value = null;
+
+            if (ValueSelector != null)
+                value = (Enum)ValueSelector(context);
+
+            int seq = 0;
+
+            if (value != null)
+                builder.AddContent(seq++, value.AsString(EnumFormat.Description));
+            else
+                builder.AddContent(seq++, "-");
+        };
+    }
+} *@

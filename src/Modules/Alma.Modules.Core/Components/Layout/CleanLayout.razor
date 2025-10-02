@@ -1,0 +1,30 @@
+﻿@using Alma.Modules.Core.Components.Shared.Themes
+@inherits LayoutComponentBase
+
+<MudThemeProvider Theme="_theme"/>
+<MudPopoverProvider />
+<MudDialogProvider />
+<MudSnackbarProvider />
+
+<MudLayout>
+
+    <MudAppBar Elevation="1" Style="@($"background-color: {Color.Dark}")">
+        <MudText Typo="Typo.h5" Class="ml-3">Alma</MudText>
+        <MudSpacer />
+    </MudAppBar>
+
+    <MudMainContent Class="pa-4 mud-background-gray d-flex align-center" Style="min-height: 100vh;"  >
+        @Body
+    </MudMainContent>
+</MudLayout>
+
+<div id="blazor-error-ui">
+    An unhandled error has occurred.
+    <a href="" class="reload">Reload</a>
+    <a class="dismiss">🗙</a>
+</div>
+
+@code
+{
+    MudTheme _theme = AlmaTheme.GetDefaultMudTheme();
+}

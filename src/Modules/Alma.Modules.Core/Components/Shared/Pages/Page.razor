@@ -1,0 +1,50 @@
+﻿<MudContainer MaxWidth="MaxWidth.ExtraLarge" Class="pt-8 d-flex flex-column" Style="@GetStyle()">
+    @if (!string.IsNullOrEmpty(Title))
+    {
+        <PageTitle>@Title</PageTitle>
+    }
+
+    @if (!string.IsNullOrWhiteSpace(Title) || Tools != null)
+    {
+        <div class="pb-4 ms-4">
+            <MudStack Row="true" Justify="Justify.SpaceBetween" AlignItems="AlignItems.Center">
+                <MudItem>
+                    <MudText Typo="Typo.h4">@Title</MudText>
+                </MudItem>
+                <MudItem>
+                    @if (Tools != null)
+                    {
+                        @Tools
+                    }
+                </MudItem>
+            </MudStack>
+            @if (!string.IsNullOrWhiteSpace(Subtitle))
+            {
+                <MudText Typo="Typo.subtitle2" Class="mud-text-disabled">@Subtitle</MudText>
+            }
+        </div>
+    }
+    @ChildContent
+</MudContainer>
+
+@code {
+    [Parameter]
+    public string? Title { get; set; }
+
+    [Parameter]
+    public string? Subtitle { get; set; }
+
+    [Parameter]
+    public bool FullHeight { get; set; } = false;
+
+    [Parameter]
+    public RenderFragment? Tools { get; set; }
+
+    [Parameter]
+    public RenderFragment? ChildContent { get; set; }
+
+    public string GetStyle()
+    {
+        return FullHeight ? "flex-grow: 1;" : string.Empty;
+    }
+}

@@ -1,0 +1,96 @@
+@using Alma.Integrations.Apis.Entities
+@using Alma.Integrations.Apis.Models
+@using Alma.Integrations.Apis.Services
+@using Alma.Modules.Integrations.Components.Pages.Apis.Dialogs
+@using Microsoft.Extensions.DependencyInjection
+
+@inherits EditComponentBase<ApiKey>
+
+@inject IServiceScopeFactory ScopeFactory;
+
+@if (_loading)
+{
+    <LoadingCircle />
+}
+else
+{
+    <MudStack Spacing="2">
+        <MudStack Row AlignItems="AlignItems.Center" Justify="Justify.SpaceBetween">
+            <MudText Typo="Typo.h6">Chaves de acesso</MudText>
+            <MudButton Variant="Variant.Filled" Color="Color.Primary" OnClick="OpenCreateDialog">Nova chave</MudButton>
+        </MudStack>
+
+        @if (_keys.Count == 0)
+        {
+            <MudText>Sem chaves cadastradas.</MudText>
+        }
+        else
+        {
+            <MudTable Items="_keys" Hover="true" Dense="true">
+                <HeaderContent>
+                    <MudTh>Nome</MudTh>
+                    <MudTh>Chave</MudTh>
+                    <MudTh>Ativa</MudTh>
+                    <MudTh>Criada em</MudTh>
+                </HeaderContent>
+                <RowTemplate>
+                    <MudTd DataLabel="Nome">@context.Name</MudTd>
+                    <MudTd DataLabel="Chave"><MudText>@context.Key</MudText></MudTd>
+                    <MudTd DataLabel="Ativa"><MudSwitch T="bool" Disabled Checked="@context.IsActive" Color="Color.Primary" /></MudTd>
+                    <MudTd DataLabel="Criada em">@context.CreatedAt.ToLocalTime().ToString("g")</MudTd>
+                </RowTemplate>
+            </MudTable>
+        }
+    </MudStack>
+}
+
+@code {
+    [CascadingParameter]
+    public Organization Organization { get; set; } = null!;
+
+    [Parameter]
+    public string ApiId { get; set; } = string.Empty;
+
+    private bool _loading = true;
+    private List<ApiKey> _keys = new();
+
+    protected override async Task OnAfterRenderAsync(bool firstRender)
+    {
+        if (firstRender)
+        {
+            await Reload();
+        }
+    }
+
+    private async Task Reload()
+    {
+        _keys.Clear();
+        _loading = true;
+        StateHasChanged();
+
+        using var scope = ScopeFactory.CreateScope();
+        var service = scope.ServiceProvider.GetRequiredService<IApiKeyService>();
+
+        _keys = await service.ListAsync(ApiId, Organization.Id);
+
+        _loading = false;
+        StateHasChanged();
+    }
+
+    private async Task OpenCreateDialog()
+    {
+        var parameters = new DialogParameters
+        {
+            ["Organization"] = Organization,
+            ["ApiId"] = ApiId,
+        };
+
+        var dialog = await DialogService.ShowAsync<ApiKeyCreateDialog>("Criar nova chave", parameters);
+        var result = await dialog.Result;
+
+        if (result is null || result.Canceled)
+            return;
+
+        await Reload();
+    }
+}

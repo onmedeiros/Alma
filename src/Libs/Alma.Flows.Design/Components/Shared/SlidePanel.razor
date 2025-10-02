@@ -1,0 +1,36 @@
+﻿<div class="slide-panel" style="@GetStyle()">
+    <div class="@Class" style="width:@Width; height: 100%;">
+        @ChildContent
+    </div>
+</div>
+
+@code {
+    [Parameter]
+    public RenderFragment? ChildContent { get; set; }
+
+    [Parameter]
+    public bool Open { get; set; }
+
+    [Parameter]
+    public string Width { get; set; } = "300px";
+
+    [Parameter]
+    public string? Class { get; set; }
+
+    private string PanelWidth => Open ? Width : "0";
+
+    public void TriggerOpen()
+    {
+        Open = !Open;
+    }
+
+    private string GetClass()
+    {
+        return $"slide-panel {Class}";
+    }
+
+    private string GetStyle()
+    {
+        return $"width: {PanelWidth};";
+    }
+}

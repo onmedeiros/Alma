@@ -1,0 +1,127 @@
+﻿@page "/alerts"
+@using Alma.Organizations.Entities
+@using Alma.Flows.Alerts.Common
+@using Alma.Flows.Alerts.Entities
+@using Alma.Flows.Alerts.Services
+@using Alma.Flows.Alerts.Stores.Filters
+@using Microsoft.Extensions.DependencyInjection
+
+@inject NavigationManager NavigationManager
+@inject IDialogService DialogService
+@inject IServiceScopeFactory ScopeFactory
+
+<Page Title="Alertas">
+
+    <ChildContent>
+        <MudDataGrid @ref="_dataGrid"
+                     T="Alert"
+                     ServerData="LoadData"
+                     CurrentPage="(PageIndex ?? 1) - 1"
+                     RowsPerPage="PageSize ?? 10"
+                     Elevation="8"
+                     Hover="true"
+                     SortMode="SortMode.None">
+
+            <ToolBarContent>
+                <MudText Typo="Typo.h6">Lista de alertas</MudText>
+                <MudSpacer></MudSpacer>
+                <MudTextField @bind-Value="Title" Placeholder="Buscar pelo título" Adornment="Adornment.End" AdornmentIcon="@MudBlazor.Icons.Material.Outlined.Search" OnAdornmentClick="_dataGrid.ReloadServerData" Class="mt-0 me-2"></MudTextField>
+            </ToolBarContent>
+
+            <Columns>
+                <PropertyColumn Title="Título" Property="x => x.Title" />
+                <TemplateColumn Title="Severidade" HeaderStyle="width: 160px;">
+                    <CellTemplate>
+                        <MudChip Color="@GetSeverityColor(context.Item.Severity)" Variant="Variant.Filled" Size="Size.Small">@context.Item.Severity</MudChip>
+                    </CellTemplate>
+                </TemplateColumn>
+                <PropertyColumn Title="Criado em" Property="x => x.CreatedAt.ToLocalTime()" HeaderStyle="width: 220px;" />
+                <TemplateColumn Title="Detalhes">
+                    <CellTemplate>
+                        @if (!string.IsNullOrWhiteSpace(context.Item.Details))
+                        {
+                            <MudText Truncate="true" Class="mud-truncate" Style="max-width: 560px;">@context.Item.Details</MudText>
+                        }
+                    </CellTemplate>
+                </TemplateColumn>
+            </Columns>
+
+            <NoRecordsContent>Nenhum alerta encontrado.</NoRecordsContent>
+
+            <PagerContent>
+                <MudDataGridPager T="Alert" />
+            </PagerContent>
+        </MudDataGrid>
+    </ChildContent>
+</Page>
+
+@code {
+    [CascadingParameter]
+    public required Organization Organization { get; set; }
+
+    // Query Parameters
+    [SupplyParameterFromQuery]
+    public int? PageIndex { get; set; }
+
+    [SupplyParameterFromQuery]
+    public int? PageSize { get; set; }
+
+    [SupplyParameterFromQuery]
+    public string? Title { get; set; }
+
+    [SupplyParameterFromQuery]
+    public string? Severity { get; set; }
+
+    private MudDataGrid<Alert> _dataGrid = new();
+
+    private async Task<GridData<Alert>> LoadData(GridState<Alert> state)
+    {
+        PageIndex = state.Page + 1;
+        PageSize = state.PageSize;
+
+        UpdateQueryParameters();
+
+        using var scope = ScopeFactory.CreateScope();
+        var alertService = scope.ServiceProvider.GetRequiredService<IAlertService>();
+
+        var filters = new AlertFilters
+        {
+            OrganizationId = Organization.Id,
+            Title = Title,
+            Severity = Enum.TryParse<AlertSeverity>(Severity, out var severity) ? severity : null
+        };
+
+        var result = await alertService.ListAsync(PageIndex ?? 1, PageSize ?? 10, filters);
+
+        return new GridData<Alert>
+        {
+            Items = result.Items,
+            TotalItems = result.TotalCount
+        };
+    }
+
+    private void UpdateQueryParameters()
+    {
+        var parameters = new Dictionary<string, object?>
+        {
+            ["title"] = Title,
+            ["severity"] = Severity,
+            ["pageIndex"] = PageIndex ?? 1,
+            ["pageSize"] = PageSize ?? 10,
+        };
+
+        NavigationManager.NavigateTo(NavigationManager.GetUriWithQueryParameters(parameters));
+    }
+
+    private Color GetSeverityColor(AlertSeverity severity)
+    {
+        return severity switch
+        {
+            AlertSeverity.Low => Color.Info,
+            AlertSeverity.Medium => Color.Warning,
+            AlertSeverity.High => Color.Error,
+            AlertSeverity.Critical => Color.Error,
+            _ => Color.Default
+        };
+    }
+}

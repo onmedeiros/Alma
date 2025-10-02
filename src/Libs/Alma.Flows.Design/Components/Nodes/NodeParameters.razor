@@ -1,0 +1,101 @@
+﻿@using Alma.Flows.Core.Activities.Attributes
+@using Alma.Flows.Core.Description.Descriptors
+@using Alma.Flows.Design.Components.Nodes.Parameters
+@using Alma.Flows.Extensions
+
+<CascadingValue Value="Node">
+    <MudBlazor.MudStack Class="gap-2">
+        @if (Node.ActivityDescriptor.Parameters.Count > 0)
+        {
+            @foreach (var parameter in Node.ActivityDescriptor.Parameters)
+            {
+                if (IsHidden(parameter))
+                    continue;
+
+                if (parameter.Type == typeof(bool))
+                {
+                    <BoolParameter Parameter="parameter" Disabled="IsDisabled(parameter)" />
+                }
+                // else if (parameter.ContainsAttribute(typeof(ActivitySelectParameterAttribute)))
+                // {
+                //     <SelectParameter Parameter="parameter" Disabled="IsDisabled(parameter)"/>
+                // }
+                else if (parameter.Type.IsAssignableTo(typeof(Enum)))
+                {
+                    <EnumParameter Parameter="parameter" Disabled="IsDisabled(parameter)" />
+                }
+                else
+                {
+                    <TextParameter Parameter="parameter" Disabled="IsDisabled(parameter)" />
+                }
+            }
+        }
+    </MudBlazor.MudStack>
+    
+</CascadingValue>
+
+@code {
+    [Parameter]
+    public ActivityNodeModel Node { get; set; } = null!;
+
+    protected override void OnAfterRender(bool firstRender)
+    {
+        if (firstRender)
+        {
+            Node.OnActivityChanged += HandleActivityChanged;
+        }
+    }
+
+    private void HandleActivityChanged(ActivityNodeModel model)
+    {
+        StateHasChanged();
+    }
+
+    private bool IsDisabled(ParameterDescriptor descriptor)
+    {
+        var parameterAttribute = descriptor.Attributes.FirstOrDefault(x => x is ActivityParameterAttribute) as ActivityParameterAttribute;
+
+        if (parameterAttribute is null)
+            return false;
+
+        if (parameterAttribute.DisabledCondition.Length == 0)
+            return false;
+
+        foreach (var condition in parameterAttribute.DisabledCondition)
+        {
+            var conditionValue = Node.GetParameterValue(condition);
+
+            if (string.IsNullOrEmpty(conditionValue))
+                continue;
+
+            if (conditionValue.ToLower() == "true")
+                return true;
+        }
+
+        return false;
+    }
+
+    private bool IsHidden(ParameterDescriptor descriptor)
+    {
+        var parameterAttribute = descriptor.Attributes.FirstOrDefault(x => x is ActivityParameterAttribute) as ActivityParameterAttribute;
+
+        if (parameterAttribute is null)
+            return false;
+
+        if (parameterAttribute.HiddenCondition.Length == 0)
+            return false;
+
+        foreach (var condition in parameterAttribute.HiddenCondition)
+        {
+            var conditionValue = Node.GetParameterValue(condition);
+
+            if (string.IsNullOrEmpty(conditionValue))
+                continue;
+
+            if (conditionValue.ToLower() == "true")
+                return true;
+        }
+
+        return false;
+    }
+}

@@ -1,0 +1,50 @@
+﻿::deep .activity-node {
+    min-width: max-content;
+    max-width: 450px;
+    padding-right: 50px;
+    border-left: 7px solid #777;
+}
+
+::deep .activity-node.selected {
+    outline: 3px dashed #CCC;
+    outline-offset: 10px;
+}
+
+::deep .activity-node-port {
+    width: 14px;
+    height: 14px;
+    margin: -7px;
+    border-radius: 50%;
+    background-color: white;
+    border: 3px solid #777;
+    cursor: pointer;
+    position: absolute;
+}
+
+    ::deep .activity-node-port.right {
+        right: 0px;
+        background-color: #777;
+        border: 3px solid white;
+    }
+
+::deep .activity-node-port.left {
+    left: 0px;
+}
+
+::deep .activity-node-port:nth-child(n) {
+    /*top: calc(50% + (var(--index) - ((var(--count) - 1) / 2)) * (14px + 4px));*/
+    top: calc(54px + (var(--index) * 18px));
+}
+
+::deep .activity-node-port.right::after {
+    content: var(--name);
+    text-align: end;
+    width: 52px;
+    position: absolute;
+    left: -56px;
+    top: -3px;
+    font-size: 11px;
+    background-color: white;
+    border-radius: 3px;
+    opacity: 0.8;
+}

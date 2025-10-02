@@ -1,0 +1,78 @@
+@using Alma.Integrations.Apis.Entities
+@using Alma.Integrations.Apis.Models
+@using Alma.Integrations.Apis.Services
+@using Microsoft.Extensions.DependencyInjection
+
+@inherits EditDialogBase<ApiKey>
+
+@inject IServiceScopeFactory ScopeFactory;
+
+<MudDialog>
+    <DialogContent>
+        @if (_model is not null)
+        {
+            <EditForm Model="_model" OnSubmit="Save">
+                <FluentValidationValidator @ref="Validator" />
+
+                <MudText Class="mb-2">Informações da chave:</MudText>
+                <MudTextField @bind-Value="_model.Name" For="@(() => _model.Name)" Label="Nome" Class="mb-5" Variant="Variant.Outlined" Margin="Margin.Dense" />
+                <MudSwitch @bind-Value="_model.IsActive" For="@(() => _model.IsActive)" Label="Ativa" Color="Color.Primary" Class="mb-3" />
+
+                <SubmitButton IsSaving="IsSaving" Class="mb-2" />
+            </EditForm>
+        }
+    </DialogContent>
+</MudDialog>
+
+@code {
+    [Parameter]
+    public Organization Organization { get; set; } = null!;
+
+    [Parameter]
+    public string ApiId { get; set; } = string.Empty;
+
+    private ApiKeyCreateModel _model = null!;
+
+    protected override async Task OnParametersSetAsync()
+    {
+        await Dialog.SetOptionsAsync(new DialogOptions
+        {
+            MaxWidth = MaxWidth.Small,
+            FullWidth = true,
+            CloseButton = true,
+            CloseOnEscapeKey = true,
+        });
+    }
+
+    protected override void OnAfterRender(bool firstRender)
+    {
+        if (firstRender)
+        {
+            _model = new ApiKeyCreateModel
+            {
+                OrganizationId = Organization.Id,
+                ApiId = ApiId,
+                Name = string.Empty,
+                IsActive = true
+            };
+
+            StateHasChanged();
+        }
+    }
+
+    private async Task Save()
+    {
+        IsSaving = true;
+        StateHasChanged();
+
+        if (!await Validate())
+            return;
+
+        using var scope = ScopeFactory.CreateScope();
+        var service = scope.ServiceProvider.GetRequiredService<IApiKeyService>();
+
+        var result = await service.CreateAsync(_model);
+
+        await Result(result);
+    }
+}

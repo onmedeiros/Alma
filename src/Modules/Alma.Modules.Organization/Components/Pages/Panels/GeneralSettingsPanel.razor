@@ -1,0 +1,93 @@
+﻿@using Alma.Modules.Core.Components.Shared.Loadings
+@using Alma.Organizations.Entities
+@using Alma.Organizations.Models
+@using Alma.Organizations.Services
+@using Microsoft.Extensions.DependencyInjection
+
+@inject IDialogService DialogService;
+@inject ISnackbar Snackbar;
+@inject IServiceScopeFactory ScopeFactory;
+
+@if (_model is null)
+{
+    <LoadingCircle />
+}
+else
+{
+    <EditForm Model="_model" OnSubmit="OnSubmit">
+        <MudStack Class="mud-width-full" Spacing="3">
+            <FluentValidationValidator @ref="_validator" />
+            <MudText Typo="Typo.h6">Informações da organização</MudText>
+            <MudTextField @bind-Value="_model.Name" For="@(() => _model.Name)" Label="Nome" Variant="Variant.Outlined" Margin="Margin.Dense" />
+            <MudTextField @bind-Value="_model.Subdomain" For="@(() => _model.Subdomain)" Label="Subdomínio" Variant="Variant.Outlined" Margin="Margin.Dense" />
+            <SubmitButton/>
+        </MudStack>
+    </EditForm>
+}
+@code {
+    [CascadingParameter]
+    public Organization Organization { get; set; } = null!;
+
+    private FluentValidationValidator _validator = null!;
+    private OrganizationEditModel _model = null!;
+
+    private bool _isSaving = false;
+
+    protected override async Task OnAfterRenderAsync(bool firstRender)
+    {
+        if (firstRender)
+        {
+            _model = new OrganizationEditModel
+            {
+                Id = Organization.Id,
+                Name = Organization.Name,
+                Subdomain = Organization.Subdomain
+            };
+
+            await InvokeAsync(StateHasChanged);
+        }
+    }
+
+    private async Task OnSubmit(EditContext context)
+    {
+        _isSaving = true;
+
+        if (!context.IsModified())
+        {
+            Snackbar.AddWarning("Nenhuma alteração a ser realizada.");
+
+            _isSaving = false;
+            StateHasChanged();
+            return;
+        }
+
+        if (!await _validator.ValidateAsync())
+        {
+            await DialogService.ShowErrorDialog("Erro de validação", "Alguns campos não estão preenchidos corretamente.");
+
+            _isSaving = false;
+            StateHasChanged();
+
+            return;
+        }
+
+        var scope = ScopeFactory.CreateScope();
+        var organizationService = scope.ServiceProvider.GetRequiredService<IOrganizationService>();
+
+        try
+        {
+            await organizationService.UpdateAsync(_model);
+            Snackbar.AddSuccess("Configurações da organização atualizadas com sucesso.");
+        }
+        catch (Exception ex)
+        {
+            await DialogService.ShowErrorDialog("Erro ao salvar configurações", ex.Message);
+            throw;
+        }
+        finally
+        {
+            _isSaving = false;
+            StateHasChanged();
+        }
+    }
+}

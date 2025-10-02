@@ -1,0 +1,132 @@
+﻿@page "/flows/definitions/edit/{id}"
+
+@using Alma.Modules.Flows.Models.Definitions
+@using Alma.Flows
+@using Alma.Flows.Definitions
+@using Microsoft.Extensions.DependencyInjection
+
+@inject NavigationManager NavigationManager
+@inject IServiceScopeFactory ScopeFactory
+@inject IDialogService DialogService
+@inject ISnackbar Snackbar
+
+<Page Title="Editar definição">
+    <PageContent>
+        @if (_model == null)
+        {
+            if (_isLoading)
+            {
+                <MudStack Row="true" Justify="Justify.Center">
+                    <MudProgressCircular Color="Color.Primary" Indeterminate="true" />
+                </MudStack>
+            }
+        }
+        else
+        {
+            <MudTabs Position="Position.Left" ApplyEffectsToContainer="true" PanelClass="pa-4">
+                <MudTabPanel Style="justify-content: start;" Text="Informações gerais" Icon="@Icons.Material.Outlined.Info">
+                    <MudStack Class="mud-width-full">
+                        <FormTextData Label="Id" Value="@Id" />
+                        <MudStack Row="true" Justify="Justify.FlexEnd" Class="mt-4">
+                            <MudButton Variant="Variant.Filled" Color="Color.Secondary" StartIcon="@Icons.Material.Outlined.AccountTree" OnClick="@EditFlow">Editar fluxo</MudButton>
+                            <SubmitButton IsSaving="@_isSaving" />
+                        </MudStack>
+                    </MudStack>
+                </MudTabPanel>
+            </MudTabs>
+        }
+    </PageContent>
+</Page>
+
+@code {
+    #region Parameters
+
+    [CascadingParameter]
+    public required Organization Organization { get; set; }
+
+    [Parameter]
+    public string? Id { get; set; }
+
+    #endregion
+
+    #region Private fields
+
+    bool _isLoading = true;
+    bool _isSaving = false;
+
+    FlowDefinition? _definition = null;
+    EditDefinitionModel? _model = null;
+
+    #endregion
+
+    protected override async Task OnAfterRenderAsync(bool firstRender)
+    {
+        if (firstRender)
+        {
+            await LoadData();
+        }
+    }
+
+
+    private async Task LoadData()
+    {
+        if (string.IsNullOrEmpty(Id))
+        {
+            await DialogService.ShowErrorDialog("Não foi possível carregar os dados da definição", "Parâmetro ID não informado.");
+            return;
+        }
+
+        _isLoading = true;
+        StateHasChanged();
+
+        var scope = ScopeFactory.CreateScope();
+        var service = scope.ServiceProvider.GetRequiredService<IFlowManager>();
+
+        try
+        {
+            var definition = await service.FindDefinitionById(Id, Organization.Id);
+
+            if (definition is null)
+            {
+                await DialogService.ShowErrorDialog("Não foi possível carregar os dados da definição", "Definição não encontrada.");
+                return;
+            }
+
+            _definition = definition;
+
+            _model = new EditDefinitionModel
+            {
+                Id = definition.Id,
+                Name = definition.Name,
+            };
+        }
+        catch (Exception ex)
+        {
+            await DialogService.ShowErrorDialog("Erro ao carregar dados da definição", ex.Message);
+        }
+        finally
+        {
+            _isLoading = false;
+            StateHasChanged();
+        }
+    }
+
+    private async Task EditFlow()
+    {
+        var dialogOptions = new DialogOptions
+        {
+            FullWidth = true,
+            MaxWidth = MaxWidth.ExtraExtraLarge,
+            CloseButton = true,
+            CloseOnEscapeKey = true,
+        };
+
+        var parameters = new DialogParameters<DefinitionFlowDesignDialog>
+        {
+            {x => x.Organization, Organization},
+            {x => x.Definition, _definition}
+        };
+
+        var dialog = await DialogService.ShowAsync<DefinitionFlowDesignDialog>("Editar fluxo", parameters, dialogOptions);
+    }
+}

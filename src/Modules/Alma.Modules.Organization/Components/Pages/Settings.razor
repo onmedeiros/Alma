@@ -1,0 +1,19 @@
+﻿@page "/organization/settings"
+
+<Page Title="Configurações da organização">
+    <PageContent>
+        <MudTabs Position="Position.Left" ApplyEffectsToContainer="true" PanelClass="flex flex-column pa-4 mud-full-width">
+            <MudTabPanel Style="justify-content: start;" Text="Configurações Gerais" Icon="@Icons.Material.Outlined.Settings">
+                <Alma.Modules.Organizations.Components.Pages.Panels.GeneralSettingsPanel/>
+            </MudTabPanel>
+
+            <MudTabPanel Style="justify-content: start;" Text="Usuários" Icon="@Icons.Material.Outlined.Person">
+                <Alma.Modules.Organizations.Components.Pages.Panels.UserSettingsPanel />
+            </MudTabPanel>
+        </MudTabs>
+    </PageContent>
+</Page>
+
+@code {
+
+}

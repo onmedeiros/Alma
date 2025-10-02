@@ -1,0 +1,53 @@
+﻿<MudStack Spacing="0" Row="@Row" Class="gap-0 mb-3">
+    <span style="@GetTitleStyle()"><b>@Title</b></span>
+    @if (!string.IsNullOrEmpty(Text))
+    {
+        <span style="@GetTextStyle()">@Text</span>
+    }
+    else if (ChildContent is not null)
+    {
+        @ChildContent
+    }
+</MudStack>
+
+@code {
+    [Parameter]
+    public required string Title { get; set; }
+
+    [Parameter]
+    public required string Text { get; set; }
+
+    [Parameter]
+    public RenderFragment? ChildContent { get; set; }
+
+    [Parameter]
+    public string? Complement { get; set; }
+
+    [Parameter]
+    public bool Row { get; set; }
+
+    [Parameter]
+    public bool Gray{ get; set; }
+
+
+    private string GetTitleStyle()
+    {
+        if (Row)
+            return "width: 100px;";
+        else
+            return "";
+    }
+
+    private string GetTextStyle()
+    {
+        return $"color: {GetTextColor()};";
+    }
+
+    private string GetTextColor()
+    {
+        if (Gray)
+            return "var(--mud-palette-gray-default)";
+        else
+            return "var(--mud-palette-text-secondary)";
+    }
+}

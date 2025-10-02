@@ -1,0 +1,12 @@
+﻿<MudStack Spacing="0" Class="gap-0 mb-2">
+    <span><b>@Label</b></span>
+    <span style="color: var(--mud-palette-gray-default);">@Value</span>
+</MudStack>
+
+@code {
+    [Parameter]
+    public required string Label { get; set; }
+
+    [Parameter]
+    public required string Value { get; set; }
+}
