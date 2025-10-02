@@ -1,0 +1,281 @@
+﻿@page "/flows/instances/edit/{id}"
+
+@using Alma.Modules.Core.Components.Shared.Loadings
+@using Alma.Modules.Flows.Components.Pages.Definitions
+@using Alma.Modules.Flows.Models.Definitions
+@using Alma.Modules.Flows.Models.Instances
+@using Alma.Flows
+@using Alma.Flows.Core.InstanceExecutions.Enums
+@using Alma.Flows.Core.Instances
+@using Alma.Flows.Core.Instances.Entities
+@using Alma.Flows.Core.Instances.Models
+@using Alma.Flows.Core.Instances.Services
+@using Alma.Flows.Definitions
+@using Microsoft.Extensions.DependencyInjection
+
+@inject NavigationManager NavigationManager
+@inject IServiceScopeFactory ScopeFactory
+@inject IDialogService DialogService
+@inject ISnackbar Snackbar
+
+<Page Title="Editar instância">
+    <PageContent>
+        @if (_model == null)
+        {
+            if (_isLoading)
+            {
+                <MudStack Row="true" Justify="Justify.Center">
+                    <MudProgressCircular Color="Color.Primary" Indeterminate="true" />
+                </MudStack>
+            }
+        }
+        else
+        {
+            <MudTabs Position="Position.Left" ApplyEffectsToContainer="true" PanelClass="pa-4">
+
+                <MudTabPanel Style="justify-content: start;" Text="Informações gerais" Icon="@Icons.Material.Outlined.Info">
+                    <MudStack Class="mud-width-full">
+
+                        <FormTextData Label="Id" Value="@Id" />
+
+                        <MudDivider Class="mt-2 mb-2" />
+
+                        <EditForm Model="@_model" OnSubmit="Save">
+                            <FluentValidationValidator @ref="_validator" />
+
+                            <MudText Typo="Typo.body2" Class="mb-3"><b>Informações da instância</b></MudText>
+
+                            <MudTextField @bind-Value="_model.Name" For="@(() => _model.Name)" Label="Nome" Variant="Variant.Outlined" Margin="Margin.Dense" Class="mb-3" />
+
+                            <MudCard Elevation="0" Class="mud-background-gray mb-3">
+                                <MudCardContent>
+                                    <MudStack Row Justify="Justify.SpaceBetween" AlignItems="AlignItems.Center" Class="mb-3">
+                                        <MudText><b>Fluxo de trabalho</b></MudText>
+                                        <MudButton OnClick="SelectDefinitionVersion" Variant="Variant.Filled" DropShadow="false">Selecionar</MudButton>
+                                    </MudStack>
+
+                                    @if (_model.FlowDefinitionVersionId is null)
+                                    {
+                                        <MudText Typo="Typo.body2">Nenhum fluxo de trabalho selecionado.</MudText>
+                                    }
+                                    else if (_isLoadingDefinitionVersion)
+                                    {
+                                        <LoadingCircle />
+                                    }
+                                    else if (_definitionVersion is not null)
+                                    {
+                                        <TextInfo Title="Nome" Text="@_definitionVersion.FlowDefinition.Name" />
+                                        <TextInfo Title="Versão" Text="@_definitionVersion.Name" />
+                                        <TextInfo Title="Data da versão" Text="@_definitionVersion.CreatedAt.ToLocalTime().ToString()" />
+                                    }
+                                    else
+                                    {
+                                        <MudText Typo="Typo.body2" Color="Color.Error">O fluxo de trabalho selecionado não está mais disponível.</MudText>
+                                    }
+                                </MudCardContent>
+                            </MudCard>
+
+                            <MudSwitch @bind-Value="_model.IsActive" For="@(() => _model.IsActive)" Label="Ativo" Color="Color.Primary" Class="mb-3" />
+
+                            <MudSelect @bind-Value="_model.ExecutionMode" For="@(() => _model.ExecutionMode)" Label="Modo de execução" HelperText="@GetExecutionModeHelperText()" Variant="Variant.Outlined" Margin="Margin.Dense">
+                                <MudSelectItem Value="InstanceExecutionMode.Automatic">Automático</MudSelectItem>
+                                <MudSelectItem Value="InstanceExecutionMode.Manual">Manual</MudSelectItem>
+                            </MudSelect>
+
+                            <MudStack Row="true" Justify="Justify.FlexEnd" Class="mt-3">
+                                <SubmitButton IsSaving="@_isSaving" />
+                            </MudStack>
+
+                        </EditForm>
+                    </MudStack>
+                </MudTabPanel>
+
+                <MudTabPanel Style="justify-content: start;" Text="Agendamentos" Icon="@Icons.Material.Outlined.Schedule">
+                    <InstanceSchedulePanel Instance="@_instance" />
+                </MudTabPanel>
+
+                <MudTabPanel Style="justify-content: start;" Text="Endpoints" Icon="@Icons.Material.Outlined.Api">
+                    <InstanceEndpointPanel Instance="@_instance" />
+                </MudTabPanel>
+
+            </MudTabs>
+        }
+    </PageContent>
+</Page>
+
+@code {
+    #region Parameters
+
+    [CascadingParameter]
+    public required Organization Organization { get; set; }
+
+    [Parameter]
+    public string? Id { get; set; }
+
+    #endregion
+
+    #region Private fields
+
+    bool _isSaving = false;
+    bool _isLoading = true;
+    bool _isLoadingDefinitionVersion = false;
+
+    FluentValidationValidator? _validator;
+    FlowInstance _instance = null!;
+    InstanceEditModel? _model = null!;
+    FlowDefinition? _definition = null!;
+    FlowDefinitionVersion? _definitionVersion = null!;
+
+    #endregion
+
+    protected override async Task OnAfterRenderAsync(bool firstRender)
+    {
+        if (firstRender)
+        {
+            await Load();
+        }
+    }
+
+
+    private async Task Load()
+    {
+        if (string.IsNullOrEmpty(Id))
+        {
+            await DialogService.ShowErrorDialog("Não foi possível carregar os dados da instância", "Parâmetro ID não informado.");
+            return;
+        }
+
+        _isLoading = true;
+        StateHasChanged();
+
+        var scope = ScopeFactory.CreateScope();
+        var service = scope.ServiceProvider.GetRequiredService<IFlowInstanceManager>();
+
+        try
+        {
+            var instance = await service.FindById(Id, Organization.Id);
+
+            if (instance is null)
+            {
+                await DialogService.ShowErrorDialog("Não foi possível carregar os dados da instância", "Instância não encontrada.");
+                return;
+            }
+
+            _instance = instance;
+
+            _model = new InstanceEditModel
+            {
+                Id = instance.Id,
+                Name = instance.Name,
+                IsActive = instance.IsActive,
+                FlowDefinitionVersionId = instance.FlowDefinitionVersionId,
+                ExecutionMode = instance.ExecutionMode
+            };
+
+            if (!string.IsNullOrEmpty(_model.FlowDefinitionVersionId))
+                await LoadDefinitionVersion();
+        }
+        catch (Exception ex)
+        {
+            await DialogService.ShowErrorDialog("Erro ao carregar dados da instância", ex.Message);
+        }
+        finally
+        {
+            _isLoading = false;
+            StateHasChanged();
+        }
+    }
+
+    private async Task Save()
+    {
+        _isSaving = true;
+        StateHasChanged();
+
+        if (_model is null || !await _validator!.ValidateAsync())
+        {
+            await DialogService.ShowErrorDialog("Erro de validação", "Alguns campos não estão preenchidos corretamente.");
+
+            _isSaving = false;
+            StateHasChanged();
+
+            return;
+        }
+
+        var scope = ScopeFactory.CreateScope();
+        var service = scope.ServiceProvider.GetRequiredService<IFlowInstanceManager>();
+
+        try
+        {
+            await service.Update(_model);
+            Snackbar.AddSuccess("Instância salva com sucesso.");
+        }
+        catch (Exception ex)
+        {
+            await DialogService.ShowErrorDialog("Erro ao salvar instância", ex.Message);
+        }
+        finally
+        {
+            _isSaving = false;
+            StateHasChanged();
+        }
+    }
+
+    private async Task LoadDefinitionVersion()
+    {
+        if (string.IsNullOrEmpty(_model.FlowDefinitionVersionId))
+            return;
+
+        _isLoadingDefinitionVersion = true;
+        StateHasChanged();
+
+        var scope = ScopeFactory.CreateScope();
+        var service = scope.ServiceProvider.GetRequiredService<IFlowManager>();
+
+        try
+        {
+            _definitionVersion = await service.FindDefinitionVersionById(_model.FlowDefinitionVersionId, Organization.Id);
+
+            if (_definitionVersion is null)
+            {
+                await DialogService.ShowErrorDialog("Erro ao carregar dados do fluxo de trabalho", "Versão do fluxo de trabalho selecionada não está mais disponível.");
+                return;
+            }
+        }
+        catch (Exception ex)
+        {
+            await DialogService.ShowErrorDialog("Erro ao carregar dados do fluxo de trabalho", ex.Message);
+        }
+        finally
+        {
+            _isLoadingDefinitionVersion = false;
+            StateHasChanged();
+        }
+    }
+
+    private async Task SelectDefinitionVersion()
+    {
+        var dialog = await DialogService.ShowSelectAsync<DefinitionSelectDialog>();
+        var result = await dialog.Result;
+
+        if (result is null || result.Canceled)
+            return;
+
+        if (result.Data is null || result.Data is not FlowDefinitionVersion version)
+            return;
+
+        _model!.FlowDefinitionVersionId = version.Id;
+        _definitionVersion = version;
+
+        StateHasChanged();
+    }
+
+    private string GetExecutionModeHelperText()
+    {
+        return _model?.ExecutionMode switch
+        {
+            InstanceExecutionMode.Automatic => "As atividades serão executadas automaticamente, exceto as que requerem interação com o usuário.",
+            InstanceExecutionMode.Manual => "As atividades serão executadas manualmente através do painel de execução.",
+            _ => string.Empty
+        };
+    }
+}

@@ -1,0 +1,41 @@
+﻿@using Alma.Blazor.Components.Account.Shared
+@using Alma.Core.Modules
+@using Alma.Modules.Core.Components.Layout
+@using System.Reflection
+@using System.Collections
+
+@inject IModuleRegistry ModuleRegistry
+
+<Router 
+AppAssembly="typeof(Program).Assembly"
+AdditionalAssemblies="GetAdditionalAssemblies()">
+    <Found Context="routeData">
+        <AuthorizeRouteView RouteData="routeData" DefaultLayout="typeof(CleanLayout)">
+            <NotAuthorized>
+                <RedirectToLogin />
+            </NotAuthorized>
+        </AuthorizeRouteView>
+        <FocusOnNavigate RouteData="routeData" Selector="h1" />
+    </Found>
+    <NotFound>
+        Página não encontrada.
+    </NotFound>
+</Router>
+
+@code 
+{
+    private IEnumerable<Assembly> GetAdditionalAssemblies()
+    {
+        List<Assembly> assemblies = [];
+
+        // Assemblies from modules
+        // assemblies.AddRange(ModuleRegistry.Assemblies);
+
+        foreach (var module in ModuleRegistry.Modules)
+        {
+            assemblies.Add(module.GetType().Assembly);
+        }
+
+        return assemblies;
+    }
+}

@@ -1,0 +1,232 @@
+﻿@using Alma.Core.Utils
+@using Alma.Flows.Design.Components.Parameters
+@using Alma.Flows.Monitoring.Activities
+@using Alma.Flows.Monitoring.Models
+@using Alma.Flows.Monitoring.MonitoringObjectSchemas.Entities
+@using Alma.Flows.Monitoring.MonitoringObjectSchemas.Models
+@using Alma.Flows.Monitoring.MonitoringObjectSchemas.Services
+@using Microsoft.Extensions.DependencyInjection
+@using MudBlazor
+
+@inherits ParameterEditor
+
+@inject IServiceScopeFactory ScopeFactory;
+
+<MudStack Class="gap-2">
+
+	<!-- MonitoringObjectScheme -->
+	@{
+		var monitoringObjectSchemeParameter = GetParameter(nameof(AverageMonitoringActivity.Schema));
+	}
+
+	<MudAutocomplete T="MonitoringObjectSchema"
+					 SearchFunc="SearchMonitoringObjectSchemas"
+					 ToStringFunc="@(x => x?.Name ?? null)"
+					 Label="@monitoringObjectSchemeParameter.DisplayName"
+					 Value="@_schema"
+					 ValueChanged="HandleMonitoringObjectSchemaChanged"
+					 Variant="Variant.Outlined"
+					 Margin="Margin.Dense"
+					 Style="width: 100%; min-width: 250px;" />
+
+	<!-- Filters -->
+	@if (_schema is not null)
+	{
+		var filterParameter = GetParameter(nameof(AverageMonitoringActivity.Filters));
+
+		<MudStack Spacing="0" Class="border border-solid mud-border-lines-default rounded pa-2">
+
+			<MudText Typo="Typo.body2"><b>@filterParameter.DisplayName</b></MudText>
+
+			@if (_filters is not null && _filters.Count > 0)
+			{
+				foreach (var filter in _filters)
+				{
+					<MudStack Row="true" AlignItems="AlignItems.Center">
+
+						<MudSelect Label="Campo"
+								   Value="filter.Field"
+								   ValueChanged="async (string e) => { filter.Field = e; await HandleFiltersValueChanged(); }"
+								   Variant="Variant.Outlined"
+								   Margin="Margin.Dense">
+							@foreach (var field in _schema.Fields)
+							{
+								<MudSelectItem Value="@field.Name">@field.Name</MudSelectItem>
+							}
+						</MudSelect>
+
+						<MudSelect Label="Operador"
+								   Value="filter.Operator.ToString()"
+								   ValueChanged="async (string e) => { filter.Operator = Enum.Parse<Flows.Monitoring.Models.FilterOperator>(e); await HandleFiltersValueChanged(); }"
+								   Variant="Variant.Outlined"
+								   Margin="Margin.Dense">
+							@foreach (var enumItem in EnumUtils.GetItems(typeof(Flows.Monitoring.Models.FilterOperator)))
+							{
+								<MudSelectItem Value="@enumItem.Value">@enumItem.Name</MudSelectItem>
+							}
+						</MudSelect>
+
+						<MudTextField Label="Valor"
+							Value="filter.Value"
+							ValueChanged="async (string e) => { filter.Value = e; await HandleFiltersValueChanged(); }"
+							Variant="Variant.Outlined"
+							Margin="Margin.Dense" />
+
+						<MudTooltip Text="Remover" Color="Color.Error" Arrow>
+							<MudIconButton OnClick="@(async () => { _filters.Remove(filter); await HandleFiltersValueChanged(); })" Icon="@Icons.Material.Outlined.Delete" Size="MudBlazor.Size.Small" Color="Color.Error" />
+						</MudTooltip>
+					</MudStack>
+				}
+			}
+
+			<MudButton OnClick="HandleAddFilter" Class="mt-4" Variant="Variant.Filled" StartIcon="@Icons.Material.Outlined.Add" Size="Size.Small" DropShadow="false">Adicionar filtro</MudButton>
+
+		</MudStack>
+
+	}
+
+	<!-- Field -->
+	@if (_schema is not null)
+	{
+		var fieldParameter = GetParameter(nameof(AverageMonitoringActivity.Field));
+
+		var selectedFieldValue = GetValue(fieldParameter.Name);
+
+		<MudSelect Label="@fieldParameter.DisplayName"
+				   Value="selectedFieldValue"
+				   ValueChanged="(string e) => HandleValueChanged(fieldParameter.Name, e)"
+				   Variant="Variant.Outlined" Margin="Margin.Dense"
+				   Style="width: 100%; min-width: 250px;">
+			@foreach (var field in _schema.Fields)
+			{
+				<MudSelectItem Value="@field.Name">@field.Name</MudSelectItem>
+			}
+		</MudSelect>
+
+	}
+
+	<!-- Value -->
+	@{
+		var valueParameter = GetParameter(nameof(AverageMonitoringActivity.Value));
+	}
+	<TextParameter Parameterizable="ParameterizableDefinition" Parameter="valueParameter" ParameterChanged="ParameterChanged" />
+
+
+	<MudStack Row="true">
+		<!-- Interval -->
+		@{
+			var intervalParameter = GetParameter(nameof(AverageMonitoringActivity.Interval));
+		}
+
+		<TextParameter Parameterizable="ParameterizableDefinition" Parameter="intervalParameter" ParameterChanged="ParameterChanged" />
+
+		<!-- IntervalType -->
+		@{
+			var intervalTypeParameter = GetParameter(nameof(AverageMonitoringActivity.IntervalType));
+		}
+		<EnumParameter Parameterizable="ParameterizableDefinition" Parameter="intervalTypeParameter" ParameterChanged="ParameterChanged" />
+	</MudStack>
+
+
+	<!-- DeviationType -->
+	@{
+		var deviationTypeParameter = GetParameter(nameof(AverageMonitoringActivity.DeviationType));
+	}
+
+	<EnumParameter Parameterizable="ParameterizableDefinition" Parameter="deviationTypeParameter" ParameterChanged="ParameterChanged" />
+
+	<!-- DeviationDirection -->
+	@{
+		var deviationDirectionParameter = GetParameter(nameof(AverageMonitoringActivity.DeviationDirection));
+	}
+	<EnumParameter Parameterizable="ParameterizableDefinition" Parameter="deviationDirectionParameter" ParameterChanged="ParameterChanged" />
+
+	<!-- DeviationLimit-->
+	@{
+		var deviationLimitParameter = GetParameter(nameof(AverageMonitoringActivity.DeviationLimit));
+	}
+
+	<TextParameter Parameterizable="ParameterizableDefinition" Parameter="deviationLimitParameter" ParameterChanged="ParameterChanged" />
+
+</MudStack>
+
+@code {
+	private MonitoringObjectSchema? _schema = null;
+	private List<Filter>? _filters = null;
+
+	protected override async Task OnAfterRenderAsync(bool firstRender)
+	{
+		if (firstRender)
+		{
+			// Load selected schema
+			var selectedMonitoringObjectSchemaValue = GetValue(nameof(AverageMonitoringActivity.Schema));
+			if (!string.IsNullOrEmpty(selectedMonitoringObjectSchemaValue))
+			{
+				using var scope = ScopeFactory.CreateScope();
+				var monitoringObjectSchemaService = scope.ServiceProvider.GetRequiredService<IMonitoringObjectSchemaService>();
+
+				_schema = await monitoringObjectSchemaService.GetOneAsync(selectedMonitoringObjectSchemaValue, Discriminator);
+
+			}
+
+			// Load filters
+			var filtersStringValue = GetValue(nameof(AverageMonitoringActivity.Filters));
+
+			if (!string.IsNullOrEmpty(filtersStringValue))
+			{
+				_filters = System.Text.Json.JsonSerializer.Deserialize<List<Filter>>(filtersStringValue);
+			}
+			else
+			{
+				_filters = new List<Filter>();
+			}
+
+			StateHasChanged();
+		}
+	}
+
+	private async Task<IEnumerable<MonitoringObjectSchema>> SearchMonitoringObjectSchemas(string value, CancellationToken c)
+	{
+		using var scope = ScopeFactory.CreateScope();
+		var monitoringObjectSchemaService = scope.ServiceProvider.GetRequiredService<IMonitoringObjectSchemaService>();
+
+		var schemas = await monitoringObjectSchemaService.SearchAsync(new MonitoringObjectSchemaSearchModel
+		{
+			PageIndex = 1,
+			PageSize = 10,
+			OrganizationId = Discriminator,
+			Term = value
+		});
+
+		return schemas.AsEnumerable();
+	}
+
+	private async Task HandleMonitoringObjectSchemaChanged(MonitoringObjectSchema schema)
+	{
+		_schema = schema;
+		_filters = new List<Filter>();
+
+		await HandleValueChanged(nameof(AverageMonitoringActivity.Schema), schema.Id);
+		await HandleFiltersValueChanged();
+	}
+
+	private async Task HandleAddFilter()
+	{
+		var filter = new Filter
+		{
+			Id = Guid.NewGuid().ToString(),
+			Field = string.Empty,
+			Operator = Flows.Monitoring.Models.FilterOperator.Equals,
+			Value = string.Empty
+		};
+
+		_filters?.Add(filter);
+		await HandleFiltersValueChanged();
+	}
+
+	private async Task HandleFiltersValueChanged()
+	{
+		var filtersStringValue = System.Text.Json.JsonSerializer.Serialize(_filters);
+		await HandleValueChanged(nameof(AverageMonitoringActivity.Filters), filtersStringValue);
+	}
+}

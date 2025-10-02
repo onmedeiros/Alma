@@ -1,0 +1,74 @@
+﻿@* @using Alma.Flows.Descriptors
+@using Alma.Flows.Extensions
+@using EnumsNET;
+@using Microsoft.Extensions.DependencyInjection
+@using MudBlazor
+
+@inject IServiceScopeFactory ScopeFactory
+
+<MudAutocomplete T="SelectOptionItem"
+                 Label="@Parameter.DisplayName"
+                 SearchFunc="GetItems"
+                 ToStringFunc="@(e=> e==null ? null : $"{e.Value}")"
+                 Value="_value"
+                 ValueChanged="@(async (SelectOptionItem e) => await Node.ChangeParameterValue(Parameter.Name, e.Key))"
+                 Variant="Variant.Outlined" Margin="Margin.Dense"
+                 ShowProgressIndicator="true"
+                 Class="mb-1"
+                 Style="width: max-content; min-width: 250px;">
+    <ItemTemplate Context="item">
+        <MudText>@item.Value</MudText>
+    </ItemTemplate>
+</MudAutocomplete>
+
+@code {
+    [CascadingParameter]
+    public ActivityNodeModel Node { get; set; } = null!;
+
+    [Parameter]
+    public ParameterDescriptor Parameter { get; set; } = null!;
+
+    [Parameter]
+    public bool Disabled { get; set; }
+
+    private ActivitySelectParameterAttribute _attribute = null!;
+
+    private SelectOptionItem? _value;
+
+    protected override async Task OnParametersSetAsync()
+    {
+        if (!Parameter.TryGetAttribute<ActivitySelectParameterAttribute>(out var attribute))
+        {
+            throw new InvalidOperationException($"Parameter {Parameter.Name} is not a select parameter.");
+        }
+
+        _attribute = attribute;
+
+        if (Node.GetParameterValue(Parameter.Name) is string value)
+        {
+            if (!string.IsNullOrEmpty(value))
+            {
+                using var scope = ScopeFactory.CreateScope();
+                var service = scope.ServiceProvider.GetRequiredKeyedService<ISelectOptions>(_attribute.SelectOptionsType);
+
+                var selectedOption = await service.GetOption(value);
+
+                if (selectedOption != null)
+                    _value = selectedOption;
+            }
+        }
+    }
+
+    private async Task<IEnumerable<SelectOptionItem>> GetItems(string term, CancellationToken token)
+    {
+        using var scope = ScopeFactory.CreateScope();
+        var service = scope.ServiceProvider.GetRequiredKeyedService<ISelectOptions>(_attribute.SelectOptionsType);
+
+        await Task.Delay(500);
+
+        var options = await service.GetOptions(term);
+
+        return options;
+    }
+}
+ *@

@@ -1,0 +1,246 @@
+﻿@using CronExpressionDescriptor
+@using Alma.Core.Utils
+@using Alma.Modules.Flows.Models.Instances
+@using Alma.Flows.Core.Common.Enums
+@using Alma.Flows.Core.InstanceEndpoints.Models
+@using Alma.Flows.Core.InstanceEndpoints.Services
+@using Alma.Flows.Core.Instances.Entities
+@using Microsoft.Extensions.DependencyInjection
+
+@inject IDialogService DialogService;
+@inject ISnackbar Snackbar;
+@inject IServiceScopeFactory ScopeFactory;
+@inject IInstanceEndpointApiManager InstanceEndpointApiManager;
+<MudDialog>
+    <DialogContent>
+        @if (_createModel is not null)
+        {
+            <EditForm Model="_createModel" OnSubmit="Create">
+                <FluentValidationValidator @ref="_validator" />
+
+                <MudText Class="mb-2">Informações da API:</MudText>
+                
+                <MudTextField @bind-Value="_createModel.Name" For="@(() => _createModel.Name)" Label="Nome" Class="mb-5" Variant="Variant.Outlined" Margin="Margin.Dense" />
+
+                <MudSelect @bind-Value="_createModel.ApiId" For="@(() => _createModel.ApiId)" Label="API" Variant="Variant.Outlined" Margin="Margin.Dense">
+                    <MudSelectItem Value="@((string?)null)" Disabled>Selecione uma API</MudSelectItem>
+                    @foreach (var api in availableApis)
+                    {
+                        <MudSelectItem Value="@api.Id">@api.Name</MudSelectItem>
+                    }
+                </MudSelect>
+                
+                <MudTextField @bind-Value="_createModel.Path" For="@(() => _createModel.Path)" Label="Caminho" Class="mb-5" Variant="Variant.Outlined" Margin="Margin.Dense" />
+
+                <MudSelect @bind-Value="_createModel.Method" For="@(() => _createModel.Method)" Label="Método" Variant="Variant.Outlined" Margin="Margin.Dense">
+                    @foreach (var enumItem in EnumUtils.GetItems<ApiMethod>())
+                    {
+                        <MudSelectItem Value="@enumItem.Value">@enumItem.Name</MudSelectItem>
+                    }
+                </MudSelect>
+
+                <MudSwitch @bind-Value="_createModel.IsActive" For="@(() => _createModel.IsActive)" Label="Ativo" Color="Color.Primary" Class="mb-3" />
+
+                <SubmitButton IsSaving="_isSaving" Class="mb-2" />
+            </EditForm>
+        }
+        else if (_editModel is not null)
+        {
+            <EditForm Model="_editModel" OnSubmit="Save">
+                <FluentValidationValidator @ref="_validator" />
+
+                <MudText Class="mb-2">Informações da API:</MudText>
+
+                <MudTextField @bind-Value="_editModel.Name" For="@(() => _editModel.Name)" Label="Nome" Class="mb-3" Variant="Variant.Outlined" Margin="Margin.Dense" />
+
+                <MudSelect @bind-Value="_editModel.ApiId" For="@(() => _editModel.ApiId)" Label="API" Variant="Variant.Outlined" Margin="Margin.Dense">
+                    <MudSelectItem Value="@((string?)null)" Disabled>Selecione uma API</MudSelectItem>
+                    @foreach (var api in availableApis)
+                    {
+                        <MudSelectItem Value="@api.Id">@api.Name</MudSelectItem>
+                    }
+                </MudSelect>
+
+                <MudTextField @bind-Value="_editModel.Path" For="@(() => _editModel.Path)" Label="Caminho" Class="mb-3" Variant="Variant.Outlined" Margin="Margin.Dense" />
+
+                <MudSelect @bind-Value="_editModel.Method" For="@(() => _editModel.Method)" Label="Método" Variant="Variant.Outlined" Margin="Margin.Dense">
+                    @foreach (var enumItem in EnumUtils.GetItems<ApiMethod>())
+                    {
+                        <MudSelectItem Value="@enumItem.Value">@enumItem.Name</MudSelectItem>
+                    }
+                </MudSelect>
+
+                <MudSwitch @bind-Value="_editModel.IsActive" For="@(() => _editModel.IsActive)" Label="Ativo" Class="mb-3" Color="Color.Primary" />
+
+                <SubmitButton IsSaving="_isSaving" Class="mt-2 mb-2" />
+            </EditForm>
+        }
+    </DialogContent>
+</MudDialog>
+
+@code {
+    #region Parameters
+
+    [CascadingParameter]
+    public IMudDialogInstance Dialog { get; set; } = null!;
+
+    [Parameter]
+    public Organization Organization { get; set; } = null!;
+
+    [Parameter]
+    public FlowInstance Instance { get; set; } = null!;
+
+    [Parameter]
+    public string? Id { get; set; }
+
+    #endregion
+
+    #region Private fields
+    private List<InstanceApiModel> availableApis = [];
+
+    private bool _isSaving = false;
+    private bool _isLoading = false;
+
+    private InstanceEndpointCreateModel? _createModel = null;
+    private InstanceEndpointEditModel? _editModel = null;
+    private FluentValidationValidator _validator = null!;
+
+    #endregion
+
+    protected override async Task OnAfterRenderAsync(bool firstRender)
+    {
+        if (firstRender)
+        {
+            // Load available APIs
+            availableApis = await InstanceEndpointApiManager.ListApis(Organization.Id);
+
+            if (string.IsNullOrEmpty(Id))
+            {
+                _createModel = new InstanceEndpointCreateModel
+                {
+                    InstanceId = Instance.Id,
+                    Discriminator = Instance.Discriminator,
+                    Name = string.Empty,
+                    Path = string.Empty,
+                    Method = ApiMethod.Get,
+                    IsActive = true
+                };
+            }
+            else
+            {
+                await Load();
+            }
+
+
+            StateHasChanged();
+        }
+    }
+
+    private async Task Create()
+    {
+        _isSaving = true;
+        StateHasChanged();
+
+        if (!await _validator!.ValidateAsync())
+        {
+            await DialogService.ShowErrorDialog("Erro de validação", "Alguns campos não estão preenchidos corretamente.");
+
+            _isSaving = false;
+            StateHasChanged();
+
+            return;
+        }
+
+        using var scope = ScopeFactory.CreateScope();
+        var service = scope.ServiceProvider.GetRequiredService<IInstanceEndpointManager>();
+
+        try
+        {
+            var result = await service.CreateAsync(_createModel!);
+
+            Snackbar.AddSuccess("API criada com sucesso.");
+
+            _createModel = null;
+            Id = result.Id;
+
+            await Load();
+        }
+        catch (Exception ex)
+        {
+            await DialogService.ShowErrorDialog("Erro ao criar API", ex.Message);
+        }
+        finally
+        {
+            _isSaving = false;
+            StateHasChanged();
+        }
+    }
+
+    private async Task Load()
+    {
+        _isLoading = true;
+        StateHasChanged();
+
+        using var scope = ScopeFactory.CreateScope();
+        var service = scope.ServiceProvider.GetRequiredService<IInstanceEndpointManager>();
+
+        var schedule = await service.FindByIdAsync(Id!, Instance.Discriminator);
+
+        if (schedule is null)
+        {
+            await DialogService.ShowErrorDialog("API não encontrada", "A API não foi encontrada.");
+            return;
+        }
+
+        _editModel = new InstanceEndpointEditModel
+        {
+            Id = schedule.Id,
+            InstanceId = schedule.InstanceId,
+            Discriminator = schedule.Discriminator,
+            Name = schedule.Name,
+            ApiId = schedule.ApiId,
+            Path = schedule.Path,
+            Method = schedule.Method,
+            IsActive = schedule.IsActive,
+        };
+
+        _isLoading = false;
+        StateHasChanged();
+    }
+
+    private async Task Save()
+    {
+        _isSaving = true;
+        StateHasChanged();
+
+        if (_editModel is null || !await _validator!.ValidateAsync())
+        {
+            await DialogService.ShowErrorDialog("Erro de validação", "Alguns campos não estão preenchidos corretamente.");
+
+            _isSaving = false;
+            StateHasChanged();
+
+            return;
+        }
+
+        using var scope = ScopeFactory.CreateScope();
+        var service = scope.ServiceProvider.GetRequiredService<IInstanceEndpointManager>();
+
+        try
+        {
+            await service.UpdateAsync(_editModel);
+
+            Snackbar.AddSuccess("API atualizada com sucesso.");
+            Dialog.Close();
+        }
+        catch (Exception ex)
+        {
+            await DialogService.ShowErrorDialog("Erro ao atualizar API", ex.Message);
+        }
+        finally
+        {
+            _isSaving = false;
+            StateHasChanged();
+        }
+    }
+}

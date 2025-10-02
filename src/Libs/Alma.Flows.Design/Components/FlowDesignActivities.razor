@@ -1,0 +1,52 @@
+﻿@using Alma.Flows.Core.Activities.Attributes
+@using Microsoft.AspNetCore.Components.Web
+@using MudBlazor
+
+
+@if (Context.GroupedActivities != null && Context.GroupedActivities.Any())
+{
+    <MudExpansionPanels MultiExpansion="true" Elevation="0" Outlined="false" Class="pe-4" Style="min-width: 250px; overflow:auto;">
+        @foreach (var group in Context.GroupedActivities)
+        {
+            <MudExpansionPanel Text="@group.Key" Style="background-color: var(--mud-palette-background-gray)">
+                @if (group.Any())
+                {
+                    <MudStack>
+                        @foreach (var activity in group)
+                        {
+                            <MudCard draggable="true" @ondragstart="(e) => HandleDragStart(activity.FullName)">
+                                <MudCardContent Class="d-flex align-center gap-2">
+                                    @{
+                                        var customization = activity.Attributes.FirstOrDefault(x => x is ActivityCustomizationAttribute) as ActivityCustomizationAttribute;
+                                        @if (customization as ActivityCustomizationAttribute != null)
+                                        {
+                                            <MudIcon Icon="@customization.Icon"></MudIcon>
+                                        }
+                                    }
+                                    @activity.DisplayName
+                                </MudCardContent>
+                            </MudCard>
+                        }
+                    </MudStack>
+                }
+                else
+                {
+                    <MudText>Esta categoria não tem atividades disponíveis.</MudText>
+                }
+            </MudExpansionPanel>
+        }
+    </MudExpansionPanels>
+}
+
+@code {
+    [CascadingParameter]
+    private FlowDesignContext Context { get; set; } = null!;
+
+    // O Blazor requer que eventos sejam atribuídos a métodos, 
+    // e não a expressões lambda diretas quando se trata de eventos nativos do HTML.
+    // Por isso, o método HandleDragStart foi criado para lidar com o evento ondragstart.
+    private void HandleDragStart(string activityFullName)
+    {
+        Context.HandleDragStart(activityFullName);
+    }
+}

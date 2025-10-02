@@ -1,0 +1,65 @@
+﻿<MudCard Elevation="8">
+    <MudCardContent>
+        <MudStack Row="true" Class="gap-5">
+            @if (!string.IsNullOrEmpty(Icon))
+            {
+                <MudItem>
+                    <MudIcon Icon="@Icon" Color="GetColor()" Style="font-size: 4rem;" />
+                </MudItem>
+            }
+
+            <MudItem>
+                <MudText Typo="Typo.body2" Style="color: var(--mud-palette-gray-default)">@Title</MudText>
+                <MudText Typo="Typo.h5">@GetValue()</MudText>
+            </MudItem>
+        </MudStack>
+        @if (ChildContent != null)
+        {
+            @ChildContent
+        }
+    </MudCardContent>
+</MudCard>
+
+@code
+{
+    [Parameter]
+    public bool IsLoading { get; set; }
+
+    [Parameter]
+    public required string Title { get; set; }
+
+    [Parameter]
+    public string? Value { get; set; }
+
+    [Parameter]
+    public string? Subvalue { get; set; }
+
+    [Parameter]
+    public string? Icon { get; set; }
+
+    [Parameter]
+    public MudBlazor.Color? Color { get; set; }
+
+    [Parameter]
+    public RenderFragment? ChildContent { get; set; }
+
+    private string GetValue()
+    {
+        if (string.IsNullOrEmpty(Value))
+        {
+            return "-";
+        }
+
+        return Value;
+    }
+
+    private MudBlazor.Color GetColor()
+    {
+        if (!Color.HasValue)
+        {
+            return MudBlazor.Color.Default;
+        }
+
+        return Color.Value;
+    }
+}

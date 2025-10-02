@@ -1,0 +1,142 @@
+﻿@page "/integrations/apis"
+@using Alma.Integrations.Apis.Entities
+@using Alma.Integrations.Apis.Services
+@using Alma.Integrations.Apis.Validators
+@using Alma.Modules.Core.Components.Shared
+@using Alma.Modules.Integrations.Components.Pages.Apis.Dialogs
+@using Alma.Organizations.Entities
+@using Microsoft.Extensions.DependencyInjection
+
+@inject NavigationManager NavigationManager
+@inject IDialogService DialogService
+@inject IServiceScopeFactory ScopeFactory
+
+<Page Title="APIs">
+
+    <Tools>
+        <MudButton OnClick="Create" Variant="Variant.Filled" StartIcon="@Icons.Material.Outlined.Add" Color="Color.Primary" Class="me-2">Criar</MudButton>
+    </Tools>
+
+    
+    <ChildContent>
+        <MudDataGrid @ref="_dataGrid"
+        T="Api"
+        ServerData="Load"
+        CurrentPage="(PageIndex ?? 1) - 1"
+        RowsPerPage="PageSize ?? 10"
+        Elevation="8"
+        Hover="true"
+        SortMode="SortMode.None">
+
+            <ToolBarContent>
+                <MudText Typo="Typo.h6">Lista de APIs</MudText>
+                <MudSpacer></MudSpacer>
+                <MudTextField @bind-Value="Term" Placeholder="Buscar" Adornment="Adornment.End" AdornmentIcon="@Icons.Material.Outlined.Search" OnAdornmentClick="_dataGrid.ReloadServerData" Class="mt-0 me-2"></MudTextField>
+            </ToolBarContent>
+
+            <Columns>
+                <PropertyColumn Title="Nome" Property="x => x.Name" />
+                <PropertyColumn Title="Criado em" Property="x => x.CreatedAt.ToLocalTime()" HeaderStyle="@DefaultHeaderStyle.DateTime" />
+                <PropertyColumn Title="Atualizado em" Property="x => x.ModifiedAt.ToLocalTime()" HeaderStyle="@DefaultHeaderStyle.DateTime" />
+
+                <TemplateColumn HeaderStyle="@DefaultHeaderStyle.Tools">
+                    <CellTemplate>
+                        <MudIconButton Href="@($"/integrations/apis/edit/{context.Item.Id}")" Icon="@Icons.Material.Outlined.Edit" Size="MudBlazor.Size.Small" />
+                    </CellTemplate>
+                </TemplateColumn>
+
+            </Columns>
+
+            <NoRecordsContent>Nenhuma api cadastrada para a organização.</NoRecordsContent>
+
+            <PagerContent>
+                <MudDataGridPager T="Api" />
+            </PagerContent>
+        </MudDataGrid>
+    </ChildContent>
+</Page>
+
+@code {
+
+    [CascadingParameter]
+    public required Organization Organization { get; set; }
+
+    #region Query Parameters
+
+    [SupplyParameterFromQuery]
+    public int? PageIndex { get; set; }
+
+    [SupplyParameterFromQuery]
+    public int? PageSize { get; set; }
+
+    [SupplyParameterFromQuery]
+    public string? Term { get; set; }
+
+    #endregion
+
+    #region private fields
+
+    private MudDataGrid<Api> _dataGrid = new MudDataGrid<Api>();
+
+    #endregion
+
+    private async Task<GridData<Api>> Load(GridState<Api> state)
+    {
+        PageIndex = state.Page + 1;
+        PageSize = state.PageSize;
+
+        UpdateQueryParameters();
+
+        using var scope = ScopeFactory.CreateScope();
+
+        var service = scope.ServiceProvider.GetRequiredService<IApiService>();
+
+        var model = new ApiSearchModel
+        {
+            PageIndex = PageIndex ?? 1,
+            PageSize = PageSize ?? 10,
+            Term = Term,
+            OrganizationId = Organization.Id
+        };
+
+        var result = await service.SearchAsync(model);
+
+        return new GridData<Api>
+        {
+            Items = result.Items,
+            TotalItems = result.TotalCount
+        };
+    }
+
+    private void UpdateQueryParameters()
+    {
+        var parameters = new Dictionary<string, object?>
+        {
+            ["term"] = Term,
+            ["pageIndex"] = PageIndex ?? 1,
+            ["pageSize"] = PageSize ?? 10,
+        };
+
+        NavigationManager.NavigateTo(NavigationManager.GetUriWithQueryParameters(parameters));
+    }
+
+    private async Task Create()
+    {
+        var parameters = new DialogParameters<ApiCreateDialog>
+        {
+            { x => x.Organization, Organization }
+        };
+
+        var dialog = await DialogService.ShowAsync<ApiCreateDialog>("Criar nova API", parameters);
+        var result = await dialog.Result;
+
+        if (result is null || result.Canceled)
+            return;
+
+        if (result.Data is Api api)
+        {
+            await _dataGrid.ReloadServerData();
+        }
+    }
+}
+ 

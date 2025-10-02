@@ -1,0 +1,41 @@
+﻿<MudDialog TitleClass="error-dialog-title">
+
+    <TitleContent>
+        <MudStack Row="true" AlignItems="AlignItems.Center">
+            <MudIcon Icon="@Icons.Material.Filled.Warning" Class="mr-3" />
+            <MudText Typo="Typo.h6">
+                @MudDialog.Title
+            </MudText>
+        </MudStack>
+        
+    </TitleContent>
+
+    <DialogContent>
+        @Message
+    </DialogContent>
+
+    <DialogActions>
+        <MudButton Color="Color.Primary" OnClick="Submit">Ok</MudButton>
+    </DialogActions>
+
+</MudDialog>
+
+<style>
+    .error-dialog-title {
+        background-color: var(--mud-palette-warning);
+        color: var(--mud-palette-warning-text);
+    }
+</style>
+
+@code {
+    [Parameter]
+    public string Message { get; set; } = string.Empty;
+
+    [CascadingParameter]
+    private IMudDialogInstance MudDialog { get; set; } = null!;
+
+    private string _errorBackground = "var(--mud-palette-warning)";
+    private string _errorColor = "var(--mud-palette-warning-text)";
+
+    private void Submit() => MudDialog.Close(DialogResult.Ok(true));
+}

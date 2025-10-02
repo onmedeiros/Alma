@@ -1,0 +1,21 @@
+﻿<MudButton ButtonType="ButtonType"
+           Variant="Variant.Filled"
+           Color="Color.Primary"
+           StartIcon="@Icons.Material.Outlined.Save"
+           OnClick="OnClick"
+           Disabled="IsSaving">Salvar</MudButton>
+
+@code
+{
+    [Parameter]
+    public bool IsSaving { get; set; }
+
+    [Parameter]
+    public string? Class { get; set; }
+
+    [Parameter]
+    public ButtonType ButtonType { get; set; } = ButtonType.Button;
+
+    [Parameter]
+    public EventCallback OnClick { get; set; }
+}

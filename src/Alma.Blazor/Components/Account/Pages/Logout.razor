@@ -1,0 +1,22 @@
+﻿@page "/Account/Logout"
+
+@using System.ComponentModel.DataAnnotations
+@using Alma.Blazor.Entities
+
+@using Alma.Organizations.Contexts
+@using Microsoft.AspNetCore.Authentication
+@using Microsoft.AspNetCore.Identity
+
+@inject NavigationManager NavigationManager
+@inject SignInManager<AlmaUser> SignInManager
+@inject IOrganizationContext OrganizationContext
+
+<span>saindo...</span>
+
+@code {
+    protected override async Task OnParametersSetAsync()
+    {
+        await SignInManager.SignOutAsync();
+        NavigationManager.NavigateTo("/");
+    }
+}

@@ -1,0 +1,53 @@
+﻿@page "/flows/activities/custom/{Id}"
+@using Alma.Modules.Flows.Components.Pages.Activities.Panels
+@using Alma.Flows.Core.CustomActivities.Models
+@using Alma.Flows.Core.CustomActivities.Services
+@using Microsoft.Extensions.DependencyInjection
+
+@inject NavigationManager NavigationManager
+@inject IServiceScopeFactory ScopeFactory
+@inject IDialogService DialogService
+@inject ISnackbar Snackbar
+
+<Page Title="Editar atividade personalizada" FullHeight>
+    <PageContent FullHeight Classes="d-flex flex-column">
+        <MudTabs Position="Position.Left" ApplyEffectsToContainer="true" PanelClass="pa-4" Class="flex-1">
+
+            <MudTabPanel Style="justify-content: start;" Text="Informações básicas" Icon="@Icons.Material.Outlined.FormatListBulleted">
+                <CustomActivityEditPanel Id="@Id" OrganizationId="@Organization.Id" />
+            </MudTabPanel>
+
+            <MudTabPanel Style="justify-content: start;" Text="Parâmetros" Icon="@Icons.Material.Outlined.Build">
+                <CustomActivityParametersPanel Id="@Id" OrganizationId="@Organization.Id" />
+            </MudTabPanel>
+
+            <MudTabPanel Style="justify-content: start;" Text="Portas" Icon="@Icons.Material.Outlined.TripOrigin">
+                <CustomActivityPortsPanel Id="@Id" OrganizationId="@Organization.Id" />
+            </MudTabPanel>
+
+            <MudTabPanel Style="justify-content: start;" Text="Código" Icon="@Icons.Material.Outlined.Code">
+                <CustomActivityCodePanel Id="@Id" OrganizationId="@Organization.Id"/>
+            </MudTabPanel>
+
+        </MudTabs>
+    </PageContent>
+    
+</Page>
+
+@code {
+    #region Parameters
+
+    [CascadingParameter]
+    public required Organization Organization { get; set; }
+
+    [Parameter]
+    public string? Id { get; set; }
+
+    #endregion
+
+    
+
+    
+
+    
+}

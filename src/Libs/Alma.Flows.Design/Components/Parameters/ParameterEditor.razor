@@ -1,0 +1,39 @@
+﻿@using Alma.Flows.Core.Abstractions
+@using Alma.Flows.Core.Description.Descriptors
+@using Alma.Flows.Definitions
+
+@code {
+	[Parameter]
+	public string? Discriminator { get; set; }
+
+	[Parameter]
+	public IParameterizableDefinition ParameterizableDefinition { get; set; } = null!;
+
+	[Parameter]
+	public IParameterizableDescriptor ParameterizableDescriptor { get; set; } = null!;
+
+	[Parameter]
+	public EventCallback<ParameterDefinition> ParameterChanged { get; set; }
+
+	protected ParameterDescriptor GetParameter(string parameter)
+	{
+		var param = ParameterizableDescriptor.Parameters.First(x => x.Name == parameter);
+		return param;
+	}
+
+	protected string? GetValue(string parameter)
+	{
+		return ParameterizableDefinition.GetParameterValue(parameter);
+	}
+
+	protected Task HandleValueChanged(string parameter, string value)
+	{
+		var parameterDescriptor = GetParameter(parameter);
+		
+		ParameterizableDefinition.SetParameterValue(parameterDescriptor, value);
+
+		var definition = ParameterizableDefinition.GetParameterDefinition(parameter);
+
+		return ParameterChanged.InvokeAsync(definition);
+	}
+}

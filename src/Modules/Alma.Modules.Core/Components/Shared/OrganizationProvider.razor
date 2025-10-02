@@ -1,0 +1,50 @@
+﻿@using Alma.Organizations.Contexts
+@using Alma.Organizations.Entities
+@using Alma.Core.Contexts
+@using Microsoft.AspNetCore.Components.Server.ProtectedBrowserStorage
+
+@inject ILogger<OrganizationProvider> Logger
+@inject NavigationManager NavigationManager
+@inject IUserContext UserContext
+@inject IOrganizationContext OrganizationContext
+@inject ProtectedLocalStorage ProtectedLocalStorage
+
+@if (isConnected)
+{
+    <CascadingValue Value="OrganizationContext">
+        <CascadingValue Value="Organization">
+            @ChildContent
+        </CascadingValue>
+    </CascadingValue>
+}
+
+@code {
+    private bool isConnected = false;
+    private Organization? Organization;
+
+    [Parameter]
+    public required RenderFragment ChildContent { get; set; }
+
+    protected override async Task OnAfterRenderAsync(bool firstRender)
+    {
+        if (firstRender)
+        {
+            isConnected = true;
+
+            try
+            {
+                var userId = UserContext.UserId;
+                Organization = await OrganizationContext.GetCurrentOrganization();
+
+                if (Organization is null)
+                    NavigationManager.NavigateTo("/organizations-select", true);
+            } 
+            catch
+            {
+                NavigationManager.NavigateTo("/organizations-select", true);
+            }
+
+            StateHasChanged();
+        }
+    }
+}

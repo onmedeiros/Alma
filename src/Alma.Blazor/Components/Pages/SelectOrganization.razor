@@ -1,0 +1,117 @@
+﻿@page "/organizations-select"
+
+@layout Alma.Modules.Core.Components.Layout.CleanLayout
+
+@using Alma.Organizations.Contexts
+@using Alma.Organizations.Entities
+@using Alma.Modules.Core.Components.Shared.Pages
+@using Alma.Organizations.Services
+@using Microsoft.AspNetCore.Authorization
+@using Microsoft.AspNetCore.Components.Server.ProtectedBrowserStorage
+@using Alma.Core.Contexts
+
+@inject NavigationManager NavigationManager
+@inject IOrganizationService OrganizationService
+@inject IOrganizationUserService OrganizationUserService
+@inject IUserContext UserContext
+@inject IOrganizationContext OrganizationContext
+@inject ProtectedLocalStorage ProtectedLocalStorage
+
+@attribute [Authorize]
+
+<Page 
+    Title="Minhas organizações"
+    Subtitle="Organizações permitem você gerenciar de forma centralizada suas informações."
+>
+    <PageContent>
+        <MudText Align="Align.Center">Selecione uma organização:</MudText>
+        <MudGrid Class="mt-4 mb-8" Justify="Justify.Center">
+            @if (_isLoading)
+            {
+                <MudItem>
+                    <MudCard Elevation="0" Width="280px" Height="180px" Class="p-4">
+                        <div class="px-6 py-4">
+                            <MudSkeleton Animation="Animation.Wave" />
+                            <MudSkeleton Animation="Animation.Wave" Height="120px" />
+                        </div>
+                    </MudCard>
+                </MudItem>
+            }
+            else
+            {
+                if (Organizations != null && Organizations.Count > 0)
+                {
+                    @foreach (var organization in Organizations)
+                    {
+                        <MudItem>
+
+                            <MudButton 
+                                Variant="Variant.Text" 
+                                Color="Color.Transparent" 
+                                Style="width: 280px; height: 180px;" 
+                                OnClick="@(async () => await OrganizationSelected(organization.Id))"
+                            >
+                                
+                                @organization.Name
+
+                            </MudButton>
+
+                            @* <MudCard Elevation="0" Width="280px" Height="180px">
+                                <MudNavLink 
+                                    OnClick="@(async () => await OrganizationSelected(organization.Id))" 
+                                    Class="mud-height-full">
+
+                                    <MudStack Class="mud-height-full">
+                                        <h3>@organization.Name</h3>
+                                    </MudStack>
+
+                                </MudNavLink>
+                            </MudCard> *@
+                        </MudItem>
+                    }
+                }
+
+                <MudItem>
+                    <MudButton Variant="Variant.Text" Color="Color.Transparent" EndIcon="@Icons.Material.Filled.Add" Style="width: 280px; height: 180px;" OnClick="@(() => NavigationManager.NavigateTo("/organizations-create") )">
+                        Criar nova organização
+                    </MudButton>
+                </MudItem>
+            }
+        </MudGrid>
+    </PageContent>
+</Page>
+
+@code {
+    private bool _isLoading = true;
+    List<Organization> Organizations = [];
+
+    protected override async Task OnAfterRenderAsync(bool firstRender)
+    {
+        if (firstRender)
+        {
+            var userOrganizations = await OrganizationUserService.GetOrganizationsAsync(UserContext.UserId);
+            if (userOrganizations is null || userOrganizations.Count == 0)
+            {
+                NavigationManager.NavigateTo("/organizations-create");
+                return;
+            }
+
+            foreach (var organizationId in userOrganizations)
+            {
+                var organization = await OrganizationService.GetById(organizationId);
+                if (organization is not null)
+                    Organizations.Add(organization);
+            }
+
+            _isLoading = false;
+
+            StateHasChanged();
+        }
+    }
+
+    private async Task OrganizationSelected(string id)
+    {
+        await OrganizationContext.SetCurrentOrganization(UserContext.UserId, id);
+        NavigationManager.NavigateTo("/", true);
+    }
+}
