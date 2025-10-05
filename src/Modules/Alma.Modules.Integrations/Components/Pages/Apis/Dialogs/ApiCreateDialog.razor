@@ -1,0 +1,83 @@
+﻿@using Alma.Integrations.Apis.Entities
+@using Alma.Integrations.Apis.Models
+@using Alma.Integrations.Apis.Services
+@using Alma.Organizations.Entities
+@using Microsoft.Extensions.DependencyInjection
+
+@inherits EditDialogBase<Api>
+
+@inject IServiceScopeFactory ScopeFactory;
+
+<MudDialog>
+    <DialogContent>
+        @if (_model is not null)
+        {
+            <EditForm Model="_model" OnSubmit="Save">
+                <FluentValidationValidator @ref="Validator" />
+
+                <MudText Class="mb-2">Informações da API:</MudText>
+                <MudTextField @bind-Value="_model.Name" For="@(() => _model.Name)" Label="Nome" Class="mb-5" Variant="Variant.Outlined" Margin="Margin.Dense" />
+                <MudTextField @bind-Value="_model.Path" For="@(() => _model.Path)" Label="Caminho" Class="mb-5" Variant="Variant.Outlined" Margin="Margin.Dense" />
+
+                <SubmitButton IsSaving="IsSaving" Class="mb-2" />
+            </EditForm>
+        }
+    </DialogContent>
+</MudDialog>
+
+@code {
+    #region Parameters
+    [Parameter]
+    public Organization Organization { get; set; } = null!;
+
+    #endregion
+
+    #region Private fields
+
+    private ApiCreateModel _model = null!;
+
+    #endregion
+
+    protected override async Task OnParametersSetAsync()
+    {
+        await Dialog.SetOptionsAsync(new DialogOptions
+        {
+            MaxWidth = MaxWidth.Small,
+            FullWidth = true,
+            CloseButton = true,
+            CloseOnEscapeKey = true,
+        });
+    }
+
+    protected override void OnAfterRender(bool firstRender)
+    {
+        if (firstRender)
+        {
+            _model = new ApiCreateModel
+            {
+                OrganizationId = Organization.Id,
+                Name = string.Empty,
+                Path = string.Empty,
+                IsActive = true
+            };
+
+            StateHasChanged();
+        }
+    }
+
+    private async Task Save()
+    {
+        IsSaving = true;
+        StateHasChanged();
+
+        if (!await Validate())
+            return;
+
+        using var scope = ScopeFactory.CreateScope();
+        var service = scope.ServiceProvider.GetRequiredService<IApiService>();
+
+        var result = await service.CreateAsync(_model);
+
+        await Result(result);
+    }
+}

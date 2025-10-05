@@ -1,0 +1,90 @@
+﻿@using Alma.Blazor.Entities
+@using Alma.Modules.Core.Components.Shared.Data
+@using Alma.Modules.Core.Components.Shared.Loadings
+@using Alma.Modules.Organizations.Models
+@using Alma.Organizations.Entities
+@using Alma.Organizations.Models
+@using Alma.Organizations.Services
+@using Microsoft.AspNetCore.Identity
+@using Microsoft.Extensions.DependencyInjection
+
+@inject IDialogService DialogService;
+@inject ISnackbar Snackbar;
+@inject IServiceScopeFactory ScopeFactory;
+@inject UserManager<AlmaUser> UserManager;
+
+<MudDataGrid @ref="_dataGrid" T="OrganizationUserModel" ServerData="Load" Elevation="0" Hover="true" Style="width: 100%;">
+
+    <ToolBarContent>
+        <MudText Typo="Typo.h6">Usuários da organização</MudText>
+        <MudSpacer></MudSpacer>
+        <MudButton OnClick="CreateUser" Variant="Variant.Filled" StartIcon="@Icons.Material.Outlined.Add" Color="Color.Primary">Criar</MudButton>
+    </ToolBarContent>
+
+    <Columns>
+
+        <PropertyColumn Title="Id" Property="x => x.AssociationId" HeaderStyle="width: 320px;" />
+        <PropertyColumn Title="Usuário" Property="x => x.UserName" />
+        <PropertyColumn Title="Associado em" Property="x => x.AssociationCreatedAt.ToLocalTime()" HeaderStyle="width: 200px;" />
+        <DataGridTrueOrFalse Title="Email confirmado" Parameter="x => x.Item.EmailConfirmed" HeaderStyle="width: 60px;" />
+        <DataGridTrueOrFalse Title="Celular confirmado" Parameter="x => x.Item.PhoneNumberConfirmed" HeaderStyle="width: 60px;" />
+        <DataGridTrueOrFalse Title="2FA" Parameter="x => x.Item.TwoFactorEnabled" HeaderStyle="width: 60px;" />
+        <TemplateColumn HeaderStyle="width: 60px;">
+            <CellTemplate>
+                <MudIconButton Href="@($"/flows/activities/custom/{context.Item.AssociationId}")" Icon="@Icons.Material.Outlined.Edit" Size="MudBlazor.Size.Small" />
+            </CellTemplate>
+        </TemplateColumn>
+
+    </Columns>
+
+    <NoRecordsContent>Nenhuma atividade personalizada encontrada.</NoRecordsContent>
+
+    <PagerContent>
+        <MudDataGridPager T="OrganizationUserModel" />
+    </PagerContent>
+
+</MudDataGrid>
+
+@code {
+    #region Parameters
+
+    [CascadingParameter]
+    public required Organization Organization { get; set; }
+
+    #endregion
+
+    #region Private fields
+
+    private MudDataGrid<OrganizationUserModel> _dataGrid = null!;
+
+    #endregion
+
+    private async Task<GridData<OrganizationUserModel>> Load(GridState<OrganizationUserModel> state)
+    {
+        var scope = ScopeFactory.CreateScope();
+        var userService = scope.ServiceProvider.GetRequiredService<IOrganizationUserService>();
+
+        var associations = await userService.GetPagedByOrganizationId(Organization.Id, state.Page, state.PageSize );
+
+        var data = new List<OrganizationUserModel>();
+
+        foreach (var association in associations.Items)
+        {
+            var user = await UserManager.FindByIdAsync(association.UserId);
+            if (user != null)
+            {
+                data.Add(new OrganizationUserModel(association, user));
+            }
+        };
+
+        return new GridData<OrganizationUserModel>
+        {
+            Items = data,
+            TotalItems = associations.TotalCount
+        };
+    }
+
+    private async Task CreateUser()
+    {
+    }
+}

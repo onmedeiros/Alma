@@ -1,0 +1,34 @@
+﻿<MudStack Row="true" Spacing="0" Class="mb-3" AlignItems="AlignItems.Center">
+    
+    <MudText Typo="Typo.body2" Style="color: var(--mud-palette-gray-default); width:150px;">
+            <b>@Title</b>
+    </MudText>
+
+    <MudText Typo="Typo.body2">
+        @if (!string.IsNullOrEmpty(Text))
+        {
+            @Text
+        }
+        else
+        {
+            <span>-</span>
+        }
+    </MudText>
+    
+    @if (!string.IsNullOrEmpty(Complement))
+    {
+        <MudSpacer/>
+        <MudText Typo="Typo.body2" Class="pe-2" Style="color: var(--mud-palette-gray-default);">@Complement</MudText>
+    }
+</MudStack>
+
+@code {
+    [Parameter]
+    public required string Title { get; set; }
+
+    [Parameter]
+    public required string? Text { get; set; }
+
+    [Parameter]
+    public string? Complement { get; set; }
+}

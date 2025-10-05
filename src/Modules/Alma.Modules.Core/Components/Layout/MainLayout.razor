@@ -1,0 +1,85 @@
+﻿@using Alma.Core.Modules
+@using Alma.Modules.Core.Components.Shared
+@using Alma.Modules.Core.Components.Shared.Themes
+@inherits LayoutComponentBase
+
+@inject ISnackbar Snackbar
+
+@if (_isLoading)
+{
+    <MudOverlay Visible="true" LightBackground>
+        <LoadingCircle />
+    </MudOverlay>
+}
+
+<MudThemeProvider Theme="_theme"/>
+<MudPopoverProvider />
+<MudDialogProvider />
+<MudSnackbarProvider />
+<MudLayout>
+    <MudAppBar Elevation="1" Style="@($"background-color: {Color.Dark}")">
+        <MudIconButton Icon="@Icons.Material.Filled.Menu" Color="Color.Inherit" Edge="Edge.Start" OnClick="@((e) => DrawerToggle())" />
+        <MudText Typo="Typo.h5" Class="ml-3">Alma</MudText>
+        <MudSpacer />
+        <MudMenu ActivationEvent="@MouseEvent.LeftClick" AnchorOrigin="Origin.BottomRight" TransformOrigin="Origin.TopRight">
+            <ActivatorContent>
+                <MudAvatar Color="Color.Primary">
+                    <MudIcon Icon="@Icons.Material.Outlined.Person" />
+                </MudAvatar>
+            </ActivatorContent>
+            <ChildContent>
+                <MudMenuItem Icon="@Icons.Material.Outlined.Person">Perfil</MudMenuItem>
+                <MudMenuItem Icon="@Icons.Material.Outlined.Language" Href="/organization/settings">Organização</MudMenuItem>
+                <MudDivider/>
+                <MudMenuItem Icon="@Icons.Material.Outlined.SyncAlt" Href="/organizations-select">Trocar organização</MudMenuItem>
+                <MudMenuItem Icon="@Icons.Material.Outlined.Logout" Href="/Account/Logout">Sair</MudMenuItem>
+            </ChildContent>
+        </MudMenu>
+    </MudAppBar>
+    <OrganizationProvider>
+        <MudDrawer @bind-Open="_drawerOpen" ClipMode="DrawerClipMode.Always" Elevation="2">
+            <NavMenu />
+        </MudDrawer>
+        <MudMainContent Class="pa-4 pt-18 mud-background-gray d-flex flex-column" Style="min-height: 100vh;">
+            @Body
+        </MudMainContent>
+    </OrganizationProvider>
+</MudLayout>
+
+
+<div id="blazor-error-ui">
+    An unhandled error has occurred.
+    <a href="" class="reload">Reload</a>
+    <a class="dismiss">🗙</a>
+</div>
+
+@code {
+    MudTheme _theme = AlmaTheme.GetDefaultMudTheme();
+
+    private bool _drawerOpen = true;
+
+    private void DrawerToggle()
+    {
+        _drawerOpen = !_drawerOpen;
+    }
+
+    protected override void OnInitialized()
+    {
+        Snackbar.Configuration.PositionClass = Defaults.Classes.Position.TopCenter;
+
+        base.OnInitialized();
+    }
+
+    private bool _isLoading = true;
+
+    protected override Task OnAfterRenderAsync(bool firstRender)
+    {
+        if (firstRender)
+        {
+            _isLoading = false;
+            StateHasChanged();
+        }
+
+        return base.OnAfterRenderAsync(firstRender);
+    }
+}

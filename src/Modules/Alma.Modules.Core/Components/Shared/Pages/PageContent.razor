@@ -1,0 +1,29 @@
+﻿<MudPaper Elevation="8" Class="@GetClasses()">
+    @ChildContent
+</MudPaper>
+
+@code {
+    [Parameter]
+    public RenderFragment? ChildContent { get; set; }
+
+    [Parameter]
+    public bool FullHeight { get; set; }
+
+    [Parameter]
+    public string? Classes { get; set; }
+
+    public string GetClasses()
+    {
+        var classes = "rounded-lg pa-4 mb-8";
+
+        if (FullHeight)
+        {
+            classes += " flex-grow-1";
+        }
+
+        if (!string.IsNullOrEmpty(Classes))
+            classes += " " + Classes;
+
+        return classes;
+    }
+}

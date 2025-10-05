@@ -1,0 +1,21 @@
+﻿@page "/integrations/apis/edit/{Id}"
+@using Alma.Modules.Integrations.Components.Pages.Apis.Panels
+
+<Page Title="Editar API">
+    <PageContent>
+        <MudTabs Position="Position.Left" ApplyEffectsToContainer="true" PanelClass="flex flex-column pa-4 mud-full-width">
+            <MudTabPanel Style="justify-content: start;" Text="Informações gerais" Icon="@Icons.Material.Outlined.Info">
+                <ApiEditInfoPanel Id="@Id" />
+            </MudTabPanel>
+
+            <MudTabPanel Style="justify-content: start;" Text="Chaves de acesso" Icon="@Icons.Material.Outlined.Key">
+                <ApiEditKeys ApiId="@Id" />
+            </MudTabPanel>
+        </MudTabs>
+    </PageContent>
+</Page>
+
+@code {
+    [Parameter]
+    public string Id { get; set; } = string.Empty;
+}

@@ -1,0 +1,12 @@
+﻿<MudLink Href="@Href" OnClick="@OnClick">@ChildContent</MudLink>
+
+@code {
+    [Parameter]
+    public string? Href { get; set; }
+
+    [Parameter]
+    public EventCallback<MouseEventArgs> OnClick { get; set; }
+
+    [Parameter]
+    public RenderFragment? ChildContent { get; set; }
+}

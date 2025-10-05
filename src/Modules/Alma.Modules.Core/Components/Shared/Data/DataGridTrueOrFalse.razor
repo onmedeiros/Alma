@@ -1,0 +1,53 @@
+﻿@inherits TemplateColumn<T>
+@typeparam T
+
+@code {
+    [Parameter]
+    public Func<CellContext<T>, bool>? Parameter { get; set; }
+
+    // protected override void OnInitialized()
+    // {
+    //     if (Parameter is null)
+    //         return;
+
+    //     base.CellTemplate = (context) => (builder) =>
+    //     {
+    //         if (Parameter(context))
+    //         {
+    //             builder.AddContent(0, @<MudIcon Icon="@Icons.Material.Filled.CheckCircle" Title="Verdadeiro" Size="Size.Small" Color="Color.Success" />);
+    //         }
+    //         else
+    //         {
+    //             builder.AddContent(0, @<MudIcon Icon="@Icons.Material.Filled.Cancel" Title="Verdadeiro" Size="Size.Small" Color="Color.Error" />);
+    //         }
+    //     };
+    // }
+
+    protected override void OnParametersSet()
+    {
+        if (Parameter is null)
+            return;
+
+        base.CellTemplate = context => builder =>
+        {
+            if (Parameter(context))
+            {
+                builder.OpenComponent<MudIcon>(0);
+                builder.AddAttribute(1, "Icon", Icons.Material.Filled.CheckCircle);
+                builder.AddAttribute(2, "Title", "Verdadeiro");
+                builder.AddAttribute(3, "Size", Size.Small);
+                builder.AddAttribute(4, "Color", Color.Success);
+                builder.CloseComponent();
+            }
+            else
+            {
+                builder.OpenComponent<MudIcon>(5);
+                builder.AddAttribute(6, "Icon", Icons.Material.Filled.Cancel);
+                builder.AddAttribute(7, "Title", "Falso");
+                builder.AddAttribute(8, "Size", Size.Small);
+                builder.AddAttribute(9, "Color", Color.Error);
+                builder.CloseComponent();
+            }
+        };
+    }
+}

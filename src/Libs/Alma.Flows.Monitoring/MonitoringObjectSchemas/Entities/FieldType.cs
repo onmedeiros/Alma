@@ -1,0 +1,22 @@
+﻿using System.ComponentModel;
+
+namespace Alma.Flows.Monitoring.MonitoringObjectSchemas.Entities
+{
+    public enum FieldType
+    {
+        [Description("Literal")]
+        String,
+
+        [Description("Inteiro")]
+        Integer,
+
+        [Description("Decimal")]
+        Decimal,
+
+        [Description("Booleano")]
+        Boolean,
+
+        [Description("Data e hora")]
+        DateTime
+    }
+}
