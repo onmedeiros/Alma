@@ -68,6 +68,10 @@ namespace Alma.Flows.Utils
                 {
                     convertedValue = new ParameterOption { Value = value, DisplayName = string.Empty };
                 }
+                else if (TryConvertFromJson(valueType, value, out convertedValue))
+                {
+                    // Successfully converted from JSON
+                }
                 else
                 {
                     throw new InvalidOperationException($"Failed to convert value. Value type '{valueType.FullName}' not supported.");
@@ -78,6 +82,28 @@ namespace Alma.Flows.Utils
             catch (Exception ex)
             {
                 throw new InvalidOperationException($"Failed to convert parameter value type {valueType}.", ex);
+            }
+        }
+
+        public static bool TryConvertFromJson(Type valueType, string? value, out object? convertedValue)
+        {
+            try
+            {
+                if (value is null)
+                {
+                    convertedValue = null;
+                }
+                else
+                {
+                    convertedValue = JsonSerializer.Deserialize(value, valueType);
+                }
+
+                return true;
+            }
+            catch
+            {
+                convertedValue = null;
+                return false;
             }
         }
     }

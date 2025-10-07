@@ -1,8 +1,12 @@
 ﻿using Alma.Flows.Core.Activities.Attributes;
 using Alma.Flows.Core.Activities.Base;
+using Alma.Flows.Core.Contexts;
 using Alma.Flows.Customizations;
 using Alma.Flows.Monitoring.Common;
 using Alma.Flows.Monitoring.Models;
+using Alma.Flows.Monitoring.Monitors;
+using Alma.Organizations.Contexts;
+using Microsoft.Extensions.DependencyInjection;
 
 namespace Alma.Flows.Monitoring.Activities
 {
@@ -54,5 +58,73 @@ namespace Alma.Flows.Monitoring.Activities
         public Parameter<int>? Count { get; set; }
 
         #endregion
+
+        public override async ValueTask ExecuteAsync(ActivityExecutionContext context)
+        {
+            var organizationContext = context.ServiceProvider.GetRequiredService<IOrganizationContext>();
+            var monitoringObjectMonitor = context.ServiceProvider.GetRequiredService<IMonitoringObjectMonitor>();
+
+            var organzationId = await organizationContext.TryGetCurrentOrganizationId();
+            var schema = Schema?.GetValue(context);
+            var filters = Filters?.GetValue(context) ?? [];
+
+            if (string.IsNullOrWhiteSpace(organzationId))
+            {
+                context.State.Log("Organização não informada.", Enums.LogSeverity.Error);
+                Fail.Execute();
+                return;
+            }
+
+            if (string.IsNullOrWhiteSpace(schema))
+            {
+                context.State.Log("Esquema do objeto não informado.", Enums.LogSeverity.Error);
+                Fail.Execute();
+                return;
+            }
+
+            var intervalType = IntervalType?.GetValue(context) ?? Models.IntervalType.Days;
+            var interval = Interval?.GetValue(context) ?? 30;
+            var comparisonOperator = Operator?.GetValue(context) ?? ComparisonOperator.GreaterThan;
+            var count = Count?.GetValue(context) ?? 100;
+
+            var since = DateTime.UtcNow;
+            since = intervalType switch
+            {
+                Models.IntervalType.Minutes => since.AddMinutes(-interval),
+                Models.IntervalType.Hours => since.AddHours(-interval),
+                Models.IntervalType.Days => since.AddDays(-interval),
+                Models.IntervalType.Months => since.AddMonths(-interval),
+                Models.IntervalType.Years => since.AddYears(-interval),
+                _ => since.AddDays(-30),
+            };
+
+            // Execute the monitoring object count
+            var result = await monitoringObjectMonitor.Count(organzationId, schema, filters, since);
+
+            context.State.Log($"Contagem de objetos de monitoramento para o esquema '{schema}' desde {since} é {result}.", Enums.LogSeverity.Information);
+
+            // Compare the result with the threshold
+            var shouldAlert = comparisonOperator switch
+            {
+                ComparisonOperator.GreaterThan => result > count,
+                ComparisonOperator.GreaterThanOrEqual => result >= count,
+                ComparisonOperator.LessThan => result < count,
+                ComparisonOperator.LessThanOrEqual => result <= count,
+                ComparisonOperator.Equals => result == count,
+                ComparisonOperator.NotEquals => result != count,
+                _ => false,
+            };
+
+            if (shouldAlert)
+            {
+                context.State.Log($"Valor de contagem ({result}) fora do limite esperado.", Enums.LogSeverity.Warning);
+                Alert.Execute();
+            }
+            else
+            {
+                context.State.Log("Valor de contagem dentro do limite esperado.", Enums.LogSeverity.Information);
+                Done.Execute();
+            }
+        }
     }
 }

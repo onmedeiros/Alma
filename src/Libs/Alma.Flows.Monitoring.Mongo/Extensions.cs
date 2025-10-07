@@ -8,6 +8,8 @@ namespace Alma.Flows.Monitoring.Mongo
         public static IServiceCollection AddAlmaFlowsMonitoringMongo(this IServiceCollection services)
         {
             services.AddScoped<IValueMonitor, MongoValueMonitor>();
+            services.AddScoped<IMonitoringObjectMonitor, MongoMonitoringObjectMonitor>();
+
             return services;
         }
     }
