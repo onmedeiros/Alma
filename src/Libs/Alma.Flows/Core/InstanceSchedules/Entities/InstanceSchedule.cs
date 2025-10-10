@@ -1,5 +1,8 @@
-﻿namespace Alma.Flows.Core.InstanceSchedules.Entities
+﻿using System.ComponentModel.DataAnnotations.Schema;
+
+namespace Alma.Flows.Core.InstanceSchedules.Entities
 {
+    [Table("flows.InstanceSchedule")]
     public class InstanceSchedule
     {
         public required string Id { get; set; }

@@ -1,7 +1,9 @@
 ﻿using Alma.Flows.Core.InstanceExecutions.Enums;
+using System.ComponentModel.DataAnnotations.Schema;
 
 namespace Alma.Flows.Core.Instances.Entities
 {
+    [Table("flows.Instance")]
     public class FlowInstance
     {
         /// <summary>

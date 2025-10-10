@@ -19,6 +19,15 @@ namespace Alma.Core.Mongo
             _client = client;
         }
 
+        #region Configuration
+
+        public ValueTask SetupAsync()
+        {
+            throw new NotImplementedException();
+        }
+
+        #endregion
+
         #region Repositories
 
         public IRepository<T> Repository<T>() where T : Entity

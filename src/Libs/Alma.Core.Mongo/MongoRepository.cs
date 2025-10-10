@@ -22,7 +22,8 @@ namespace Alma.Core.Mongo
             _logger = logger;
             _context = context;
             _database = database;
-            Collection = _database.GetCollection<T>(typeof(T).Name);
+            var collectionName = CollectionNameResolver.GetCollectionName(typeof(T));
+            Collection = _database.GetCollection<T>(collectionName);
         }
 
         #region Operations

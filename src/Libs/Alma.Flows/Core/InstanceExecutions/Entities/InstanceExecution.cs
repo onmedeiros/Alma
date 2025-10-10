@@ -1,9 +1,11 @@
 ﻿using Alma.Flows.Core.InstanceExecutions.Enums;
 using Alma.Flows.Options;
 using Alma.Flows.States;
+using System.ComponentModel.DataAnnotations.Schema;
 
 namespace Alma.Flows.Core.InstanceExecutions.Entities
 {
+    [Table("flows.InstanceExecution")]
     public class InstanceExecution
     {
         public required string Id { get; set; }

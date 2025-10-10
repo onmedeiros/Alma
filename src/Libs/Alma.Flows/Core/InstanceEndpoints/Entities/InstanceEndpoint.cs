@@ -1,7 +1,9 @@
 ﻿using Alma.Flows.Core.Common.Enums;
+using System.ComponentModel.DataAnnotations.Schema;
 
 namespace Alma.Flows.Core.InstanceEndpoints.Entities
 {
+    [Table("flows.InstanceEndpoint")]
     public class InstanceEndpoint
     {
         public required string Id { get; set; }

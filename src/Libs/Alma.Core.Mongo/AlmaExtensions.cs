@@ -76,6 +76,9 @@ namespace Alma.Core.Mongo
 
             RegisterMongoMappings();
 
+            // Add IHostedService for IndexConfigurator
+            services.AddHostedService<IndexConfigurator>();
+
             return services;
         }
     }

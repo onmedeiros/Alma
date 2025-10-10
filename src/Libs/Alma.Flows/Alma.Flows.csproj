@@ -18,11 +18,6 @@
   </ItemGroup>
 
   <ItemGroup>
-    <Folder Include="Core\CustomActivities\Extensions\" />
-    <Folder Include="Core\InstanceEvents\" />
-  </ItemGroup>
-
-  <ItemGroup>
     <ProjectReference Include="..\Alma.Core\Alma.Core.csproj" />
   </ItemGroup>
 

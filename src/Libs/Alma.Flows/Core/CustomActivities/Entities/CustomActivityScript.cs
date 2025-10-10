@@ -1,5 +1,8 @@
-﻿namespace Alma.Flows.Core.CustomActivities.Entities
+﻿using System.ComponentModel.DataAnnotations.Schema;
+
+namespace Alma.Flows.Core.CustomActivities.Entities
 {
+    [Table("flows.CustomActivityScript")]
     public class CustomActivityScript
     {
         /// <summary>

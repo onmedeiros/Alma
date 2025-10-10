@@ -88,7 +88,6 @@ builder.Services.AddProblemDetails((Hellang.Middleware.ProblemDetails.ProblemDet
 
 builder.Services.AddHostedService<ApplicationRegister>();
 builder.Services.AddAlmaFlows(options => { });
-builder.Services.AddFlowAlerts();
 
 #region Database
 

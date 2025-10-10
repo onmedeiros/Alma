@@ -4,14 +4,15 @@ using Alma.Flows.Alerts.Common;
 using Alma.Flows.Alerts.Entities;
 using Alma.Flows.Alerts.Stores.Filters;
 using Microsoft.Extensions.Logging;
-using System.Linq;
 
 namespace Alma.Flows.Alerts.Services
 {
     public interface IAlertService
     {
         ValueTask<ServiceResult<Alert>> Create(AlertSeverity severity, string title, string? details = null, string? organizationId = null);
+
         ValueTask<PagedList<Alert>> ListAsync(int page, int pageSize, AlertFilters filters);
+
         ValueTask<Alert?> FindByIdAsync(string id, string? organizationId = null);
     }
 

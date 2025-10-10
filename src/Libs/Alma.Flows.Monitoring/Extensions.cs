@@ -6,6 +6,9 @@ using Alma.Flows.Monitoring.MonitoringObjectSchemas.Services;
 using Alma.Flows.Options;
 using Microsoft.Extensions.DependencyInjection;
 using Alma.Core;
+using Alma.Core.Data;
+using Alma.Flows.Monitoring.MonitoringObjects.Entities;
+using Alma.Flows.Monitoring.MonitoringObjectSchemas.Entities;
 
 namespace Alma.Flows.Monitoring
 {
@@ -25,6 +28,15 @@ namespace Alma.Flows.Monitoring
             services.AddKeyedScoped<IParameterProvider, MonitoringObjectSchemaParameterProvider>(typeof(MonitoringObjectSchemaParameterProvider));
 
             services.AddSimpleValidator("Alma.Flows.Monitoring");
+
+            // Configure Context
+            services.ConfigureContext(options => options
+                .AddIndex<MonitoringObject>(EntityIndexType.Ascending, ["OrganizationId"])
+                .AddIndex<MonitoringObject>(EntityIndexType.Ascending, ["SchemaId"])
+                .AddIndex<MonitoringObject>(EntityIndexType.Ascending, ["PrimaryKey"])
+                .AddIndex<MonitoringObject>(EntityIndexType.Descending, ["Timestamp"])
+                .AddIndex<MonitoringObjectSchema>(EntityIndexType.Ascending, ["OrganizationId"])
+            );
 
             return services;
         }

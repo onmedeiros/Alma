@@ -1,5 +1,8 @@
-﻿namespace Alma.Flows.Core.Categories.Entities
+﻿using System.ComponentModel.DataAnnotations.Schema;
+
+namespace Alma.Flows.Core.Categories.Entities
 {
+    [Table("flows.Category")]
     public class Category
     {
         /// <summary>
