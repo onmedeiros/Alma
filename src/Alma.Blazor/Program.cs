@@ -222,7 +222,8 @@ builder.Services.AddModules(options =>
     .Register<Alma.Modules.Organizations.Module>()
     .Register<Alma.Modules.Flows.Module>()
     .Register<Alma.Modules.Alerts.Module>()
-    .Register<Alma.Modules.Monitoring.Module>();
+    .Register<Alma.Modules.Monitoring.Module>()
+    .Register<Alma.Modules.Dashboards.Module>();
 
 // Registro de bibliotecas
 builder.Services.AddAlmaFlowsApis();

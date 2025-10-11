@@ -40,6 +40,7 @@
     <ProjectReference Include="..\Libs\Alma.Integrations\Alma.Integrations.csproj" />
     <ProjectReference Include="..\Modules\Alma.Modules.Alerts\Alma.Modules.Alerts.csproj" />
     <ProjectReference Include="..\Modules\Alma.Modules.Core\Alma.Modules.Core.csproj" />
+    <ProjectReference Include="..\Modules\Alma.Modules.Dashboards\Alma.Modules.Dashboards.csproj" />
     <ProjectReference Include="..\Modules\Alma.Modules.Integrations\Alma.Modules.Integrations.csproj" />
     <ProjectReference Include="..\Modules\Alma.Modules.Monitoring\Alma.Modules.Monitoring.csproj" />
     <ProjectReference Include="..\Modules\Alma.Modules.Organization\Alma.Modules.Organizations.csproj" />
