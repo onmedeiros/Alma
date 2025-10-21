@@ -1,0 +1,103 @@
+﻿@using Alma.Workflows.Core.Abstractions
+@using Alma.Workflows.Core.Activities.Attributes
+@using Alma.Workflows.Core.Description.Descriptors
+@using Alma.Workflows.Definitions
+@using Microsoft.AspNetCore.Components.Web
+@using MudBlazor
+@using System.Globalization
+
+@if (IsDecimal)
+{
+    <MudNumericField T="decimal?"
+                     Label="@Parameter.DisplayName"
+                     Value="@DecimalValue"
+                     ValueChanged="@DecimalValueChanged"
+                     Variant="Variant.Outlined" Margin="Margin.Dense"
+                     Style="min-width: 250px;"
+                     Disabled="@Disabled"
+                     Culture="@CultureInfo.InvariantCulture" />
+}
+else
+{
+    <MudNumericField T="int?"
+                     Label="@Parameter.DisplayName"
+                     Value="@IntValue"
+                     ValueChanged="@IntValueChanged"
+                     Variant="Variant.Outlined" Margin="Margin.Dense"
+                     Style="min-width: 250px;"
+                     Disabled="@Disabled" />
+}
+
+@code {
+    [Parameter]
+    public IParameterizableDefinition Parameterizable { get; set; } = null!;
+
+    [Parameter]
+    public ParameterDescriptor Parameter { get; set; } = null!;
+
+    [Parameter]
+    public EventCallback<ParameterDefinition> ParameterChanged { get; set; }
+
+    [Parameter]
+    public bool Disabled { get; set; }
+
+    // Defines whether this numeric parameter accepts decimals (with '.') or integers only
+    [Parameter]
+    public bool IsDecimal { get; set; }
+
+    private decimal? DecimalValue { get; set; }
+    private int? IntValue { get; set; }
+
+    protected override void OnInitialized()
+    {
+        // Keep support for potential attribute-driven behavior if needed in the future
+        var parameterAttribute = Parameter.Attributes.FirstOrDefault(x => x is ActivityParameterAttribute) as ActivityParameterAttribute;
+        _ = parameterAttribute; // currently unused for numeric input
+    }
+
+    protected override void OnParametersSet()
+    {
+        var current = Parameterizable.GetParameterValue(Parameter.Name);
+
+        if (IsDecimal)
+        {
+            if (!string.IsNullOrWhiteSpace(current) && decimal.TryParse(current, NumberStyles.Any, CultureInfo.InvariantCulture, out var d))
+            {
+                DecimalValue = d;
+            }
+            else
+            {
+                DecimalValue = null;
+            }
+        }
+        else
+        {
+            if (!string.IsNullOrWhiteSpace(current) && int.TryParse(current, NumberStyles.Integer, CultureInfo.InvariantCulture, out var i))
+            {
+                IntValue = i;
+            }
+            else
+            {
+                IntValue = null;
+            }
+        }
+    }
+
+    private async Task DecimalValueChanged(decimal? value)
+    {
+        DecimalValue = value;
+        var valueString = value?.ToString(CultureInfo.InvariantCulture) ?? string.Empty;
+        Parameterizable.SetParameterValue(Parameter, valueString);
+        var definition = Parameterizable.GetParameterDefinition(Parameter.Name);
+        await ParameterChanged.InvokeAsync(definition);
+    }
+
+    private async Task IntValueChanged(int? value)
+    {
+        IntValue = value;
+        var valueString = value?.ToString(CultureInfo.InvariantCulture) ?? string.Empty;
+        Parameterizable.SetParameterValue(Parameter, valueString);
+        var definition = Parameterizable.GetParameterDefinition(Parameter.Name);
+        await ParameterChanged.InvokeAsync(definition);
+    }
+}

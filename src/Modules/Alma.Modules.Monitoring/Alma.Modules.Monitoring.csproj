@@ -20,8 +20,8 @@
   </ItemGroup>
 
   <ItemGroup>
-    <ProjectReference Include="..\..\Libs\Alma.Flows.Design\Alma.Flows.Design.csproj" />
-    <ProjectReference Include="..\..\Libs\Alma.Flows.Monitoring\Alma.Flows.Monitoring.csproj" />
+    <ProjectReference Include="..\..\Libs\Alma.Workflows.Design\Alma.Workflows.Design.csproj" />
+    <ProjectReference Include="..\..\Libs\Alma.Workflows.Monitoring\Alma.Workflows.Monitoring.csproj" />
     <ProjectReference Include="..\Alma.Modules.Core\Alma.Modules.Core.csproj" />
   </ItemGroup>
 

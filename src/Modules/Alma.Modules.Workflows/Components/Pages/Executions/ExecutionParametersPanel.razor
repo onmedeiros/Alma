@@ -1,0 +1,34 @@
+﻿@using Alma.Modules.Workflows.Components.Registries
+@using Alma.Modules.Workflows.Components.Shared
+@using Alma.Workflows
+@using Alma.Workflows.Core.Abstractions
+@using Alma.Workflows.Core.InstanceExecutions.Entities
+@using Alma.Workflows.Core.InstanceExecutions.Services
+@using Alma.Workflows.Core.Instances.Services
+@using Alma.Workflows.Definitions
+@using Alma.Workflows.Enums
+@using Alma.Workflows.Parsers
+@using Alma.Workflows.Runners
+@using Alma.Workflows.States
+@using EnumsNET
+@using Microsoft.Extensions.DependencyInjection
+
+@inject NavigationManager NavigationManager
+@inject IServiceScopeFactory ScopeFactory
+@inject IDialogService DialogService
+@inject ISnackbar Snackbar
+
+@inject IFlowManager _flowManager;
+@inject IInstanceManager _instanceManager;
+@inject IInstanceExecutionManager _executionManager;
+@inject IFlowDefinitionParser _definitionParser;
+@inject IFlowRunnerFactory _runnerFactory;
+@inject IParameterSetter _parameterSetter;
+
+@inject IActivityComponentRegistry _activityComponentRegistry;
+
+
+@code {
+    [Parameter]
+    public InstanceExecution Execution { get; set; } = default!;
+}

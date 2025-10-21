@@ -1,0 +1,27 @@
+﻿@using Alma.Workflows.Core.Description.Descriptors
+@using Alma.Workflows.Design.Utils
+@using EnumsNET;
+@using MudBlazor
+
+<MudSelect Label="@Parameter.DisplayName"
+           Value="@Node.GetParameterValue(Parameter.Name)"
+           ValueChanged="@((string e) => Node.ChangeParameterValue(Parameter.Name, e))"
+           Variant="Variant.Outlined" Margin="Margin.Dense"
+           Class="mb-1"
+           Style="width: max-content; min-width: 250px;">
+    @foreach (var enumItem in EnumUtils.GetItems(Parameter.Type))
+    {
+        <MudSelectItem Value="@enumItem.Value">@enumItem.Name</MudSelectItem>
+    }
+</MudSelect>
+
+@code {
+    [CascadingParameter]
+    public ActivityNodeModel Node { get; set; } = null!;
+
+    [Parameter]
+    public ParameterDescriptor Parameter { get; set; } = null!;
+
+    [Parameter]
+    public bool Disabled { get; set; }
+}

@@ -1,0 +1,169 @@
+﻿@using Alma.Workflows.Core.Description.Descriptors
+@using Alma.Workflows.Definitions
+@using Alma.Workflows.Design.Components.ApprovalAndChecks
+@using Alma.Workflows.Design.Components.Nodes
+@using Alma.Workflows.Design.Components.Parameters
+@using Alma.Workflows.Design.Components.Shared
+@using Alma.Workflows.Design.Extensions
+@using Alma.Workflows.Design.Registries
+@using MudBlazor
+
+@inject IDialogService DialogService;
+@inject IParameterEditorRegistry ParameterEditorRegistry;
+
+@if (Node != null)
+{
+    <MudStack Spacing="0" Style="max-height: 100%">
+        <MudText Typo="Typo.h6">@Node.ActivityDescriptor.DisplayName</MudText>
+        <MudText Typo="Typo.body2" class="mud-text-secondary">@Node.ActivityDescriptor.Description</MudText>
+
+        <MudTextField Label="Nome"
+            Value="@Node.Activity.CustomDisplayName"
+            ValueChanged="@((string s) => Node.ChangeCustomDisplayName(s))"
+            Variant="Variant.Outlined" Margin="Margin.Dense"
+            Style="min-width: 250px;" />
+
+        <MudDivider Class="my-4" />
+
+        <MudTabs 
+            Elevation="0" 
+            Outlined 
+            Rounded 
+            Class="overflow-hidden flex-grow-1"
+            Style="max-height: 100%;"
+            MinimumTabWidth="20px;"
+            PanelClass="flex-grow-1 overflow-auto">
+
+            <MudTabPanel Text="Parâmetros">
+                <MudStack Spacing="0" Class="mt-2 pb-4">
+                    @if (ParameterEditorRegistry.TryGetComponent(Node.ActivityDescriptor.TypeName, out var componentType))
+                    {
+                        <DynamicComponent Type="componentType" 
+                                          Parameters="new Dictionary<string, object?> 
+                                          { 
+                                              { nameof(ParameterEditor.Discriminator), ActivityDefinition.Discriminator },
+                                              { nameof(ParameterEditor.ParameterizableDefinition), ActivityDefinition },
+                                              { nameof(ParameterEditor.ParameterizableDescriptor), ActivityDescriptor },
+                                              { nameof(ParameterEditor.ParameterChanged), ParameterChanged }
+                                          }" />
+                    }
+                    else if (Node.ActivityDescriptor.Parameters.Count > 0)
+                    {
+                        <DefaultParameterEditor ParameterizableDefinition="ActivityDefinition" Discriminator="@ActivityDefinition.Discriminator" ParameterizableDescriptor="@ActivityDescriptor" ParameterChanged="ParameterChanged">
+
+                        </DefaultParameterEditor>
+                    }
+                    else
+                    {
+                        <MudText Typo="Typo.body2" Class="mud-text-secondary">Esta atividade não contém parâmetros.</MudText>
+                    }
+                </MudStack>
+            </MudTabPanel>
+
+            <MudTabPanel Text="Aprovações e Checagens">
+                <MudStack Spacing="0" Class="mt-2">
+                    @if(Node.Activity.ApprovalAndChecks.Count == 0)
+                    {
+                        <MudText Typo="Typo.body2" Class="mud-text-secondary mt-4">Nenhuma aprovação ou checagem adicionada para a atividade atual.</MudText>
+                    }
+                    else
+                    {
+                        <MudTable Items="Node.Activity.ApprovalAndChecks" Hover="true" Dense Elevation="0" Class="mt-4">
+
+                            <HeaderContent>
+                                <MudTh Style="width: 185px; ">Nome</MudTh>
+                                <MudTh Style="width: 60px;"></MudTh>
+                            </HeaderContent>
+
+                            <RowTemplate>
+                                <MudTd>@context.CustomName</MudTd>
+                                <MudTd>
+                                    <div class="d-flex flex-row justify-end">
+                                        <MudIconButton OnClick="@(() => HandleEditApprovalAndCheck(context.Id))" Icon="@Icons.Material.Outlined.Edit" Size="MudBlazor.Size.Small" />
+                                        <MudIconButton OnClick="@(() => HandleRemoveApprovalCheck(context.Id))" Icon="@Icons.Material.Outlined.Delete" Size="MudBlazor.Size.Small" Color="Color.Error" />
+
+                                    </div>
+                                </MudTd>
+                            </RowTemplate>
+                        </MudTable>
+
+                    }
+                    <MudButton OnClick="HandleAddApprovalAndCheck" Class="mt-4" Variant="Variant.Filled" StartIcon="@Icons.Material.Outlined.Add" Size="Size.Small" DropShadow="false">Adicionar</MudButton>
+                </MudStack>
+            </MudTabPanel>
+
+        </MudTabs>
+
+    </MudStack>
+
+}
+
+@code {
+
+    [Parameter]
+    public ActivityNodeModel Node { get; set; } = null!;
+
+    [Parameter]
+    public ActivityDefinition ActivityDefinition { get; set; } = null!;
+
+    [Parameter]
+    public ActivityDescriptor ActivityDescriptor { get; set; } = null!;
+
+    [Parameter]
+    public EventCallback<ParameterDefinition> ParameterChanged { get; set; }
+
+    private async Task HandleAddApprovalAndCheck()
+    {
+        var options = new DialogOptions
+        {
+            MaxWidth = MaxWidth.Small,
+            FullWidth = true,
+            CloseOnEscapeKey = true,
+            CloseButton = true
+        };
+
+        var dialog = await DialogService.ShowAsync<ApprovalAndCheckSelectorDialog>("Selecionar aprovação ou checagem", options);
+        var result = await dialog.Result;
+
+        if (result == null || result.Canceled)
+            return;
+
+        if (result is not null && result.Data is ApprovalAndCheckDescriptor approvalAndCheck)
+        {
+            Node.Activity.AddApprovalAndCheck(approvalAndCheck);
+        }
+    }
+
+    private async Task HandleEditApprovalAndCheck(string id)
+    {
+        var definition = ActivityDefinition.ApprovalAndChecks.First(ac => ac.Id == id);
+
+        var parameters = new DialogParameters<ApprovalAndCheckDialog>
+        {
+            { x => x.Definition, definition }
+        };
+
+        var options = new DialogOptions
+        {
+            MaxWidth = MaxWidth.Small,
+            FullWidth = true,
+            CloseOnEscapeKey = true,
+            CloseButton = true
+        };
+
+        var dialog = await DialogService.ShowAsync<ApprovalAndCheckDialog>("Editar aprovação ou checagem", parameters, options);
+        var result = await dialog.Result;
+
+        await ParameterChanged.InvokeAsync();
+    }
+
+    private async Task HandleRemoveApprovalCheck(string id)
+    {
+        var result = await DialogService.ShowDeleteConfirmationDialog("Deseja realmente remover a aprovação ou checagem selecionada?");
+
+        if (result == null || result.Canceled)
+            return;
+
+        Node.Activity.RemoveApprovalAndCheck(id);
+    }
+}

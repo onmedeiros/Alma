@@ -1,0 +1,97 @@
+@page "/Workflows/executions/details/{id}"
+@using Alma.Modules.Core.Components.Shared.Loadings
+@using Alma.Workflows.Core.InstanceExecutions.Entities
+@using Alma.Workflows.Core.InstanceExecutions.Services
+@using Microsoft.Extensions.DependencyInjection
+
+@inject NavigationManager NavigationManager
+@inject IServiceScopeFactory ScopeFactory
+@inject IDialogService DialogService
+@inject ISnackbar Snackbar
+
+<Page Title="Detalhes da execu��o">
+    <PageContent>
+        @if (_isLoading)
+        {
+            <LoadingCircle />
+        }
+        else if (_execution is not null)
+        {
+            <MudTabs Position="Position.Left" ApplyEffectsToContainer="true" PanelClass="pa-4">
+                <MudTabPanel Class="flex-1" Text="Painel de execu��o" Icon="@Icons.Material.Outlined.PlayArrow">
+                    <ExecutionPanel Execution="_execution"/>
+                </MudTabPanel>
+            </MudTabs>
+        }
+        else
+        {
+            <MudAlert Severity="Severity.Error">N�o foi poss�vel carregar a execu��o.</MudAlert>
+        }
+    </PageContent>
+</Page>
+
+@code {
+    #region Parameters
+
+    [CascadingParameter]
+    public required Organization Organization { get; set; }
+
+    [Parameter]
+    public string? Id { get; set; }
+
+    #endregion
+
+    #region Private fields
+
+    bool _isSaving = false;
+    bool _isLoading = true;
+
+    InstanceExecution? _execution = default!;
+
+    #endregion
+
+    protected override async Task OnAfterRenderAsync(bool firstRender)
+    {
+        if (firstRender)
+        {
+            await Load();
+        }
+    }
+
+    private async Task Load()
+    {
+        if (string.IsNullOrEmpty(Id))
+        {
+            await DialogService.ShowErrorDialog("N�o foi poss�vel carregar os dados da execu��o", "Par�metro ID n�o informado.");
+            return;
+        }
+
+        _isLoading = true;
+        StateHasChanged();
+
+        using var scope = ScopeFactory.CreateScope();
+        var executionManager = scope.ServiceProvider.GetRequiredService<IInstanceExecutionManager>();
+
+        try
+        {
+            _execution = await executionManager.FindById(Id, Organization.Id);
+
+            if (_execution is null)
+            {
+                await DialogService.ShowErrorDialog("N�o foi poss�vel carregar os dados da execu��o", "Execu��o n�o encontrada.");
+                return;
+            }
+
+            StateHasChanged();
+        }
+        catch (Exception ex)
+        {
+            await DialogService.ShowErrorDialog("N�o foi poss�vel carregar os dados da execu��o", ex.Message);
+        }
+        finally
+        {
+            _isLoading = false;
+            StateHasChanged();
+        }
+    }
+}

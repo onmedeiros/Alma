@@ -31,7 +31,7 @@
         <DataGridTrueOrFalse Title="2FA" Parameter="x => x.Item.TwoFactorEnabled" HeaderStyle="width: 60px;" />
         <TemplateColumn HeaderStyle="width: 60px;">
             <CellTemplate>
-                <MudIconButton Href="@($"/flows/activities/custom/{context.Item.AssociationId}")" Icon="@Icons.Material.Outlined.Edit" Size="MudBlazor.Size.Small" />
+                <MudIconButton Href="@($"/Workflows/activities/custom/{context.Item.AssociationId}")" Icon="@Icons.Material.Outlined.Edit" Size="MudBlazor.Size.Small" />
             </CellTemplate>
         </TemplateColumn>
 

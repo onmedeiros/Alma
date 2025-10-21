@@ -1,0 +1,143 @@
+﻿@using System.Text.Json
+@using Alma.Workflows.Core.Abstractions
+@using Alma.Workflows.Core.Description.Descriptors
+@using Alma.Workflows.Definitions
+@using Alma.Workflows.Design.Components.Shared
+@using MudBlazor;
+
+@inject IDialogService DialogService;
+
+@if(_value is not null)
+{
+    <MudStack Spacing="0" Class="border border-solid mud-border-lines-default rounded">
+        <MudText Typo="Typo.body2" Class="ms-4 mt-2"><b>@Parameter.DisplayName</b></MudText>
+
+        <MudTable @ref="_table" Items="_value" Elevation="0" Class="mud-width-full" Dense>
+
+            <HeaderContent>
+                <MudTh Style="width: 150px">Nome</MudTh>
+                <MudTh Style="width: 150px">Valor</MudTh>
+                <MudTh></MudTh>
+            </HeaderContent>
+
+            <RowTemplate>
+                <MudTd>@context.Key</MudTd>
+                <MudTd Class="overflow-auto" Style="max-width: 200px;">@context.Value</MudTd>
+                <MudTd>
+                    <div class="d-flex flex-row justify-end">
+                        <MudTooltip Text="Editar" Arrow>
+                            <MudIconButton OnClick="@(() => HandleEditValue(context.Key))" Icon="@Icons.Material.Outlined.Edit" Size="MudBlazor.Size.Small" />
+                        </MudTooltip>
+
+                        <MudTooltip Text="Remover" Color="Color.Error" Arrow>
+                            <MudIconButton OnClick="@(() => HandleRemoveValue(context.Key))" Icon="@Icons.Material.Outlined.Delete" Size="MudBlazor.Size.Small" Color="Color.Error" />
+                        </MudTooltip>
+                    </div>
+                </MudTd>
+            </RowTemplate>
+
+            <NoRecordsContent>
+                <MudText Typo="Typo.body2" Class="mud-text-secondary mt-4">Lista vazia.</MudText>
+            </NoRecordsContent>
+        </MudTable>
+
+        <MudButton OnClick="HandleAddValue" Class="mt-4 mb-2 mx-2" Variant="Variant.Filled" StartIcon="@Icons.Material.Outlined.Add" Size="Size.Small" DropShadow="false">Adicionar item</MudButton>
+
+    </MudStack>
+}
+
+
+@code {
+    [Parameter]
+    public IParameterizableDefinition Parameterizable { get; set; } = null!;
+
+    [Parameter]
+    public ParameterDescriptor Parameter { get; set; } = null!;
+
+    [Parameter]
+    public EventCallback<ParameterDefinition> ParameterChanged { get; set; }
+
+    [Parameter]
+    public bool Disabled { get; set; }
+
+    private MudTable<KeyValuePair<string, string>> _table = default!;
+    private Dictionary<string, string> _value = default!;
+
+    protected override void OnInitialized()
+    {
+        var stringValue = Parameterizable.GetParameterValue(Parameter.Name);
+
+        if (!string.IsNullOrEmpty(stringValue))
+        {
+            _value = JsonSerializer.Deserialize<Dictionary<string, string>>(stringValue) 
+                ?? new Dictionary<string, string>();
+        }
+        else
+        {
+            _value = new Dictionary<string, string>();
+        }
+    }
+
+    private async Task HandleAddValue()
+    {
+        var options = new DialogOptions
+        {
+            MaxWidth = MaxWidth.Small,
+            FullWidth = true,
+        };
+
+        var dialog = await DialogService.ShowAsync<KeyValueEditorDialog>("Adicionar item", options);
+        var result = await dialog.Result;
+
+        if (result is not null && result.Data is KeyValuePair<string, string> keyValue)
+        {
+            _value[keyValue.Key] = keyValue.Value;
+            await UpdateValue();
+        }
+    }
+
+    private async Task HandleEditValue(string key)
+    {
+        var parameters = new DialogParameters<KeyValueEditorDialog>
+        {
+            { x => x.Key, key },
+            { x => x.Value, _value[key] }
+        };
+
+        var options = new DialogOptions
+        {
+            MaxWidth = MaxWidth.Small,
+            FullWidth = true,
+        };
+
+        var dialog = await DialogService.ShowAsync<KeyValueEditorDialog>("Editar item", parameters, options);
+        var result = await dialog.Result;
+
+        if (result is not null && result.Data is KeyValuePair<string, string> keyValue)
+        {
+            _value.Remove(key);
+            _value[keyValue.Key] = keyValue.Value;
+
+            await UpdateValue();
+        }
+    }
+
+    private Task HandleRemoveValue(string key)
+    {
+        _value.Remove(key);
+        return UpdateValue();
+    }
+
+    private Task UpdateValue()
+    {
+        var stringValue = JsonSerializer.Serialize(_value);
+
+        Parameterizable.SetParameterValue(Parameter, stringValue);
+
+        var definition = Parameterizable.GetParameterDefinition(Parameter.Name);
+
+        StateHasChanged();
+
+        return ParameterChanged.InvokeAsync(definition);
+    }
+}

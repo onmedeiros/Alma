@@ -1,0 +1,50 @@
+﻿@using Alma.Workflows.Core.Description.Descriptors
+@using MudBlazor
+
+@inject IApprovalAndCheckRegistry Registry
+
+<MudDialog>
+    <DialogContent>
+        <MudStack>
+            <MudRadioGroup @bind-Value="_selectedApprovalAndCheck">
+                @foreach (var descriptor in Registry.List(_term))
+                {
+                    <MudRadio Value="@descriptor">
+                        <span>
+                            <b>@descriptor.DisplayName</b>
+                            <br />
+                            <span class="mud-text-secondary">@descriptor.Description</span>
+                        </span>
+                    </MudRadio>
+                }
+            </MudRadioGroup>
+        </MudStack>
+    </DialogContent>
+
+    <DialogActions>
+        <MudButton OnClick="@(() => Dialog.Cancel())">Cancelar</MudButton>
+        <MudButton OnClick="HandleSelectClick" Variant="Variant.Filled" Color="Color.Primary" Disabled="@(_selectedApprovalAndCheck is null)">Selecionar</MudButton>
+    </DialogActions>
+</MudDialog>
+
+@code {
+
+    #region Parameters
+
+    [CascadingParameter]
+    public IMudDialogInstance Dialog { get; set; } = null!;
+
+    #endregion
+
+    #region Private fields
+
+    ApprovalAndCheckDescriptor? _selectedApprovalAndCheck;
+    string _term = string.Empty;
+
+    #endregion
+
+    private void HandleSelectClick()
+    {
+        Dialog.Close(DialogResult.Ok(_selectedApprovalAndCheck));
+    }
+}

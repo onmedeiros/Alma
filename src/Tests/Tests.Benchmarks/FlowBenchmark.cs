@@ -1,12 +1,12 @@
-﻿using Alma.Flows;
-using Alma.Flows.Activities;
-using Alma.Flows.Activities.Data;
-using Alma.Flows.Builders;
-using Alma.Flows.Core.Activities.Steps;
-using Alma.Flows.Core.Contexts;
-using Alma.Flows.Models.Activities;
-using Alma.Flows.Parsers;
-using Alma.Flows.Runners;
+﻿using Alma.Workflows;
+using Alma.Workflows.Activities;
+using Alma.Workflows.Activities.Data;
+using Alma.Workflows.Builders;
+using Alma.Workflows.Core.Activities.Steps;
+using Alma.Workflows.Core.Contexts;
+using Alma.Workflows.Models.Activities;
+using Alma.Workflows.Parsers;
+using Alma.Workflows.Runners;
 using BenchmarkDotNet.Attributes;
 using Microsoft.Extensions.DependencyInjection;
 
@@ -26,7 +26,7 @@ namespace Tests.Benchmarks
             var services = new ServiceCollection();
 
             services.AddLogging();
-            services.AddAlmaFlows(options =>
+            services.AddAlmaWorkflows(options =>
             {
                 // Configure flow options if needed
             });

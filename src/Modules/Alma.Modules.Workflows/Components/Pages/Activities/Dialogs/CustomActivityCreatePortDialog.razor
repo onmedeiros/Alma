@@ -1,0 +1,160 @@
+﻿@using Alma.Core.Utils
+@using Alma.Workflows.Core.Activities.Base
+@using Alma.Workflows.Core.Common.Enums
+@using Alma.Workflows.Core.CustomActivities.Entities
+@using Alma.Workflows.Core.CustomActivities.Models
+@using Alma.Workflows.Core.CustomActivities.Services
+@using Microsoft.Extensions.DependencyInjection
+
+@inject IDialogService DialogService;
+@inject ISnackbar Snackbar;
+@inject IServiceScopeFactory ScopeFactory;
+
+<MudDialog>
+    <DialogContent>
+        @if(_editModel is not null)
+        {
+            <EditForm Model="_editModel" OnSubmit="Save">
+                <FluentValidationValidator @ref="_validator" />
+
+                <MudStack>
+
+                    <MudText Class="mb-2">Informações da porta</MudText>
+
+                    <MudTextField @bind-Value="_editModel.Name" For="@(() => _editModel.Name)" Label="Nome" Variant="Variant.Outlined" Margin="Margin.Dense" />
+
+                    <MudTextField @bind-Value="_editModel.DisplayName" For="@(() => _editModel.DisplayName)" Label="Nome de exibição" Variant="Variant.Outlined" Margin="Margin.Dense" />
+
+                    <MudSelect @bind-Value="_editModel.Type" For="@(() => _editModel.Type)" Label="Tipo" Variant="Variant.Outlined" Margin="Margin.Dense">
+                        @foreach (var enumItem in EnumUtils.GetItems<PortType>())
+                        {
+                            <MudSelectItem Value="@enumItem.Value">@enumItem.Name</MudSelectItem>
+                        }
+                    </MudSelect>
+
+                    <SubmitButton IsSaving="_isSaving" Class="mb-2" />
+                </MudStack>
+            </EditForm>
+        }
+    </DialogContent>
+</MudDialog>
+
+@code {
+    #region Parameters
+
+    [CascadingParameter]
+    public IMudDialogInstance Dialog { get; set; } = null!;
+
+    [Parameter]
+    public required CustomActivityTemplate CustomActivity { get; set; }
+
+    [Parameter]
+    public string? Id { get; set; }
+
+    #endregion
+
+    #region Private fields
+
+    private bool _isSaving = false;
+    private bool _isLoading = false;
+
+    private CustomActivityPortEditModel? _editModel = null;
+    private FluentValidationValidator _validator = null!;
+
+    #endregion
+
+    protected override async Task OnParametersSetAsync()
+    {
+        await Dialog.SetOptionsAsync(new DialogOptions
+        {
+            MaxWidth = MaxWidth.Small,
+            FullWidth = true,
+            CloseButton = true,
+            CloseOnEscapeKey = true,
+        });
+    }
+
+    protected override async Task OnAfterRenderAsync(bool firstRender)
+    {
+        if (firstRender)
+        {
+            if (string.IsNullOrEmpty(Id))
+            {
+                _editModel = new CustomActivityPortEditModel
+                {
+                    CustomActivityId = CustomActivity.Id,
+                    CustomActivityDiscriminator = CustomActivity.Discriminator
+                };
+
+                StateHasChanged();
+            }
+            else
+            {
+                var portToBeEdited = CustomActivity.Ports.FirstOrDefault(x => x.Id == Id);
+
+                if (portToBeEdited is null)
+                {
+                    Snackbar.Add("Parâmetro não encontrado.", Severity.Error);
+                    Dialog.Cancel();
+                }
+                else
+                {
+                    _editModel = new CustomActivityPortEditModel
+                    {
+                        Id = portToBeEdited.Id,
+                        CustomActivityId = CustomActivity.Id,
+                        CustomActivityDiscriminator = CustomActivity.Discriminator,
+                        Name = portToBeEdited.Name,
+                        DisplayName = portToBeEdited.DisplayName,
+                        Type = portToBeEdited.Type
+                    };
+
+                    StateHasChanged();
+                }
+            }
+        }
+    }
+
+    private async Task Save()
+    {
+        _isSaving = true;
+        StateHasChanged();
+
+        if (_editModel is null || !await _validator!.ValidateAsync())
+        {
+            await DialogService.ShowErrorDialog("Erro de validação", "Alguns campos não estão preenchidos corretamente.");
+
+            _isSaving = false;
+            StateHasChanged();
+
+            return;
+        }
+
+        using var scope = ScopeFactory.CreateScope();
+        var manager = scope.ServiceProvider.GetRequiredService<ICustomActivityManager>();
+
+        try
+        {
+            if (string.IsNullOrEmpty(_editModel.Id))
+            {
+                await manager.AddPort(_editModel);
+            }
+            else
+            {
+                await manager.UpdatePort(_editModel);
+            }
+
+            Snackbar.AddSuccess("Alterações salvas com sucesso.");
+            Dialog.Close();
+        }
+        catch (Exception ex)
+        {
+            await DialogService.ShowErrorDialog("Erro ao salvar alterações", ex.Message);
+        }
+        finally
+        {
+            _isSaving = false;
+            StateHasChanged();
+        }
+    }
+}

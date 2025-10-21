@@ -1,5 +1,5 @@
-﻿@using Alma.Flows.Monitoring.MonitoringObjectSchemas.Entities
-@using Alma.Flows.Monitoring.MonitoringObjectSchemas.Models
+﻿@using Alma.Workflows.Monitoring.MonitoringObjectSchemas.Entities
+@using Alma.Workflows.Monitoring.MonitoringObjectSchemas.Models
 @using EnumsNET
 
 @inject IDialogService DialogService;
@@ -17,10 +17,10 @@
 					
 					<MudTextField @bind-Value="_model.Name" For="@(() => _model.Name)" Label="Nome" Variant="Variant.Outlined" Margin="Margin.Dense" />
 					
-						<MudSelect T="Flows.Monitoring.MonitoringObjectSchemas.Entities.FieldType" Label="Tipo" @bind-Value="_model.Type" For="@(() => _model.Type)" Variant="Variant.Outlined" Margin="Margin.Dense">
-						@foreach (var type in Enum.GetValues<Flows.Monitoring.MonitoringObjectSchemas.Entities.FieldType>())
+						<MudSelect T="Workflows.Monitoring.MonitoringObjectSchemas.Entities.FieldType" Label="Tipo" @bind-Value="_model.Type" For="@(() => _model.Type)" Variant="Variant.Outlined" Margin="Margin.Dense">
+						@foreach (var type in Enum.GetValues<Workflows.Monitoring.MonitoringObjectSchemas.Entities.FieldType>())
 						{
-							<MudSelectItem T="Flows.Monitoring.MonitoringObjectSchemas.Entities.FieldType" Value="type">@type.AsString(EnumFormat.Description)</MudSelectItem>
+							<MudSelectItem T="Workflows.Monitoring.MonitoringObjectSchemas.Entities.FieldType" Value="type">@type.AsString(EnumFormat.Description)</MudSelectItem>
 						}
 					</MudSelect>
 
@@ -79,7 +79,7 @@
 				_model = new FieldEditModel
 				{
 					Name = string.Empty,
-					Type = Flows.Monitoring.MonitoringObjectSchemas.Entities.FieldType.String,
+					Type = Workflows.Monitoring.MonitoringObjectSchemas.Entities.FieldType.String,
 					Order = 0,
 					IsPrimaryKey = false,
 					IsTimestamp = false,

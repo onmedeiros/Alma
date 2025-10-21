@@ -16,7 +16,7 @@
   </ItemGroup>
 
   <ItemGroup>
-    <ProjectReference Include="..\..\Libs\Alma.Flows.Alerts\Alma.Flows.Alerts.csproj" />
+    <ProjectReference Include="..\..\Libs\Alma.Workflows.Alerts\Alma.Workflows.Alerts.csproj" />
     <ProjectReference Include="..\Alma.Modules.Core\Alma.Modules.Core.csproj" />
   </ItemGroup>
 </Project>

@@ -1,7 +1,7 @@
 ﻿using Alma.Core.Modules;
-using Alma.Flows.Design.Registries;
-using Alma.Flows.Monitoring;
-using Alma.Flows.Monitoring.Activities;
+using Alma.Workflows.Design.Registries;
+using Alma.Workflows.Monitoring;
+using Alma.Workflows.Monitoring.Activities;
 using Alma.Modules.Monitoring.Components.ParameterEditors;
 using Microsoft.Extensions.DependencyInjection;
 using MudBlazor;
@@ -36,7 +36,7 @@ namespace Alma.Modules.Monitoring
         public override void Configure(IServiceCollection services)
         {
             // Add Services
-            services.AddAlmaFlowsMonitoring();
+            services.AddAlmaWorkflowsMonitoring();
 
             services.ConfigureParameterEditors(options =>
             {

@@ -1,0 +1,25 @@
+﻿@using Alma.Workflows.Core.InstanceExecutions.Enums
+@using Alma.Workflows.Enums
+@using EnumsNET
+
+<MudChip T="string" Variant="Variant.Filled" Color="GetColor()" Size="Size.Small">
+    @Status.AsString(EnumFormat.Description)
+</MudChip>
+
+@code {
+    [Parameter]
+    public ActivityExecutionStatus Status { get; set; }
+
+    private Color GetColor()
+    {
+        return Status switch
+        {
+            ActivityExecutionStatus.Pending => MudBlazor.Color.Default,
+            ActivityExecutionStatus.Waiting => MudBlazor.Color.Warning,
+            ActivityExecutionStatus.Ready => MudBlazor.Color.Success,
+            ActivityExecutionStatus.Completed => MudBlazor.Color.Primary,
+            ActivityExecutionStatus.Failed => MudBlazor.Color.Error,
+            _ => MudBlazor.Color.Default
+        };
+    }
+}

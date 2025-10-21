@@ -1,0 +1,197 @@
+﻿@using System.Diagnostics.CodeAnalysis
+@using System.Text.Json
+@using Alma.Workflows.Core.ApprovalsAndChecks.Enums
+@using Alma.Workflows.States
+@using EnumsNET
+@using MudBlazor
+
+@inject ISnackbar Snackbar
+@inject IApprovalAndCheckRegistry ApprovalAndCheckRegistry
+
+<MudStack Spacing="0" Style="max-height: 100%">
+    <MudText>Painel de execução</MudText>
+
+    <MudDivider Class="my-4" />
+
+    @if (Context.ExecutionContext is null)
+    {
+        <MudText Typo="Typo.body2" Class="mud-text-secondary">O fluxo de trabalho ainda não foi executado.</MudText>
+    }
+    else
+    {
+        <MudTabs 
+            Elevation="0" 
+            Class="overflow-hidden flex-grow-1" 
+            Style="max-height: 100%;" 
+            MinimumTabWidth="20px;"
+            PanelClass="flex-grow-1 overflow-auto">
+
+            <MudTabPanel Text="Variáveis">
+                @if (Context.ExecutionContext.State.Variables.Count == 0)
+                {
+                    <MudText Typo="Typo.body2" Class="mud-text-secondary mt-4">Nenhuma variável declarada neste fluxo de trabalho.</MudText>
+                }
+                else
+                {
+                    <MudTable Items="Context.ExecutionContext.State.Variables" Hover="true" Dense Elevation="0" Class="mt-4">
+                        <HeaderContent>
+                            <MudTh>Nome</MudTh>
+                            <MudTh>Valor</MudTh>
+                        </HeaderContent>
+                        <RowTemplate>
+                            <MudTd>@context.Key</MudTd>
+                            @if (IsPrimitiveType(context.Value.Value))
+                            {
+                                <MudTd>@context.Value?.ValueString</MudTd>
+                            }
+                            else
+                            {
+                                @if (!_expandedStates.ContainsKey(context.Key))
+                                {
+                                    _expandedStates.Add(context.Key, false);
+                                }
+
+                                <MudTd>
+                                    <MudButton OnClick="@(() => HandleExpandObjectView(context.Key))" Size="Size.Small" Variant="Variant.Outlined">@(_expandedStates[context.Key] ? "- Objeto" : "+ Objeto")</MudButton>
+
+                                    <MudCollapse Expanded="_expandedStates[context.Key]">
+                                        <MudDivider Class="my-2" />
+                                        <pre style="max-height: 400px; overflow: auto;">@GetJson(context.Value.Value)</pre>
+                                    </MudCollapse>
+
+                                </MudTd>
+                            }
+                        </RowTemplate>
+                    </MudTable>
+                }
+            </MudTabPanel>
+
+            <MudTabPanel Text="Aprovações e Checagens">
+                @if (Context.ExecutionContext.State.ApprovalAndChecks.Count == 0)
+                {
+                    <MudText Typo="Typo.body2" Class="mud-text-secondary mt-4">Nenhuma aprovação ou checagem para a execução atual.</MudText>
+                }
+                else
+                {
+                    <MudTable Items="Context.ExecutionContext.State.ApprovalAndChecks" Hover="true" Dense Elevation="0" Class="mt-4">
+                        <HeaderContent>
+                            <MudTh Style="width: 185px; ">Nome</MudTh>
+                            <MudTh Style="width: 90px">Status</MudTh>
+                            <MudTh Style="width: 60px;"></MudTh>
+                        </HeaderContent>
+                        <RowTemplate>
+                            <MudTd>@GetApprovalAndCheckName(context)</MudTd>
+                            <MudTd>@context.Status.AsString(EnumFormat.Description)</MudTd>
+                            <MudTd>
+                                @if (context.Status != ApprovalAndCheckStatus.Approved && context.Status != ApprovalAndCheckStatus.Rejected)
+                                {
+                                    <div class="d-flex flex-row justify-end">
+                                        <MudTooltip Text="Aprovar" Color="Color.Success" Arrow>
+                                            <MudIconButton OnClick="@(() => HandleApprove(context))" Icon="@Icons.Material.Outlined.CheckCircle" Size="MudBlazor.Size.Small" Color="Color.Success" />
+                                        </MudTooltip>
+
+                                        <MudTooltip Text="Rejeitar" Color="Color.Error" Arrow>
+                                            <MudIconButton OnClick="@(() => HandleReject(context))" Icon="@Icons.Material.Outlined.Cancel" Size="MudBlazor.Size.Small" Color="Color.Error" />
+                                        </MudTooltip>
+                                    </div>
+                                }
+                            </MudTd>
+                        </RowTemplate>
+                    </MudTable>
+                }
+            </MudTabPanel>
+
+            <MudTabPanel Text="Logs">
+                @if (Context.ExecutionContext.State.Logs.Count == 0)
+                {
+                    <MudText Typo="Typo.body2" Class="mud-text-secondary mt-4">Nenhuma log para a execução atual.</MudText>
+                }
+                else
+                {
+                    <MudTable Items="Context.ExecutionContext.State.Logs" Hover="true" Dense Elevation="0" Class="mt-4">
+                        <HeaderContent>
+                            <MudTh Style="width: 185px; ">Timestamp</MudTh>
+                            <MudTh Style="width: 100px;">Severidade</MudTh>
+                            <MudTh>Mensagem</MudTh>
+                        </HeaderContent>
+                        <RowTemplate>
+                            <MudTd>@context.DateTime.ToLocalTime()</MudTd>
+                            <MudTd>@context.Severity.AsString(EnumFormat.Description)</MudTd>
+                            <MudTd Style="overflow: auto;">@context.Message</MudTd>
+                        </RowTemplate>
+                    </MudTable>
+                }
+            </MudTabPanel>
+        </MudTabs>
+    }
+</MudStack>
+@code {
+    [CascadingParameter]
+    public FlowDesignContext Context { get; set; } = null!;
+
+    [Parameter]
+    public EventCallback OnResume{ get; set; }
+
+    private Dictionary<string, bool> _expandedStates = new();
+
+    private static JsonSerializerOptions _jsonOptions => new JsonSerializerOptions
+    {
+        WriteIndented = true,
+
+    };
+
+    private void HandleExpandObjectView(string key)
+    {
+        if (_expandedStates.ContainsKey(key))
+        {
+            _expandedStates[key] = !_expandedStates[key];
+        }
+    }
+
+    private async Task HandleApprove(ApprovalAndCheckState state)
+    {
+        state.Status = ApprovalAndCheckStatus.Approved;
+        await OnResume.InvokeAsync();
+    }
+
+    private async Task HandleReject(ApprovalAndCheckState state)
+    {
+        state.Status = ApprovalAndCheckStatus.Rejected;
+        await OnResume.InvokeAsync();
+    }
+
+    private bool IsPrimitiveType(object? value)
+    {
+        if (value is null)
+        {
+            return true;
+        }
+
+        return value.GetType().IsPrimitive || value.GetType() == typeof(string) || value.GetType() == typeof(decimal);
+    }
+
+    private string GetJson(object? value)
+    {
+        return JsonSerializer.Serialize(value, _jsonOptions);
+    }
+
+    private string GetApprovalAndCheckName(ApprovalAndCheckState state)
+    {
+        var activity = Context.ExecutionContext?.Flow.Activities.FirstOrDefault(x => x.Id == state.ParentActivityId);
+
+        if (activity is null)
+        {
+            var approvalAndCheckDescriptor = ApprovalAndCheckRegistry.GetApprovalAndCheckDescriptor(state.FullName);
+            return approvalAndCheckDescriptor?.Name ?? state.FullName;
+        }
+
+        var approvalAndCheckInstance = activity.ApprovalAndChecks.FirstOrDefault(x => x.Id == state.Id);
+        
+        if (approvalAndCheckInstance is null)
+        {
+            return state.FullName;
+        }
+
+        return approvalAndCheckInstance.GetCustomName();
+    }
+}

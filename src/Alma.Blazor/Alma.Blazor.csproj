@@ -33,10 +33,10 @@
   <ItemGroup>
     <ProjectReference Include="..\Libs\Alma.Core.Mongo\Alma.Core.Mongo.csproj" />
     <ProjectReference Include="..\Libs\Alma.Core\Alma.Core.csproj" />
-    <ProjectReference Include="..\Libs\Alma.Flows.Monitoring.Mongo\Alma.Flows.Monitoring.Mongo.csproj" />
+    <ProjectReference Include="..\Libs\Alma.Workflows.Monitoring.Mongo\Alma.Workflows.Monitoring.Mongo.csproj" />
     <ProjectReference Include="..\Libs\Alma.Organizations\Alma.Organizations.csproj" />
-    <ProjectReference Include="..\Libs\Alma.Flows.Apis.AspNetCore\Alma.Flows.Apis.AspNetCore.csproj" />
-    <ProjectReference Include="..\Libs\Alma.Flows\Alma.Flows.csproj" />
+    <ProjectReference Include="..\Libs\Alma.Workflows.Apis.AspNetCore\Alma.Workflows.Apis.AspNetCore.csproj" />
+    <ProjectReference Include="..\Libs\Alma.Workflows\Alma.Workflows.csproj" />
     <ProjectReference Include="..\Libs\Alma.Integrations\Alma.Integrations.csproj" />
     <ProjectReference Include="..\Modules\Alma.Modules.Alerts\Alma.Modules.Alerts.csproj" />
     <ProjectReference Include="..\Modules\Alma.Modules.Core\Alma.Modules.Core.csproj" />
@@ -44,7 +44,7 @@
     <ProjectReference Include="..\Modules\Alma.Modules.Integrations\Alma.Modules.Integrations.csproj" />
     <ProjectReference Include="..\Modules\Alma.Modules.Monitoring\Alma.Modules.Monitoring.csproj" />
     <ProjectReference Include="..\Modules\Alma.Modules.Organization\Alma.Modules.Organizations.csproj" />
-    <ProjectReference Include="..\Modules\Alma.Modules.Flows\Alma.Modules.Flows.csproj" />
+    <ProjectReference Include="..\Modules\Alma.Modules.Workflows\Alma.Modules.Workflows.csproj" />
   </ItemGroup>
 
 

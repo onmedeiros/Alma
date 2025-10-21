@@ -1,0 +1,186 @@
+﻿@using BlazorMonaco
+@using BlazorMonaco.Editor
+@using BlazorMonaco.Languages
+@using Alma.Workflows.Core.CustomActivities.Entities
+@using Alma.Workflows.Core.CustomActivities.Models
+@using Alma.Workflows.Core.CustomActivities.Services
+@using Microsoft.Extensions.DependencyInjection
+@using Microsoft.JSInterop
+@using System.Text.Json
+
+@inject NavigationManager NavigationManager
+@inject IServiceScopeFactory ScopeFactory
+@inject IDialogService DialogService
+@inject ISnackbar Snackbar
+@inject IJSRuntime JSRuntime
+
+
+@if (_script is null || _isLoading)
+{
+    <MudStack Row="true" Justify="Justify.Center">
+        <MudProgressCircular Color="Color.Primary" Indeterminate="true" />
+    </MudStack>
+}
+else
+{
+    <MudStack Class="mud-width-full" Spacing="0">
+        <MudText Typo="Typo.body2"><b>Editor de código</b></MudText>
+        <MudText Typo="Typo.body2" Class="mb-3"><span class="mud-text-secondary">Esta funcionalidade ainda está em testes.</span></MudText>
+
+        <StandaloneCodeEditor @ref="_editor"
+            Id="editor" 
+            ConstructionOptions="EditorConstructionOptions"
+            CssClass="mud-height-full rounded overflow-hidden mud-elevation-7"
+            OnKeyUp="ScheduleAutoSave"/>
+    </MudStack>
+}
+
+@code {
+    #region Parameters
+
+    [Parameter]
+    public required string Id { get; set; }
+
+    [Parameter]
+    public required string OrganizationId { get; set; }
+
+    #endregion
+
+    #region Private fields
+
+    bool _isLoading = true;
+    bool _isSaving = false;
+    string _scriptContent = string.Empty;
+
+    // Save fields
+    Timer _saveTimer = null!;
+    private readonly object _saveTimerLock = new object();
+
+    StandaloneCodeEditor _editor = null!;
+    CustomActivityTemplate _entity = null!;
+    CustomActivityScript _script = null!;
+
+    #endregion
+
+    protected override async Task OnAfterRenderAsync(bool firstRender)
+    {
+        if (firstRender)
+        {
+            await Load();
+
+            // Configure Monaco Editor
+            await BlazorMonaco.Languages.Global.RegisterCompletionItemProvider(JSRuntime, "javascript", async (modelUri, position, context ) =>
+            {
+
+                // Provide suggestions here as per your requirements
+                return new CompletionList
+                {
+                    Suggestions = new[]
+                    {
+                        new CompletionItem
+                        {
+                            Label = JsonDocument.Parse("\"log\"").RootElement,
+                            Kind = CompletionItemKind.Function,
+                            InsertText = "log(${1:message});",
+                            Documentation = JsonDocument.Parse("\"Register a log message.\"").RootElement
+                        }
+                    }.ToList()
+                };
+            });
+        }
+    }
+
+    private async Task Load()
+    {
+        if (string.IsNullOrEmpty(Id))
+        {
+            await DialogService.ShowErrorDialog("Não foi possível carregar os dados da atividade personalizada", "Parâmetro ID não informado.");
+            return;
+        }
+
+        _isLoading = true;
+        StateHasChanged();
+
+        var scope = ScopeFactory.CreateScope();
+        var customActivityManager = scope.ServiceProvider.GetRequiredService<ICustomActivityManager>();
+
+        try
+        {
+            var customActivity = await customActivityManager.FindById(Id, OrganizationId);
+
+            if (customActivity is null)
+            {
+                await DialogService.ShowErrorDialog("Não foi possível carregar os dados da atividade personalizada", "Atividade personalizada não encontrada.");
+                return;
+            }
+
+            _entity = customActivity;
+            _script = await customActivityManager.FindScriptAsync(Id, OrganizationId);
+        }
+        catch (Exception ex)
+        {
+            await DialogService.ShowErrorDialog("Erro ao carregar dados da atividade personalizada.", ex.Message);
+        }
+        finally
+        {
+            _isLoading = false;
+            StateHasChanged();
+        }
+    }
+
+    private async Task Save(bool force = false)
+    {
+        _isSaving = true;
+        StateHasChanged();
+
+        var scope = ScopeFactory.CreateScope();
+        var customActivityManager = scope.ServiceProvider.GetRequiredService<ICustomActivityManager>();
+
+        try
+        {
+            var content = await _editor.GetValue();
+            await customActivityManager.UpdateScript(Id, OrganizationId, content);
+        }
+        catch (Exception ex)
+        {
+            await DialogService.ShowErrorDialog("Erro ao atualizar script.", ex.Message);
+        }
+        finally
+        {
+            _isSaving = false;
+            StateHasChanged();
+        }
+    }
+
+    private void ScheduleAutoSave()
+    {
+        _isSaving = true;
+        StateHasChanged();
+
+        lock (_saveTimerLock)
+        {
+            if (_saveTimer == null)
+            {
+                _saveTimer = new Timer(async _ =>
+                {
+                    await InvokeAsync(async () => await Save());
+                }, null, 500, Timeout.Infinite);
+            }
+            else
+            {
+                _saveTimer.Change(500, Timeout.Infinite);
+            }
+        }
+    }
+
+    private StandaloneEditorConstructionOptions EditorConstructionOptions(StandaloneCodeEditor editor)
+    {
+        return new StandaloneEditorConstructionOptions
+        {
+            AutomaticLayout = true,
+            Language = "javascript",
+            Value = _script.Content,
+            Theme = "vs-dark"
+        };
+    }
+}

@@ -12,21 +12,21 @@ Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "Solution Items", "Solution 
 EndProject
 Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "Tests", "Tests", "{02EA681E-C7D8-13C7-8484-4AC65E1B71E8}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Alma.Flows", "Libs\Alma.Flows\Alma.Flows.csproj", "{C10AE09B-077F-40AE-8315-D4624011C808}"
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Alma.Workflows", "Libs\Alma.Workflows\Alma.Workflows.csproj", "{C10AE09B-077F-40AE-8315-D4624011C808}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Alma.Flows.Tests", "Tests\Alma.Flows.Tests\Alma.Flows.Tests.csproj", "{60C290F1-ADC2-40C4-A855-171E318D4895}"
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Alma.Workflows.Tests", "Tests\Alma.Workflows.Tests\Alma.Workflows.Tests.csproj", "{60C290F1-ADC2-40C4-A855-171E318D4895}"
 EndProject
 Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "Modules", "Modules", "{D6A79253-4736-45BE-BC8A-38506A7E3539}"
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Alma.Modules.Core", "Modules\Alma.Modules.Core\Alma.Modules.Core.csproj", "{2A7DAC31-D13D-44FD-97D7-1A9B84DF7DE2}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Alma.Modules.Flows", "Modules\Alma.Modules.Flows\Alma.Modules.Flows.csproj", "{8048D2C8-DD45-4885-8230-9AD9D1AB7E5A}"
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Alma.Modules.Workflows", "Modules\Alma.Modules.Workflows\Alma.Modules.Workflows.csproj", "{8048D2C8-DD45-4885-8230-9AD9D1AB7E5A}"
 EndProject
 Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "Libs", "Libs", "{A9476561-6A58-4024-B4D7-21EE0B9A3E86}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Alma.Flows.Design", "Libs\Alma.Flows.Design\Alma.Flows.Design.csproj", "{4D6F9E16-A4F6-4BCE-A1CC-856E5568AF4C}"
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Alma.Workflows.Design", "Libs\Alma.Workflows.Design\Alma.Workflows.Design.csproj", "{4D6F9E16-A4F6-4BCE-A1CC-856E5568AF4C}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Alma.Flows.Hangfire", "Libs\Alma.Flows.Hangfire\Alma.Flows.Hangfire.csproj", "{91F0510C-4132-46A6-A25E-1B807D8D9637}"
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Alma.Workflows.Hangfire", "Libs\Alma.Workflows.Hangfire\Alma.Workflows.Hangfire.csproj", "{91F0510C-4132-46A6-A25E-1B807D8D9637}"
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Alma.Modules.Organizations", "Modules\Alma.Modules.Organization\Alma.Modules.Organizations.csproj", "{835AE0D3-7B27-4968-9F1B-D33493169401}"
 EndProject
@@ -36,17 +36,17 @@ Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Alma.Organizations", "Libs\
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Alma.Integrations", "Libs\Alma.Integrations\Alma.Integrations.csproj", "{C7839051-A9BB-44AC-812C-60E80D6FF972}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Alma.Flows.Apis.AspNetCore", "Libs\Alma.Flows.Apis.AspNetCore\Alma.Flows.Apis.AspNetCore.csproj", "{02703EAE-3737-1F34-C28B-6847D0852548}"
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Alma.Workflows.Apis.AspNetCore", "Libs\Alma.Workflows.Apis.AspNetCore\Alma.Workflows.Apis.AspNetCore.csproj", "{02703EAE-3737-1F34-C28B-6847D0852548}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Alma.Flows.Alerts", "Libs\Alma.Flows.Alerts\Alma.Flows.Alerts.csproj", "{FB6CE5C4-7104-4F1D-92F1-FC7BB7620009}"
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Alma.Workflows.Alerts", "Libs\Alma.Workflows.Alerts\Alma.Workflows.Alerts.csproj", "{FB6CE5C4-7104-4F1D-92F1-FC7BB7620009}"
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Alma.Modules.Alerts", "Modules\Alma.Modules.Alerts\Alma.Modules.Alerts.csproj", "{374F3905-103B-4BBF-A907-A7CA2A0D3B00}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Alma.Flows.Monitoring", "Libs\Alma.Flows.Monitoring\Alma.Flows.Monitoring.csproj", "{C8B6C7F4-DAE7-4F8F-99B7-33AEB3C4F363}"
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Alma.Workflows.Monitoring", "Libs\Alma.Workflows.Monitoring\Alma.Workflows.Monitoring.csproj", "{C8B6C7F4-DAE7-4F8F-99B7-33AEB3C4F363}"
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Alma.Modules.Monitoring", "Modules\Alma.Modules.Monitoring\Alma.Modules.Monitoring.csproj", "{AC388D72-8288-46EF-AF4D-6A8C45156765}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Alma.Flows.Monitoring.Mongo", "Libs\Alma.Flows.Monitoring.Mongo\Alma.Flows.Monitoring.Mongo.csproj", "{2823FA78-0467-47AD-B711-DEC6179D67AB}"
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Alma.Workflows.Monitoring.Mongo", "Libs\Alma.Workflows.Monitoring.Mongo\Alma.Workflows.Monitoring.Mongo.csproj", "{2823FA78-0467-47AD-B711-DEC6179D67AB}"
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Alma.Core.Mongo", "Libs\Alma.Core.Mongo\Alma.Core.Mongo.csproj", "{36B905F3-F47A-C20F-B895-397B1E5730E4}"
 EndProject

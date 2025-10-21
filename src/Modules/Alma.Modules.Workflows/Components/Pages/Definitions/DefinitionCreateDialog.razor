@@ -1,0 +1,94 @@
+﻿@using Alma.Modules.Workflows.Models.Definitions
+@using Alma.Workflows
+@using Microsoft.Extensions.DependencyInjection
+
+@inject IDialogService DialogService;
+@inject ISnackbar Snackbar;
+@inject IServiceScopeFactory ScopeFactory;
+
+<MudDialog>
+    <DialogContent>
+        @if(_model is not null)
+        {
+            <EditForm Model="_model" OnSubmit="Save">
+                <FluentValidationValidator @ref="_validator" />
+
+                <MudText Class="mb-2">Informações da definição:</MudText>
+                <MudTextField @bind-Value="_model.Name" For="@(() => _model.Name)" Label="Nome" Class="mb-5" Variant="Variant.Outlined" Margin="Margin.Dense" />
+
+                <SubmitButton IsSaving="_isSaving" Class="mb-2"/>
+            </EditForm>
+        }
+    </DialogContent>
+</MudDialog>
+
+@code {
+
+    #region Parameters
+
+    [CascadingParameter]
+    public IMudDialogInstance Dialog { get; set; } = null!;
+
+    [Parameter]
+    public Organization Organization { get; set; } = null!;
+
+    #endregion
+
+    #region Private fields
+
+    private bool _isSaving = false;
+    private CreateDefinitionModel _model = null!;
+    private FluentValidationValidator _validator = null!;
+
+    #endregion
+
+    protected override void OnAfterRender(bool firstRender)
+    {
+        if (firstRender)
+        {
+            _model = new CreateDefinitionModel
+            {
+                Name = string.Empty
+            };
+
+            StateHasChanged();
+        }
+    }
+
+    private async Task Save()
+    {
+        _isSaving = true;
+        StateHasChanged();
+
+        if (!await _validator!.ValidateAsync())
+        {
+            await DialogService.ShowErrorDialog("Erro de validação", "Alguns campos não estão preenchidos corretamente.");
+
+            _isSaving = false;
+            StateHasChanged();
+
+            return;
+        }
+
+        using var scope = ScopeFactory.CreateScope();
+        var service = scope.ServiceProvider.GetRequiredService<IFlowManager>();
+
+        try
+        {
+            var result = await service.CreateDefinition(_model.Name!, discriminator: Organization.Id);
+
+            Snackbar.AddSuccess("Definição criada com sucesso.");
+
+            Dialog.Close(DialogResult.Ok(result));
+        }
+        catch (Exception ex)
+        {
+            await DialogService.ShowErrorDialog("Erro ao criar definição", ex.Message);
+        }
+        finally
+        {
+            _isSaving = false;
+            StateHasChanged();
+        }
+    }
+}

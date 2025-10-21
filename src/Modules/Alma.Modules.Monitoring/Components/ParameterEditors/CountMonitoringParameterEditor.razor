@@ -1,10 +1,10 @@
 ﻿@using Alma.Core.Utils
-@using Alma.Flows.Design.Components.Parameters
-@using Alma.Flows.Monitoring.Activities
-@using Alma.Flows.Monitoring.Models
-@using Alma.Flows.Monitoring.MonitoringObjectSchemas.Entities
-@using Alma.Flows.Monitoring.MonitoringObjectSchemas.Models
-@using Alma.Flows.Monitoring.MonitoringObjectSchemas.Services
+@using Alma.Workflows.Design.Components.Parameters
+@using Alma.Workflows.Monitoring.Activities
+@using Alma.Workflows.Monitoring.Models
+@using Alma.Workflows.Monitoring.MonitoringObjectSchemas.Entities
+@using Alma.Workflows.Monitoring.MonitoringObjectSchemas.Models
+@using Alma.Workflows.Monitoring.MonitoringObjectSchemas.Services
 @using Microsoft.Extensions.DependencyInjection
 @using MudBlazor
 
@@ -57,10 +57,10 @@
 
 						<MudSelect Label="Operador"
 								   Value="filter.Operator.ToString()"
-								   ValueChanged="async (string e) => { filter.Operator = Enum.Parse<Flows.Monitoring.Models.FilterOperator>(e); await HandleFiltersValueChanged(); }"
+								   ValueChanged="async (string e) => { filter.Operator = Enum.Parse<Workflows.Monitoring.Models.FilterOperator>(e); await HandleFiltersValueChanged(); }"
 								   Variant="Variant.Outlined"
 								   Margin="Margin.Dense">
-							@foreach (var enumItem in EnumUtils.GetItems(typeof(Flows.Monitoring.Models.FilterOperator)))
+							@foreach (var enumItem in EnumUtils.GetItems(typeof(Workflows.Monitoring.Models.FilterOperator)))
 							{
 								<MudSelectItem Value="@enumItem.Value">@enumItem.Name</MudSelectItem>
 							}
@@ -182,7 +182,7 @@
 		{
 			Id = Guid.NewGuid().ToString(),
 			Field = string.Empty,
-			Operator = Flows.Monitoring.Models.FilterOperator.Equals,
+			Operator = Workflows.Monitoring.Models.FilterOperator.Equals,
 			Value = string.Empty
 		};
 

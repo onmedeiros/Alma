@@ -1,0 +1,328 @@
+﻿@using Alma.Workflows
+@using Alma.Workflows.Core.Description.Descriptors
+@using Alma.Workflows.Definitions
+@using Alma.Workflows.Design.Components.Nodes
+@using Alma.Workflows.Design.Components.Ports
+@using Alma.Workflows.Design.Components.Shared
+@using Alma.Workflows.Design.Enums
+@using Alma.Workflows.Design.Extensions
+@using Alma.Workflows.Extensions
+@using Alma.Workflows.Registries
+@using Microsoft.AspNetCore.Components.Routing
+@using Microsoft.AspNetCore.Components.Web
+@using Microsoft.Extensions.DependencyInjection
+@using Microsoft.Extensions.Logging
+@using MudBlazor
+@using global::Blazor.Diagrams
+@using global::Blazor.Diagrams.Components
+@using global::Blazor.Diagrams.Components.Widgets
+@using global::Blazor.Diagrams.Core.Geometry
+@using global::Blazor.Diagrams.Core.Models
+@using global::Blazor.Diagrams.Core.Models.Base
+@using global::Blazor.Diagrams.Core.PathGenerators
+@using global::Blazor.Diagrams.Core.Routers
+@using global::Blazor.Diagrams.Options
+
+@inject IServiceScopeFactory ScopeFactory
+@inject IDialogService DialogService
+@inject ISnackbar Snackbar
+@inject IActivityRegistry ActivityRegistry
+@inject ILogger<FlowDesign> Logger;
+@inject FlowDesignContext Context;
+
+<CascadingValue Value="Context">
+
+    <div class="d-flex flex-grow-1 gap-0" style="height: 100%;">
+
+        <FlowDesignActivities />
+
+        @if (!_isLoading)
+        {
+            <CascadingValue Value="Context.Diagram" IsFixed="true">
+                <CascadingValue Value="Definition">
+
+                    <div class="diagram-container flex-1 rounded overflow-hidden"
+                    style="height: 100%; min-height: 600px;"
+                    ondragover="event.preventDefault();"
+                    @ondragover:preventDefault
+                    @ondrop="HandleDragDrop">
+
+                        <FlowDesignTools 
+                        @bind-ExecutionMode="Context.ExecutionMode"
+                        ExecutionStatus="Context.DesignExecutionStatus"
+                        IsSaving="_isSaving"
+                        AutoSave="Context.AutoSaveEnabled"
+                        AutoSaveChanged="Context.HandleAutoSaveChanged"
+                        OnSaveClick="async () => await Save(true)"
+                        OnPublishClick="async () => await OnPublish.InvokeAsync(Definition)"
+                        OnPlayClick="HandlePlayClick"
+                        OnPlayNextClick="HandlePlayNextClick"
+                        OnStopClick="HandleStopClick"
+                        OnExecutionPanelClick="HandleExecutionPanelClick"/>
+
+                        <DiagramCanvas>
+                            <Widgets>
+                                <GridWidget Size="18" Mode="GridMode.Point" BackgroundColor="var(--mud-palette-background-gray)" />
+                            </Widgets>
+                        </DiagramCanvas>
+                    </div>
+
+                    @* <MudDrawer Open="_parameterEditorOpen" Width="350px" Class="ps-4" Elevation="0" Variant="@DrawerVariant.Persistent" Anchor="Anchor.End">
+
+                                @if (_parameterEditorSelectedNode is not null)
+                                {
+                                    <FlowDesignParameterEditor Node="_parameterEditorSelectedNode" />
+                                }
+
+                            </MudDrawer> *@
+                </CascadingValue>
+            </CascadingValue>
+        }
+        else
+        {
+            <MudStack Row="true" Justify="Justify.Center">
+                <MudProgressCircular Color="Color.Primary" Indeterminate="true" />
+            </MudStack>
+        }
+
+        <SlidePanel Open="_parameterEditorOpen" Class="px-4" Width="450px">
+            @if (_parameterEditorSelectedNode is not null)
+            {
+                @* <FlowDesignParameterEditor Node="_parameterEditorSelectedNode" /> *@
+                <FlowDesignParameterEditor Node="_parameterEditorSelectedNode" ActivityDefinition="_parameterEditorSelectedNode.Activity" ActivityDescriptor="_parameterEditorSelectedNode.ActivityDescriptor" ParameterChanged="ScheduleAutoSave"/>
+            }
+        </SlidePanel>
+
+        <SlidePanel @ref="_executionPanel" Class="ps-4" Width="550px">
+            <FlowDesignExecutionPanel OnResume="HandlePlayNextClick"/>
+        </SlidePanel>
+    </div>
+
+</CascadingValue>
+
+@code {
+
+    #region Parameters
+
+    [Parameter]
+    public FlowDesignOptions Options { get; set; } = new FlowDesignOptions();
+
+    [Parameter]
+    public FlowDefinition Definition { get; set; } = default!;
+
+    [Parameter]
+    public EventCallback<FlowDefinition> DefinitionChanged { get; set; }
+
+    [Parameter]
+    public EventCallback<FlowDefinition> OnSave { get; set; }
+
+    [Parameter]
+    public EventCallback<FlowDefinition> OnPublish { get; set; }
+
+    #endregion
+
+
+    #region Private
+
+    bool _isLoading = true;
+
+    // Save fields
+    bool _isSaving = false;
+    Timer _saveTimer = null!;
+    private readonly object _saveTimerLock = new object();
+
+    // Parameters fields
+
+    private IEnumerable<IGrouping<string, ActivityDescriptor>> _groupedActivities = null!;
+
+    private MudDrawer _parameterEditor = null!;
+    private ActivityNodeModel? _parameterEditorSelectedNode;
+    bool _parameterEditorOpen = false;
+    bool _executionPanelOpen = false;
+
+    SlidePanel _executionPanel = null!;
+
+    #endregion
+
+    protected override async Task OnInitializedAsync()
+    {
+        await Context.Initialize(Options, Definition);
+
+        Context.OnStateHasChanged += StateHasChanged;
+        Context.OnAutoSave += ScheduleAutoSave;
+        Context.OnActivitySelectionChanged += HandleActivitySelectionChanged;
+    }
+
+    protected override async Task OnAfterRenderAsync(bool firstRender)
+    {
+        if (firstRender)
+        {
+            _isLoading = true;
+            StateHasChanged();
+
+            await Task.Delay(200);
+
+            _isLoading = false;
+            StateHasChanged();
+        }
+    }
+
+    private void ScheduleAutoSave()
+    {
+        if (!Context.AutoSaveEnabled)
+        {
+            return;
+        }
+
+        _isSaving = true;
+        StateHasChanged();
+
+        lock (_saveTimerLock)
+        {
+            if (_saveTimer == null)
+            {
+                _saveTimer = new Timer(async _ =>
+                {
+                    await InvokeAsync(async () => await Save());
+                }, null, 500, Timeout.Infinite);
+            }
+            else
+            {
+                _saveTimer.Change(500, Timeout.Infinite);
+            }
+        }
+    }
+
+    private async Task Save(bool force = false)
+    {
+        if (Context.AutoSaveEnabled || force)
+        {
+            _isSaving = true;
+            await InvokeAsync(StateHasChanged);
+
+            await OnSave.InvokeAsync(Definition);
+
+            _isSaving = false;
+            await InvokeAsync(StateHasChanged);
+        }
+    }
+
+    #region Eventos
+
+    private void HandleDragDrop(DragEventArgs e)
+    {
+        Context.HandleDragDrop(e);
+    }
+
+    private async void HandleActivitySelectionChanged(ActivityNodeModel? node)
+    {
+        if (node is not null)
+        {
+            if (_parameterEditorSelectedNode is not null)
+            {
+                _parameterEditorSelectedNode = null;
+
+                await Task.Delay(200);
+                StateHasChanged();
+
+            }
+            _parameterEditorSelectedNode = node;
+            _parameterEditorOpen = true;
+        }
+        else
+        {
+            await Task.Delay(100);
+            _parameterEditorOpen = false;
+        }
+
+        StateHasChanged();
+    }
+
+    private async Task HandlePlayClick()
+    {
+        try
+        {
+            Snackbar.AddSuccess("Executando");
+
+            await Context.Execute();
+
+            if (Context.DesignExecutionStatus == FlowDesignContextExecutionStatus.Executing)
+            {
+                Snackbar.AddSuccess("Atividade executada");
+            }
+            else if (Context.DesignExecutionStatus == FlowDesignContextExecutionStatus.Waiting)
+            {
+                Snackbar.AddWarning("Execução pausada");
+            }
+            else if (Context.DesignExecutionStatus == FlowDesignContextExecutionStatus.Completed)
+            {
+                Snackbar.AddSuccess("Execução concluída");
+            }
+
+        }
+        catch (Exception ex)
+        {
+            Snackbar.Add(ex.Message, Severity.Error);
+        }
+    }
+
+    private async Task HandlePlayNextClick()
+    {
+        try
+        {
+            if (Context.DesignExecutionStatus != FlowDesignContextExecutionStatus.Executing)
+            {
+                Snackbar.AddSuccess("Executando próximo");
+            }
+            else
+            {
+                Snackbar.AddSuccess("Resumindo");
+            }
+
+            await Context.ExecuteNext();
+
+            if (Context.DesignExecutionStatus == FlowDesignContextExecutionStatus.Executing)
+            {
+                Snackbar.AddSuccess("Atividade executada");
+            }
+            else if (Context.DesignExecutionStatus == FlowDesignContextExecutionStatus.Waiting)
+            {
+                Snackbar.AddWarning("Execução pausada");
+            }
+            else if (Context.DesignExecutionStatus == FlowDesignContextExecutionStatus.Completed)
+            {
+                Snackbar.AddSuccess("Execução concluída");
+            }
+        }
+        catch (Exception ex)
+        {
+            Snackbar.AddError(ex.Message);
+        }
+    }
+
+    private Task HandleStopClick()
+    {
+        try
+        {
+            Context.Stop();
+            Snackbar.AddError("Execução interrompida");
+        }
+        catch (Exception ex)
+        {
+            Snackbar.AddError(ex.Message);
+        }
+
+        return Task.CompletedTask;
+    }
+
+    private void HandleExecutionPanelClick()
+    {
+        _executionPanel.TriggerOpen();
+    }
+
+    private void HandleParameterChanged(ParameterDefinition parameter)
+    {
+        ScheduleAutoSave();
+    }
+    #endregion
+}

@@ -1,0 +1,162 @@
+﻿@using CronExpressionDescriptor
+@using Alma.Modules.Core.Components.Shared.Data
+@using Alma.Modules.Core.Components.Shared.Loadings
+@using Alma.Workflows.Core.InstanceSchedules.Entities
+@using Alma.Workflows.Core.InstanceSchedules.Services
+@using Alma.Workflows.Core.Instances.Entities
+@using Microsoft.Extensions.DependencyInjection
+
+@inject IServiceScopeFactory ScopeFactory
+@inject IDialogService DialogService
+@inject ISnackbar Snackbar
+
+<MudDataGrid @ref="_dataGrid" T="InstanceSchedule" ServerData="Load" Elevation="0" Hover="true" Style="width: 100%;">
+
+    <ToolBarContent>
+        <MudText Typo="Typo.h6">Agendamentos</MudText>
+        <MudSpacer></MudSpacer>
+        <MudButton OnClick="CreateSchedule" Variant="Variant.Filled" StartIcon="@Icons.Material.Outlined.Add" Color="Color.Primary">Criar</MudButton>
+    </ToolBarContent>
+
+    <Columns>
+
+        <PropertyColumn Title="Nome" Property="x => x.Name"/>
+        <PropertyColumn Title="Criado em" Property="x => x.CreatedAt.ToLocalTime()" HeaderStyle="width: 200px;"/>
+        <PropertyColumn Title="Última atualização" Property="x => x.UpdatedAt.ToLocalTime()" HeaderStyle="width: 200px;" />
+
+        <TemplateColumn Title="Última execução" HeaderStyle="width: 200px;">
+            <CellTemplate>
+                @if (context.Item.LastRunAt is null)
+                {
+                    <span class="mud-text-secondary">Não executado</span>
+                }
+                else
+                {
+                    @context.Item.LastRunAt?.ToLocalTime()
+                }
+            </CellTemplate>
+        </TemplateColumn>
+
+        <DataGridTrueOrFalse Title="Ativo" Parameter="x => x.Item.IsActive" HeaderStyle="width: 60px;" />
+
+        <TemplateColumn Title="Expressão cronológica" HeaderStyle="width: 200px;">
+            <CellTemplate>
+                @if(context.Item.CronExpression is null)
+                {
+                    <span class="mud-text-secondary">-</span>
+                }
+                else
+                {
+                    <span class="mud-text-primary">@context.Item.CronExpression</span> <br />
+                    <span class="mud-text-secondary">
+                        @GetCronDescription(context.Item.CronExpression)
+                    </span>
+                }
+            </CellTemplate>
+        </TemplateColumn>
+
+        <TemplateColumn HeaderStyle="width: 60px;">
+            <CellTemplate>
+                <MudIconButton OnClick="@(() => EditSchedule(context.Item.Id))" Icon="@Icons.Material.Outlined.Edit" Size="MudBlazor.Size.Small" />
+            </CellTemplate>
+        </TemplateColumn>
+
+    </Columns>
+
+</MudDataGrid>
+
+@code {
+
+    #region Parameters
+
+    [CascadingParameter]
+    public required Organization Organization { get; set; }
+
+    [Parameter]
+    public FlowInstance Instance { get; set; } = default!;
+
+    #endregion
+
+    #region Private fields
+
+    private MudDataGrid<InstanceSchedule> _dataGrid = null!;
+
+    #endregion
+
+    private async Task<GridData<InstanceSchedule>> Load(GridState<InstanceSchedule> state)
+    {
+
+        var scope = ScopeFactory.CreateScope();
+        var service = scope.ServiceProvider.GetRequiredService<IInstanceScheduleManager>();
+
+        var schedules = await service.ListAllByInstanceId(Instance.Id, Instance.Discriminator);
+
+        return new GridData<InstanceSchedule>
+        {
+            TotalItems = schedules.Count,
+            Items = schedules
+        };
+    }
+
+    private async Task CreateSchedule()
+    {
+        var parameters = new DialogParameters<InstanceScheduleEditDialog>
+        {
+            { x => x.Organization, Organization },
+            {x => x.Instance, Instance},
+            {x => x.Id, null}
+        };
+
+        var options = new DialogOptions
+        {
+            MaxWidth = MaxWidth.Small,
+            FullWidth = true
+        };
+
+        var dialog = await DialogService.ShowAsync<InstanceScheduleEditDialog>("Criar novo agendamento", parameters, options);
+        var result = await dialog.Result;
+
+        if (result == null || result.Canceled)
+            return;
+
+        await _dataGrid.ReloadServerData();
+    }
+
+    private async Task EditSchedule(string id)
+    {
+        var parameters = new DialogParameters<InstanceScheduleEditDialog>
+        {
+            { x => x.Organization, Organization },
+            {x => x.Instance, Instance},
+            {x => x.Id, id}
+        };
+
+        var options = new DialogOptions
+        {
+            MaxWidth = MaxWidth.Small,
+            FullWidth = true
+        };
+
+        var dialog = await DialogService.ShowAsync<InstanceScheduleEditDialog>("Editar agendamento", parameters, options);
+        var result = await dialog.Result;
+
+        if (result == null || result.Canceled)
+            return;
+
+        await _dataGrid.ReloadServerData();
+    }
+
+    private string? GetCronDescription(string cronExpression)
+    {
+        if (!string.IsNullOrEmpty(cronExpression))
+        {
+            return ExpressionDescriptor.GetDescription(cronExpression, new Options
+            {
+                Locale = "pt-BR",
+                Use24HourTimeFormat = true
+            });
+        }
+
+        return null;
+    }
+}

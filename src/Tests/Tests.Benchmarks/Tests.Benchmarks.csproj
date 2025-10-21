@@ -12,7 +12,7 @@
   </ItemGroup>
 
   <ItemGroup>
-    <ProjectReference Include="..\..\Libs\Alma.Flows\Alma.Flows.csproj" />
+    <ProjectReference Include="..\..\Libs\Alma.Workflows\Alma.Workflows.csproj" />
   </ItemGroup>
 
 </Project>

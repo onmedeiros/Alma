@@ -1,0 +1,137 @@
+﻿@using CronExpressionDescriptor
+@using Alma.Modules.Core.Components.Shared.Data
+@using Alma.Modules.Core.Components.Shared.Loadings
+@using Alma.Workflows.Core.InstanceEndpoints.Entities
+@using Alma.Workflows.Core.InstanceEndpoints.Services
+@using Alma.Workflows.Core.Instances.Entities
+@using Microsoft.Extensions.DependencyInjection
+
+@inject IServiceScopeFactory ScopeFactory
+@inject IDialogService DialogService
+@inject ISnackbar Snackbar
+
+<MudDataGrid @ref="_dataGrid" T="InstanceEndpoint" ServerData="Load" Elevation="0" Hover="true" Style="width: 100%;">
+
+    <ToolBarContent>
+        <MudText Typo="Typo.h6">Endpoints</MudText>
+        <MudSpacer></MudSpacer>
+        <MudButton OnClick="CreateApi" Variant="Variant.Filled" StartIcon="@Icons.Material.Outlined.Add" Color="Color.Primary">Criar</MudButton>
+    </ToolBarContent>
+
+    <Columns>
+
+        <PropertyColumn Title="Nome" Property="x => x.Name"/>
+        <PropertyColumn Title="Caminho" Property="x => x.Path"/>
+        <PropertyColumn Title="Criado em" Property="x => x.CreatedAt.ToLocalTime()" HeaderStyle="width: 200px;"/>
+        <PropertyColumn Title="Última atualização" Property="x => x.UpdatedAt.ToLocalTime()" HeaderStyle="width: 200px;" />
+
+        <TemplateColumn Title="Última execução" HeaderStyle="width: 200px;">
+            <CellTemplate>
+                @if (context.Item.LastRunAt is null)
+                {
+                    <span class="mud-text-secondary">Não executado</span>
+                }
+                else
+                {
+                    @context.Item.LastRunAt?.ToLocalTime()
+                }
+            </CellTemplate>
+        </TemplateColumn>
+
+        <DataGridTrueOrFalse Title="Ativo" Parameter="x => x.Item.IsActive" HeaderStyle="width: 60px;" />
+
+        <TemplateColumn HeaderStyle="width: 60px;">
+            <CellTemplate>
+                <MudIconButton OnClick="@(() => EditApi(context.Item.Id))" Icon="@Icons.Material.Outlined.Edit" Size="MudBlazor.Size.Small" />
+            </CellTemplate>
+        </TemplateColumn>
+
+    </Columns>
+
+    <NoRecordsContent>
+        <MudText Typo="Typo.subtitle2" Class="text-center">Nenhuma endpoint criado.</MudText>
+    </NoRecordsContent>
+
+</MudDataGrid>
+
+@code {
+
+    #region Parameters
+
+    [CascadingParameter]
+    public required Organization Organization { get; set; }
+
+    [Parameter]
+    public FlowInstance Instance { get; set; } = default!;
+
+    #endregion
+
+    #region Private fields
+
+    private MudDataGrid<InstanceEndpoint> _dataGrid = null!;
+
+    #endregion
+
+    private async Task<GridData<InstanceEndpoint>> Load(GridState<InstanceEndpoint> state)
+    {
+
+        var scope = ScopeFactory.CreateScope();
+        var service = scope.ServiceProvider.GetRequiredService<IInstanceEndpointManager>();
+
+        var apis = await service.ListAllByInstanceIdAsync(Instance.Id, Instance.Discriminator);
+
+        return new GridData<InstanceEndpoint>
+        {
+            TotalItems = apis.Count,
+            Items = apis
+        };
+    }
+
+    private async Task CreateApi()
+    {
+        var parameters = new DialogParameters<InstanceEndpointEditDialog>
+        {
+            { x => x.Organization, Organization },
+            {x => x.Instance, Instance},
+            {x => x.Id, null}
+        };
+
+        var options = new DialogOptions
+        {
+            MaxWidth = MaxWidth.Small,
+            FullWidth = true
+        };
+
+        var dialog = await DialogService.ShowAsync<InstanceEndpointEditDialog>("Criar nova API", parameters, options);
+        var result = await dialog.Result;
+
+        if (result == null || result.Canceled)
+            return;
+
+        await _dataGrid.ReloadServerData();
+    }
+
+    private async Task EditApi(string id)
+    {
+        var parameters = new DialogParameters<InstanceEndpointEditDialog>
+        {
+            { x => x.Organization, Organization },
+            {x => x.Instance, Instance},
+            {x => x.Id, id}
+        };
+
+        var options = new DialogOptions
+        {
+            MaxWidth = MaxWidth.Small,
+            FullWidth = true
+        };
+
+        var dialog = await DialogService.ShowAsync<InstanceEndpointEditDialog>("Editar API", parameters, options);
+        var result = await dialog.Result;
+
+        if (result == null || result.Canceled)
+            return;
+
+        await _dataGrid.ReloadServerData();
+    }
+}

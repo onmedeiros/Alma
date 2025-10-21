@@ -7,10 +7,10 @@ using Alma.Blazor.Services;
 using Alma.Core;
 using Alma.Core.Exceptions;
 using Alma.Core.Mongo;
-using Alma.Flows;
-using Alma.Flows.Alerts;
-using Alma.Flows.Apis.AspNetCore;
-using Alma.Flows.Monitoring.Mongo;
+using Alma.Workflows;
+using Alma.Workflows.Alerts;
+using Alma.Workflows.Apis.AspNetCore;
+using Alma.Workflows.Monitoring.Mongo;
 using Alma.Modules.Integrations.Controllers.Filters;
 using Alma.Organizations;
 using Alma.Organizations.Middlewares;
@@ -87,7 +87,7 @@ builder.Services.AddProblemDetails((Hellang.Middleware.ProblemDetails.ProblemDet
 });
 
 builder.Services.AddHostedService<ApplicationRegister>();
-builder.Services.AddAlmaFlows(options => { });
+builder.Services.AddAlmaWorkflows(options => { });
 
 #region Database
 
@@ -215,19 +215,19 @@ builder.Services.AddScoped<ApiHostRestrictionFilter>();
 builder.Services.AddModules(options =>
 {
     // options.Register(typeof(Alma.Modules.Base.Module).Assembly);
-    // options.Register(typeof(Alma.Modules.Flows.Module).Assembly);
+    // options.Register(typeof(Alma.Modules.Workflows.Module).Assembly);
 })
     .Register<Alma.Modules.Core.Module>()
     .Register<Alma.Modules.Integrations.Module>()
     .Register<Alma.Modules.Organizations.Module>()
-    .Register<Alma.Modules.Flows.Module>()
+    .Register<Alma.Modules.Workflows.Module>()
     .Register<Alma.Modules.Alerts.Module>()
     .Register<Alma.Modules.Monitoring.Module>()
     .Register<Alma.Modules.Dashboards.Module>();
 
 // Registro de bibliotecas
-builder.Services.AddAlmaFlowsApis();
-builder.Services.AddAlmaFlowsMonitoringMongo();
+builder.Services.AddAlmaWorkflowsApis();
+builder.Services.AddAlmaWorkflowsMonitoringMongo();
 
 var app = builder.Build();
 

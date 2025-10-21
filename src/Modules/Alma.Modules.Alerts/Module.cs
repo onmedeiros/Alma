@@ -1,5 +1,5 @@
 ﻿using Alma.Core.Modules;
-using Alma.Flows.Alerts;
+using Alma.Workflows.Alerts;
 using Microsoft.Extensions.DependencyInjection;
 using MudBlazor;
 
