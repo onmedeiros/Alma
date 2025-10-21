@@ -1,4 +1,4 @@
-﻿<MudContainer MaxWidth="MaxWidth.ExtraLarge" Class="pt-8 d-flex flex-column" Style="@GetStyle()">
+﻿<MudContainer MaxWidth="MaxWidth" Class="pt-8 d-flex flex-column" Style="@GetStyle()">
     @if (!string.IsNullOrEmpty(Title))
     {
         <PageTitle>@Title</PageTitle>
@@ -36,6 +36,9 @@
 
     [Parameter]
     public bool FullHeight { get; set; } = false;
+
+    [Parameter]
+    public MaxWidth MaxWidth { get; set; } = MaxWidth.ExtraLarge;
 
     [Parameter]
     public RenderFragment? Tools { get; set; }

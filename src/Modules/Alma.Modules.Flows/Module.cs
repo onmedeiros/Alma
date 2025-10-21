@@ -14,6 +14,9 @@ using Alma.Flows.Hangfire;
 using Alma.Flows.Stores;
 using Microsoft.Extensions.DependencyInjection;
 using MudBlazor;
+using Alma.Modules.Widgets.Extensions;
+using Alma.Modules.Flows.Components.Widgets;
+using Alma.Modules.Widgets.Options;
 
 namespace Alma.Modules.Flows
 {
@@ -75,6 +78,20 @@ namespace Alma.Modules.Flows
             {
                 options.Register<FormActivity, FormActivityComponent>();
                 options.Register<InstructionActivity, InstructionActivityComponent>();
+            });
+
+            // Widgets
+            services.ConfigureWidgets(options =>
+            {
+                options.Register<ActiveInstancesWidget>(new WidgetOptions
+                {
+                    Name = "Instâncias ativas",
+                    Container = "Dashboard",
+                    Width = 2,
+                    Height = 1,
+                    MaxWidth = 4,
+                    MaxHeight = 2
+                });
             });
         }
     }

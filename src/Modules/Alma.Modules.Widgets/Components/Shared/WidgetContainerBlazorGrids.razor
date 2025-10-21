@@ -1,0 +1,56 @@
+﻿@using Alma.Modules.Widgets.Entities
+@using Alma.Modules.Widgets.Services
+@using Alma.Organizations.Entities
+@using Microsoft.Extensions.DependencyInjection
+
+@inject IWidgetRegistry Registry
+@inject IServiceScopeFactory ScopeFactory
+
+<Excubo.Blazor.Grids.Dashboard
+	RowGap="1em"
+	ColumnGap="1em"
+	ColumnCount="12"
+	>
+
+	<Excubo.Blazor.Grids.TitleSettings HeadingLevel="5" Alignment="Excubo.Blazor.Grids.Alignment.Left"/>
+	<Excubo.Blazor.Grids.Element Title="Exemplo" @bind-Row="x" @bind-Column="y" @bind-RowSpan="h" @bind-ColumnSpan="w">
+		<WidgetComponent >
+			<p>Widget</p>
+		</WidgetComponent>
+	</Excubo.Blazor.Grids.Element>
+	
+</Excubo.Blazor.Grids.Dashboard>
+
+<p>Position = @x x @y</p>
+@code {
+	[CascadingParameter]
+	public Organization Organization { get; set; } = default!;
+
+	[Parameter]
+	public required string Name { get; set; }
+
+	private List<Widget> _containerWidgets = [];
+
+	private int x = 0;
+	private int y = 0;
+	private int w = 1;
+	private int h = 2;
+
+	protected override async Task OnAfterRenderAsync(bool firstRender)
+	{
+		if (firstRender)
+		{
+			await LoadWidgets();
+			StateHasChanged();
+		}
+	}
+
+	private async Task LoadWidgets()
+	{
+		using var scope = ScopeFactory.CreateScope();
+		var widgetService = scope.ServiceProvider.GetRequiredService<IWidgetService>();
+
+		var containerWidgets = await widgetService.GetByContainer(Name, Organization.Id);
+		_containerWidgets = containerWidgets.ToList();
+	}
+}

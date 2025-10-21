@@ -1,0 +1,132 @@
+@using Alma.Modules.Dashboards.Interop
+@using Alma.Modules.Widgets.Entities
+@using Alma.Modules.Widgets.Interop
+@using Alma.Modules.Widgets.Services
+@using Alma.Organizations.Entities
+@using Microsoft.Extensions.DependencyInjection
+
+@inject IGridstackInterop GridStack;
+@inject IWidgetRegistry Registry
+@inject IServiceScopeFactory ScopeFactory
+
+<WidgetSelector @bind-Open="_isWidgetSelectorOpen" Container="@Name">
+
+</WidgetSelector>
+
+<MudStack Row="true" Justify="Justify.FlexEnd" Class="mb-2">
+
+	@if (!_isEditMode)
+	{
+		<MudTooltip Text="Editar">
+			<MudIconButton Icon="@Icons.Material.Outlined.Edit" OnClick="EnterEditMode"/>
+		</MudTooltip>
+	}
+	else
+	{
+		<MudButton Variant="Variant.Text" OnClick="OpenWidgetSelector">Adicionar Widget</MudButton>
+		<MudButton Variant="Variant.Filled">Salvar</MudButton>
+	}
+
+</MudStack>
+<div class="grid-stack rounded">
+
+	@foreach (var widget in _containerWidgets)
+	{
+		<WidgetComponent Widget="widget"> </WidgetComponent>
+	}
+</div>
+
+@code {
+	[CascadingParameter]
+	public Organization Organization { get; set; } = default!;
+
+	[Parameter]
+	public required string Name { get; set; }
+
+	private List<Widget> _containerWidgets = [];
+	private List<string> _makedWidgets = [];
+
+	private int x = 0;
+	private int y = 0;
+	private int w = 1;
+	private int h = 2;
+
+	private bool _isEditMode = false;
+	private bool _isWidgetSelectorOpen = false;
+
+	protected override async Task OnAfterRenderAsync(bool firstRender)
+	{
+		if (firstRender)
+		{
+			// Configure events
+			GridStack.OnAdded += HandleAdded;
+
+			// Initialize GridStack
+			await GridStack.InitializeAsync(new Interop.GridstackInteropOptions
+			{
+				AcceptWidgets = true,
+			});
+
+			await LoadWidgets();
+
+			StateHasChanged();
+		}
+		else
+		{
+			await RemakeWidgets();
+		}
+	}
+
+	private async Task LoadWidgets()
+	{
+		using var scope = ScopeFactory.CreateScope();
+		var widgetService = scope.ServiceProvider.GetRequiredService<IWidgetService>();
+
+		var containerWidgets = await widgetService.GetByContainer(Name, Organization.Id);
+		_containerWidgets = containerWidgets.ToList();
+	}
+
+	private async Task EnterEditMode()
+	{
+		await GridStack.SetStatic(false);
+		_isEditMode = true;
+	}
+
+	private void OpenWidgetSelector()
+	{
+		_isWidgetSelectorOpen = true;
+	}
+
+	private async Task RemakeWidgets()
+	{
+		foreach(var widget in _containerWidgets)
+		{
+			if (_makedWidgets.Contains(widget.Id))
+				continue;
+
+			await GridStack.MakeWidget(widget.Id);
+			_makedWidgets.Add(widget.Id);
+		}
+	}
+
+	private async Task HandleAdded(GridStackInteropEventArgs args)
+	{
+		foreach (var widget in args.Widgets)
+		{
+			var newWidget = new Widget
+			{
+				OrganizationId = Organization.Id,
+				Container = Name,
+				Type = widget.Type ?? throw new InvalidOperationException("Invalid widget."),
+				X = widget.X,
+				Y = widget.Y,
+				Width = widget.W,
+				Height = widget.H,
+			};
+
+			_containerWidgets.Add(newWidget);
+		}
+
+		StateHasChanged();
+	}
+}

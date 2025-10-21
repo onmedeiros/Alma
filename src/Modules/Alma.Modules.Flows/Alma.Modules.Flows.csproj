@@ -28,5 +28,6 @@
     <ProjectReference Include="..\..\Libs\Alma.Flows\Alma.Flows.csproj" />
     <ProjectReference Include="..\Alma.Modules.Core\Alma.Modules.Core.csproj" />
     <ProjectReference Include="..\Alma.Modules.Organization\Alma.Modules.Organizations.csproj" />
+    <ProjectReference Include="..\Alma.Modules.Widgets\Alma.Modules.Widgets.csproj" />
   </ItemGroup>
 </Project>

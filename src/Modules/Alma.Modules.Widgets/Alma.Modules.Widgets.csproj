@@ -12,12 +12,22 @@
   </ItemGroup>
 
   <ItemGroup>
+    <PackageReference Include="Excubo.Blazor.Grids" Version="3.1.74" />
     <PackageReference Include="Microsoft.AspNetCore.Components.Web" Version="9.0.9" />
   </ItemGroup>
 
   <ItemGroup>
     <ProjectReference Include="..\..\Libs\Alma.Core\Alma.Core.csproj" />
     <ProjectReference Include="..\Alma.Modules.Core\Alma.Modules.Core.csproj" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <Content Update="wwwroot\gridstack.min.css">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </Content>
+    <Content Update="wwwroot\gridstackInterop.js">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </Content>
   </ItemGroup>
 
 </Project>

@@ -1,5 +1,6 @@
 ﻿using Alma.Core.Modules;
 using Alma.Modules.Dashboards.Interop;
+using Alma.Modules.Widgets.Services;
 using Microsoft.Extensions.DependencyInjection;
 using MudBlazor;
 
@@ -27,6 +28,8 @@ namespace Alma.Modules.Dashboards
         public override void Configure(IServiceCollection services)
         {
             services.AddScoped<IGridstackInterop, GridStackInterop>();
+            services.AddScoped<IWidgetRegistry, WidgetRegistry>();
+            services.AddScoped<IWidgetService, WidgetService>();
         }
     }
 }

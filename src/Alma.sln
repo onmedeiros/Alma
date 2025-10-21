@@ -52,7 +52,7 @@ Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Alma.Core.Mongo", "Libs\Alm
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Alma.Core", "Libs\Alma.Core\Alma.Core.csproj", "{49D92EBF-AFAE-40CA-4AFF-58922B54E663}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Alma.Modules.Dashboards", "Modules\Alma.Modules.Dashboards\Alma.Modules.Dashboards.csproj", "{C69CACC7-61D0-4FAE-9949-5C2A3E025FF7}"
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Alma.Modules.Widgets", "Modules\Alma.Modules.Widgets\Alma.Modules.Widgets.csproj", "{C69CACC7-61D0-4FAE-9949-5C2A3E025FF7}"
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Tests.Benchmarks", "Tests\Tests.Benchmarks\Tests.Benchmarks.csproj", "{79779CC1-1E7F-4FF1-8FF6-A2D740A41D12}"
 EndProject

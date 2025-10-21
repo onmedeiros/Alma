@@ -1,0 +1,33 @@
+﻿@using Alma.Modules.Widgets.Entities
+@using Alma.Modules.Widgets.Models
+@using Alma.Modules.Widgets.Services
+
+@inject IWidgetRegistry Registry;
+
+<div class="grid-stack-item" id="@Widget.Id" gs-w="@Widget.Width" gs-h="@Widget.Height" gs-x="@Widget.X" gs-y="@Widget.Y" gs-max-w="@_descriptor.MaxWidth" gs-max-h="@_descriptor.MaxHeight">
+	<div class="grid-stack-item-content">
+		<MudCard Elevation="8" Style="min-height: 100%">
+			<MudCardContent>
+				<DynamicComponent Type="Registry.GetByTypeName(Widget.Type).Type" />
+			</MudCardContent>
+		</MudCard>
+	</div>
+</div>
+
+@code {
+	[Parameter]
+	public RenderFragment? ChildContent { get; set; }
+
+	[Parameter]
+	public Widget Widget { get; set; } = default!;
+
+	private WidgetDescriptor _descriptor = default!;
+
+	protected override void OnParametersSet()
+	{
+		if (_descriptor is null)
+		{
+			_descriptor = Registry.GetByTypeName(Widget.Type);
+		}
+	}
+}

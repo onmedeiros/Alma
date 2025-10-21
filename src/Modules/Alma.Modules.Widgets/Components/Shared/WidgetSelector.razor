@@ -1,0 +1,49 @@
+﻿@using Alma.Modules.Widgets.Services
+@inject IWidgetRegistry Registry;
+
+<MudDrawer Open="Open" Anchor="Anchor.End" Variant="DrawerVariant.Temporary" Overlay="false" Width="400px">
+	<MudDrawerHeader>
+		<MudStack Row="true" Justify="Justify.SpaceBetween" AlignItems="AlignItems.Center" Class="mud-width-full">
+			<MudText Typo="Typo.h6">Widgets</MudText>
+			<MudIconButton Icon="@Icons.Material.Filled.Close" Color="Color.Inherit" OnClick="Close"/>
+		</MudStack>
+	</MudDrawerHeader>
+	<MudStack Spacing="2">
+		@{
+			var availableWidgets = Registry.GetByContainer(Container);
+			
+			if (availableWidgets.Any())
+			{
+				foreach (var widget in availableWidgets)
+				{
+					<MudCard Class="grid-stack-item grid-stack-available-widget" to-add="true" type="@widget.Type.FullName" gs-w="@widget.Width" gs-h="@widget.Height" gs-max-w="@widget.MaxWidth" gs-max-h="@widget.MaxHeight">
+						<MudCardContent>
+							<MudText>@widget.Name</MudText>
+						</MudCardContent>
+					</MudCard>
+				}
+			}
+			else
+			{
+				<MudText>Nenhum widget disponível.</MudText>
+			}
+		}
+	</MudStack>
+</MudDrawer>
+
+@code {
+	[Parameter]
+	public string Container { get; set; } = string.Empty;
+
+	[Parameter]
+	public bool Open { get; set; } = false;
+
+	[Parameter]
+	public EventCallback<bool> OpenChanged { get; set; }
+
+	public async Task Close()
+	{
+		Open = false;
+		await OpenChanged.InvokeAsync(Open);
+	}
+}
