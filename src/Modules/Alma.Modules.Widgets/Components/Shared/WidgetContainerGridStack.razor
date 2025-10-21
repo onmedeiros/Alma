@@ -13,18 +13,31 @@
 
 </WidgetSelector>
 
-<MudStack Row="true" Justify="Justify.FlexEnd" Class="mb-2">
+<MudStack Row="true" Justify="_isEditMode? Justify.SpaceBetween: Justify.FlexEnd" Class="mb-2" AlignItems="AlignItems.Center">
 
 	@if (!_isEditMode)
 	{
-		<MudTooltip Text="Editar">
+		<MudTooltip Text="Entrar no modo edição">
 			<MudIconButton Icon="@Icons.Material.Outlined.Edit" OnClick="EnterEditMode"/>
 		</MudTooltip>
 	}
 	else
 	{
-		<MudButton Variant="Variant.Text" OnClick="OpenWidgetSelector">Adicionar Widget</MudButton>
-		<MudButton Variant="Variant.Filled">Salvar</MudButton>
+		<MudStack Row="true">
+			<MudTooltip Text="Salvar">
+				<MudIconButton Icon="@Icons.Material.Outlined.Save" Color="Color.Primary" OnClick="Save" />
+			</MudTooltip>
+
+			<MudTooltip Text="Adicionar widgets">
+				<MudIconButton Icon="@Icons.Material.Outlined.Widgets" OnClick="OpenWidgetSelector" />
+			</MudTooltip>
+		</MudStack>
+
+		<MudStack Row="true">
+			<MudTooltip Text="Cancelar edição">
+				<MudIconButton Class="ms-4" Icon="@Icons.Material.Outlined.Cancel" Color="Color.Error" OnClick="CancelEdit" />
+			</MudTooltip>
+		</MudStack>
 	}
 
 </MudStack>
@@ -45,6 +58,8 @@
 
 	private List<Widget> _containerWidgets = [];
 	private List<string> _makedWidgets = [];
+	private List<string> _addedWidgets = [];
+	private List<string> _removedWidgets = [];
 
 	private int x = 0;
 	private int y = 0;
@@ -60,6 +75,7 @@
 		{
 			// Configure events
 			GridStack.OnAdded += HandleAdded;
+			GridStack.OnChanged += HandleChanged;
 
 			// Initialize GridStack
 			await GridStack.InitializeAsync(new Interop.GridstackInteropOptions
@@ -67,12 +83,14 @@
 				AcceptWidgets = true,
 			});
 
+			// Load widgets
 			await LoadWidgets();
 
 			StateHasChanged();
 		}
 		else
 		{
+			// When re-rendered, remake remaining widgets on gridstack
 			await RemakeWidgets();
 		}
 	}
@@ -90,6 +108,18 @@
 	{
 		await GridStack.SetStatic(false);
 		_isEditMode = true;
+	}
+
+	private async Task ExitEditMode()
+	{
+		await GridStack.SetStatic(true);
+		_isEditMode = false;
+	}
+
+	private async Task CancelEdit()
+	{
+		await GridStack.SetStatic(true);
+		_isEditMode = false;
 	}
 
 	private void OpenWidgetSelector()
@@ -125,7 +155,72 @@
 			};
 
 			_containerWidgets.Add(newWidget);
+			_addedWidgets.Add(newWidget.Id);
 		}
+
+		StateHasChanged();
+	}
+
+	private async Task HandleChanged(GridStackInteropEventArgs args)
+	{
+		foreach (var widget in args.Widgets)
+		{
+			var existingWidget = _containerWidgets.FirstOrDefault(w => w.Id == widget.Id);
+
+			if (existingWidget is not null)
+			{
+				existingWidget.X = widget.X;
+				existingWidget.Y = widget.Y;
+				existingWidget.Width = widget.W;
+				existingWidget.Height = widget.H;
+			}
+		}
+
+		StateHasChanged();
+	}
+
+	private async Task HandleRemoved(GridStackInteropEventArgs args)
+	{
+		foreach (var widget in args.Widgets)
+		{
+			var existingWidget = _containerWidgets.FirstOrDefault(w => w.Id == widget.Id);
+			if (existingWidget is not null)
+			{
+				_containerWidgets.Remove(existingWidget);
+				_removedWidgets.Add(existingWidget.Id);
+			}
+		}
+
+		StateHasChanged();
+	}
+
+	private async Task Save()
+	{
+		using var scope = ScopeFactory.CreateScope();
+		var widgetService = scope.ServiceProvider.GetRequiredService<IWidgetService>();
+
+		foreach (var widget in _containerWidgets)
+		{
+			if (_addedWidgets.Contains(widget.Id))
+			{
+				await widgetService.Create(widget);
+			}
+			else
+			{
+				await widgetService.Update(widget);
+			}
+
+		}
+
+		foreach (var widgetId in _removedWidgets)
+		{
+			await widgetService.Delete(widgetId, Organization.Id);
+		}
+
+		_addedWidgets.Clear();
+		_removedWidgets.Clear();
+
+		await ExitEditMode();
 
 		StateHasChanged();
 	}

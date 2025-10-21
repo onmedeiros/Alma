@@ -1,10 +1,12 @@
 .grid-stack {
     background-color: #EAEAEA;
     min-height: 64px;
+    border: 3px dashed #DDD
 }
 
-.grid-stack .grid-stack-static {
-    background-color: transparent;
+.grid-stack-static {
+    background-color: #EEE;
+    border: none;
 }
 
 .grid-stack-item-content {

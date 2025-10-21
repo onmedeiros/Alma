@@ -9,6 +9,10 @@ namespace Alma.Modules.Dashboards.Interop
     {
         event Func<GridStackInteropEventArgs, Task>? OnAdded;
 
+        event Func<GridStackInteropEventArgs, Task>? OnChanged;
+
+        event Func<GridStackInteropEventArgs, Task>? OnRemoved;
+
         ValueTask InitializeAsync(GridstackInteropOptions? options = null);
 
         ValueTask SetStatic(bool opt);
@@ -55,6 +59,10 @@ namespace Alma.Modules.Dashboards.Interop
 
         public event Func<GridStackInteropEventArgs, Task>? OnAdded;
 
+        public event Func<GridStackInteropEventArgs, Task>? OnChanged;
+
+        public event Func<GridStackInteropEventArgs, Task>? OnRemoved;
+
         #endregion
 
         #region JS Events
@@ -65,6 +73,24 @@ namespace Alma.Modules.Dashboards.Interop
             if (OnAdded is not null)
             {
                 await OnAdded.Invoke(args);
+            }
+        }
+
+        [JSInvokable("HandleChanged")]
+        public async Task HandleChanged(GridStackInteropEventArgs args)
+        {
+            if (OnChanged is not null)
+            {
+                await OnChanged.Invoke(args);
+            }
+        }
+
+        [JSInvokable("HandleRemoved")]
+        public async Task HandleRemoved(GridStackInteropEventArgs args)
+        {
+            if (OnRemoved is not null)
+            {
+                await OnRemoved.Invoke(args);
             }
         }
 

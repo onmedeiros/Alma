@@ -117,15 +117,37 @@ export async function initializeGridStack(options, interopReference) {
         }
     );
 
+    grid.on('change',
+        async (event, items) => {
+            items.forEach(item => console.log('Item changed:', item));
+            await interopReference.invokeMethodAsync('HandleChanged', getEventArgs(event, items));
+        }
+    );
+
+    grid.on('removed',
+        async (event, items) => {
+            await interopReference.invokeMethodAsync('HandleRemoved', getEventArgs(event, items));
+        }
+    );
+
     return grid;
 }
 
 function getEventArgs(event, items) {
-    var widgetsToAdd = items.filter(item => item.el.attributes["to-add"] !== undefined && item.el.attributes["to-add"].value === "true");
+    var widgets = [];
+
+    if (event.type === 'added') {
+        widgets = items.filter(item => item.el.attributes["to-add"] !== undefined && item.el.attributes["to-add"].value === "true");
+    }
+    else {
+        widgets = items;
+    }
+
     return {
         eventName: event.type,
-        widgets: widgetsToAdd.map(item => ({
-            type: item.el.attributes["type"].value,
+        widgets: widgets.map(item => ({
+            id: item.el.id,
+            type: item.el.attributes["type"]?.value,
             w: item.w,
             h: item.h,
             x: item.x,
