@@ -7,6 +7,8 @@
         public int Height { get; set; } = 1;
         public int MaxWidth { get; set; } = 1;
         public int MaxHeight { get; set; } = 1;
+        public int MinWidth { get; set; } = 1;
+        public int MinHeight { get; set; } = 1;
         public string? Container { get; set; }
     }
 }

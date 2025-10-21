@@ -9,5 +9,7 @@
         public required int Height { get; set; }
         public required int MaxWidth { get; set; }
         public required int MaxHeight { get; set; }
+        public required int MinWidth { get; set; }
+        public required int MinHeight { get; set; }
     }
 }

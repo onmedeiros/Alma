@@ -28,7 +28,9 @@ namespace Alma.Modules.Widgets.Options
                 Width = options.Width,
                 Height = options.Height,
                 MaxWidth = options.MaxWidth,
-                MaxHeight = options.MaxHeight
+                MaxHeight = options.MaxHeight,
+                MinWidth = options.MinWidth,
+                MinHeight = options.MinHeight,
             });
         }
 

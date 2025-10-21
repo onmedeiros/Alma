@@ -90,7 +90,9 @@ namespace Alma.Modules.Flows
                     Width = 2,
                     Height = 1,
                     MaxWidth = 4,
-                    MaxHeight = 2
+                    MaxHeight = 2,
+                    MinWidth = 2,
+                    MinHeight = 1
                 });
             });
         }
