@@ -45,7 +45,7 @@
 
 	@foreach (var widget in _containerWidgets)
 	{
-		<WidgetComponent Widget="widget"> </WidgetComponent>
+		<WidgetComponent @key="widget.Id" Widget="widget" IsEditMode="_isEditMode" OnRemoveClick="HandleRemoveClick"> </WidgetComponent>
 	}
 </div>
 
@@ -76,6 +76,7 @@
 			// Configure events
 			GridStack.OnAdded += HandleAdded;
 			GridStack.OnChanged += HandleChanged;
+			GridStack.OnRemoved += HandleRemoved;
 
 			// Initialize GridStack
 			await GridStack.InitializeAsync(new Interop.GridstackInteropOptions
@@ -165,7 +166,7 @@
 	{
 		foreach (var widget in args.Widgets)
 		{
-			var existingWidget = _containerWidgets.FirstOrDefault(w => w.Id == widget.Id);
+			var existingWidget = _containerWidgets.FirstOrDefault(w => w.Id == widget.Id?.Replace("id-", ""));
 
 			if (existingWidget is not null)
 			{
@@ -183,13 +184,22 @@
 	{
 		foreach (var widget in args.Widgets)
 		{
-			var existingWidget = _containerWidgets.FirstOrDefault(w => w.Id == widget.Id);
+			var existingWidget = _containerWidgets.FirstOrDefault(w => w.Id == widget.Id?.Replace("id-", ""));
 			if (existingWidget is not null)
 			{
 				_containerWidgets.Remove(existingWidget);
 				_removedWidgets.Add(existingWidget.Id);
 			}
 		}
+
+		StateHasChanged();
+	}
+
+	private async Task HandleRemoveClick(Widget widget)
+	{
+
+		_containerWidgets.Remove(widget);
+		_removedWidgets.Add(widget.Id);
 
 		StateHasChanged();
 	}

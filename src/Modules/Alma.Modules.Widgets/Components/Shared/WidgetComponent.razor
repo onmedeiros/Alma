@@ -4,10 +4,21 @@
 
 @inject IWidgetRegistry Registry;
 
-<div class="grid-stack-item" id="@Widget.Id" gs-w="@Widget.Width" gs-h="@Widget.Height" gs-x="@Widget.X" gs-y="@Widget.Y" gs-max-w="@_descriptor.MaxWidth" gs-max-h="@_descriptor.MaxHeight">
+<div class="grid-stack-item" id="id-@Widget.Id" gs-w="@Widget.Width" gs-h="@Widget.Height" gs-x="@Widget.X" gs-y="@Widget.Y" gs-max-w="@_descriptor.MaxWidth" gs-max-h="@_descriptor.MaxHeight">
 	<div class="grid-stack-item-content">
 		<MudCard Elevation="8" Style="min-height: 100%">
 			<MudCardContent>
+				<MudStack Row="true" AlignItems="AlignItems.Center">
+					<MudText>@_descriptor.Name</MudText>
+					@if (IsEditMode)
+					{
+						<MudStack Row="true" Justify="Justify.FlexEnd" Class="ms-auto">
+							<MudTooltip Text="Remover widget">
+								<MudIconButton Icon="@Icons.Material.Outlined.Delete" Color="Color.Error" Size="Size.Small" OnClick="@(async () => await OnRemoveClick.InvokeAsync(Widget))" />
+							</MudTooltip>
+						</MudStack>
+					}
+				</MudStack>
 				<DynamicComponent Type="Registry.GetByTypeName(Widget.Type).Type" />
 			</MudCardContent>
 		</MudCard>
@@ -20,6 +31,12 @@
 
 	[Parameter]
 	public Widget Widget { get; set; } = default!;
+
+	[Parameter]
+	public bool IsEditMode { get; set; }
+
+	[Parameter]
+	public EventCallback<Widget> OnRemoveClick { get; set; }
 
 	private WidgetDescriptor _descriptor = default!;
 

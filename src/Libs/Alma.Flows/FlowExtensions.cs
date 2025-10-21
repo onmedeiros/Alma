@@ -74,7 +74,7 @@ namespace Alma.Flows
             services.AddSingleton<IApprovalAndCheckRegistry, ApprovalAndCheckRegistry>();
             services.AddScoped<ICustomActivityRegistry, CustomActivityRegistry>();
             services.AddScoped<IFlowManager, FlowManager>();
-            services.AddScoped<IFlowInstanceManager, FlowInstanceManager>();
+            services.AddScoped<IInstanceManager, InstanceManager>();
             services.AddScoped<IFlowRunManager, FlowRunManager>();
             services.AddScoped<IFlowDefinitionParser, FlowDefinitionParser>();
             services.AddScoped<IInstanceScheduleManager, InstanceScheduleManager>();

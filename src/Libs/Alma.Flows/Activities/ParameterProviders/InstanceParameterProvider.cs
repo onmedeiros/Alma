@@ -6,9 +6,9 @@ namespace Alma.Flows.Activities.ParameterProviders
 {
     public class InstanceParameterProvider : IParameterProvider
     {
-        private readonly IFlowInstanceManager _instanceManager;
+        private readonly IInstanceManager _instanceManager;
 
-        public InstanceParameterProvider(IFlowInstanceManager instanceManager)
+        public InstanceParameterProvider(IInstanceManager instanceManager)
         {
             _instanceManager = instanceManager;
         }

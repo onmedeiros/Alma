@@ -88,7 +88,7 @@
         UpdateQueryParameters();
 
         using var scope = ScopeFactory.CreateScope();
-        var service = scope.ServiceProvider.GetRequiredService<IFlowInstanceManager>();
+        var service = scope.ServiceProvider.GetRequiredService<IInstanceManager>();
 
         var filters = new FlowInstanceFilters
             {

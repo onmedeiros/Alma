@@ -6,11 +6,18 @@ namespace Alma.Flows.Core.Instances.Stores
     public interface IFlowInstanceStore
     {
         ValueTask<FlowInstance> InsertAsync(FlowInstance instance, CancellationToken cancellationToken = default);
+
         ValueTask<FlowInstance> UpdateAsync(FlowInstance instance, CancellationToken cancellationToken = default);
+
         ValueTask<FlowInstance?> DeleteAsync(string id, string? discriminator = null, CancellationToken cancellationToken = default);
+
         ValueTask<FlowInstance?> FindByIdAsync(string id, string? discriminator = null, CancellationToken cancellationToken = default);
+
         ValueTask<PagedList<FlowInstance>> ListAsync(int page, int pageSize, FlowInstanceFilters? filters = null, CancellationToken cancellationToken = default);
+
         ValueTask<string> GetName(string id, string? discriminator = null, CancellationToken cancellationToken = default);
+
+        ValueTask<int> CountAsync(FlowInstanceFilters? filters = null, CancellationToken cancellationToken = default);
     }
 
     public class FlowInstanceStore : IFlowInstanceStore
@@ -41,6 +48,11 @@ namespace Alma.Flows.Core.Instances.Stores
         }
 
         public ValueTask<string> GetName(string id, string? discriminator = null, CancellationToken cancellationToken = default)
+        {
+            throw new NotImplementedException();
+        }
+
+        public ValueTask<int> CountAsync(FlowInstanceFilters? filters = null, CancellationToken cancellationToken = default)
         {
             throw new NotImplementedException();
         }

@@ -73,7 +73,7 @@
         }
 
         using var scope = ScopeFactory.CreateScope();
-        var service = scope.ServiceProvider.GetRequiredService<IFlowInstanceManager>();
+        var service = scope.ServiceProvider.GetRequiredService<IInstanceManager>();
 
         try
         {

@@ -19,7 +19,7 @@
 @inject ISnackbar Snackbar
 
 @inject IFlowManager _flowManager;
-@inject IFlowInstanceManager _instanceManager;
+@inject IInstanceManager _instanceManager;
 @inject IInstanceExecutionManager _executionManager;
 @inject IFlowDefinitionParser _definitionParser;
 @inject IFlowRunnerFactory _runnerFactory;
@@ -146,7 +146,7 @@
     private async Task LoadSummary()
     {
         using var scope = ScopeFactory.CreateScope();
-        var instanceManager = scope.ServiceProvider.GetRequiredService<IFlowInstanceManager>();
+        var instanceManager = scope.ServiceProvider.GetRequiredService<IInstanceManager>();
 
         _InstanceName = await instanceManager.GetName(Execution.InstanceId, Execution.Discriminator);
     }

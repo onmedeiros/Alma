@@ -149,7 +149,7 @@
         StateHasChanged();
 
         var scope = ScopeFactory.CreateScope();
-        var service = scope.ServiceProvider.GetRequiredService<IFlowInstanceManager>();
+        var service = scope.ServiceProvider.GetRequiredService<IInstanceManager>();
 
         try
         {
@@ -202,7 +202,7 @@
         }
 
         var scope = ScopeFactory.CreateScope();
-        var service = scope.ServiceProvider.GetRequiredService<IFlowInstanceManager>();
+        var service = scope.ServiceProvider.GetRequiredService<IInstanceManager>();
 
         try
         {

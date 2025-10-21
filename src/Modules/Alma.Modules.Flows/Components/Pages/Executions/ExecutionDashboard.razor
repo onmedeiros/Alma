@@ -98,7 +98,7 @@
 
         using var scope = ScopeFactory.CreateScope();
         var executionManager = scope.ServiceProvider.GetRequiredService<IInstanceExecutionManager>();
-        var instanceManager = scope.ServiceProvider.GetRequiredService<IFlowInstanceManager>();
+        var instanceManager = scope.ServiceProvider.GetRequiredService<IInstanceManager>();
 
         var filters = new InstanceExecutionFilters
         {

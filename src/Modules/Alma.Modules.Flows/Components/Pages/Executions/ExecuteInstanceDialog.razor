@@ -106,7 +106,7 @@
         StateHasChanged();
 
         using var scope = ScopeFactory.CreateScope();
-        var instanceManager = scope.ServiceProvider.GetRequiredService<IFlowInstanceManager>();
+        var instanceManager = scope.ServiceProvider.GetRequiredService<IInstanceManager>();
         var organizationContext = scope.ServiceProvider.GetRequiredService<IOrganizationContext>();
 
         try

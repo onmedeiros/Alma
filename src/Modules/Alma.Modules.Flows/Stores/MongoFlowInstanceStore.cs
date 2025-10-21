@@ -132,5 +132,27 @@ namespace Alma.Modules.Flows.Stores
 
             return name.IsNullOrEmpty("Sem nome");
         }
+
+        public ValueTask<int> CountAsync(FlowInstanceFilters? filters = null, CancellationToken cancellationToken = default)
+        {
+            var query = _collection.AsQueryable();
+
+            if (filters is not null)
+            {
+                if (!string.IsNullOrWhiteSpace(filters.Name))
+                {
+                    query = query.Where(x => x.Name.Contains(filters.Name));
+                }
+                if (!string.IsNullOrWhiteSpace(filters.Discriminator))
+                {
+                    query = query.Where(x => x.Discriminator == filters.Discriminator);
+                }
+                if (filters.IsActive.HasValue)
+                {
+                    query = query.Where(x => x.IsActive == filters.IsActive.Value);
+                }
+            }
+            return new ValueTask<int>(query.CountAsync(cancellationToken));
+        }
     }
 }

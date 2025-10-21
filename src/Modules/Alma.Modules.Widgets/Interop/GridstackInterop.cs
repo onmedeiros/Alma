@@ -18,6 +18,8 @@ namespace Alma.Modules.Dashboards.Interop
         ValueTask SetStatic(bool opt);
 
         ValueTask MakeWidget(string id);
+
+        ValueTask RemoveWidget(string id);
     }
 
     public class GridStackInterop : IGridstackInterop
@@ -52,7 +54,13 @@ namespace Alma.Modules.Dashboards.Interop
         {
             EnsureInitialized(_grid);
 
-            return _grid.InvokeVoidAsync("makeWidget", $"#{id}");
+            return _grid.InvokeVoidAsync("makeWidget", $"#id-{id}");
+        }
+
+        public ValueTask RemoveWidget(string id)
+        {
+            EnsureInitialized(_grid);
+            return _grid.InvokeVoidAsync("removeWidget", $"#id-{id}");
         }
 
         #region Events
