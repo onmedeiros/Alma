@@ -19,6 +19,7 @@ using Alma.Workflows.Registries;
 using Alma.Workflows.Runners;
 using Microsoft.AspNetCore.Components.Web;
 using Microsoft.Extensions.Logging;
+using Alma.Workflows.Core.InstanceExecutions.Enums;
 
 namespace Alma.Workflows.Design
 {
@@ -55,7 +56,7 @@ namespace Alma.Workflows.Design
         public bool AutoSaveEnabled { get; private set; }
         public ActivityNodeModel? SelectedNode { get; private set; }
         public FlowExecutionContext? ExecutionContext => Runner?.Context;
-        public FlowRunner? Runner { get; private set; }
+        public FlowRunnerV2? Runner { get; private set; }
 
         // Mouse states
         public bool IsDragging { get; private set; }
@@ -378,16 +379,18 @@ namespace Alma.Workflows.Design
             var options = new ExecutionOptions
             {
                 Delay = 400,
-                MaxDegreeOfParallelism = 4
+                MaxDegreeOfParallelism = 1,
+                ExecutionMode = InstanceExecutionMode.StepByStep
             };
 
-            Runner = _flowRunnerFactory.Create(flow, options: options);
+            Runner = _flowRunnerFactory.CreateV2(flow, options: options);
 
             _logger.LogInformation("Executing flow definition {FlowId}.", Definition.Id);
 
             DesignExecutionStatus = FlowDesignContextExecutionStatus.Executing;
             OnStateHasChanged?.Invoke();
 
+            await Runner.PreparePendingExecutionsAsync();
             UpdateLinkColorsExperimental();
 
             await ExecuteNext();
@@ -398,7 +401,7 @@ namespace Alma.Workflows.Design
             if (Runner is null)
                 throw new Exception("Runner not initialized.");
 
-            var hasReadyActivities = await Runner.HasNext();
+            var hasReadyActivities = Runner.PendingExecutions.Any();
 
             if (!hasReadyActivities)
             {

@@ -8,6 +8,9 @@ namespace Alma.Workflows.Core.InstanceExecutions.Enums
         Automatic,
 
         [Description("Manual")]
-        Manual
+        Manual,
+
+        [Description("Passo a Passo")]
+        StepByStep
     }
 }

@@ -21,7 +21,7 @@ namespace Alma.Workflows.Runners
         private readonly IApprovalAndCheckResolverFactory _approvalAndCheckResolverFactory;
         private readonly IActivity _activity;
 
-        public bool RequireInteraction => _activity.Descriptor.RequireInteraction;
+        public bool RequireInteraction => _activity.Descriptor.RequireInteraction || Context.Options.ExecutionMode == Core.InstanceExecutions.Enums.InstanceExecutionMode.StepByStep;
 
         public ActivityExecutionContext Context { get; private set; }
 

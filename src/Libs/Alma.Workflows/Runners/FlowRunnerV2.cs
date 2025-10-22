@@ -2,6 +2,7 @@
 using Alma.Workflows.Core.Activities.Enums;
 using Alma.Workflows.Core.ApprovalsAndChecks.Models;
 using Alma.Workflows.Core.Contexts;
+using Alma.Workflows.Core.InstanceExecutions.Enums;
 using Alma.Workflows.Enums;
 using Alma.Workflows.Options;
 using Alma.Workflows.States;
@@ -50,6 +51,9 @@ namespace Alma.Workflows.Runners
 
         public async Task<bool> ExecuteNextAsync()
         {
+            if (Context.Options.Delay > 0)
+                await Task.Delay(Context.Options.Delay);
+
             if (PendingExecutions.Count == 0 && !await PreparePendingExecutionsAsync())
                 return false;
 
@@ -71,7 +75,7 @@ namespace Alma.Workflows.Runners
                     // sem interação para continuar executando automaticamente. Se não houverem mais e o modo de execução
                     // for manual, para a execução automática.
                     if (!PendingExecutions.Any(x => !x.RequireInteraction && x.QueueItem.CanExecute)
-                        && Context.Options.ExecutionMode == Core.InstanceExecutions.Enums.InstanceExecutionMode.Manual)
+                        && Context.Options.ExecutionMode == InstanceExecutionMode.Manual)
                     {
                         continueExecuting = false;
                     }
@@ -80,7 +84,7 @@ namespace Alma.Workflows.Runners
                 }
 
                 // Em seguida, executa as próximas atividades que requerem interação.
-                var take = Context.Options.ExecutionMode == Core.InstanceExecutions.Enums.InstanceExecutionMode.Manual
+                var take = Context.Options.ExecutionMode == InstanceExecutionMode.Manual || Context.Options.ExecutionMode == InstanceExecutionMode.StepByStep
                     ? 1
                     : Context.Options.MaxDegreeOfParallelism;
 
@@ -99,7 +103,7 @@ namespace Alma.Workflows.Runners
 
                 // Se não houver mais atividades para executar, verifica se o modo de execução é manual.
                 // O modo manual permite que as atividades sejam executadas uma a uma.
-                if (Context.Options.ExecutionMode == Core.InstanceExecutions.Enums.InstanceExecutionMode.Manual)
+                if (Context.Options.ExecutionMode == InstanceExecutionMode.Manual || Context.Options.ExecutionMode == InstanceExecutionMode.StepByStep)
                 {
                     continueExecuting = false;
                     continue;

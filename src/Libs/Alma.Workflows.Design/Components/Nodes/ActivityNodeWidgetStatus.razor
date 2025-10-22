@@ -1,0 +1,70 @@
+﻿@using Alma.Workflows.Enums
+@using MudBlazor
+
+@if (Context.DesignExecutionStatus != Enums.FlowDesignContextExecutionStatus.NotStarted)
+{
+	<div class="activity-node-status">
+		<MudStack Row="true" Class="activity-node-status-stack px-2 rounded-pill mud-elevation-1">
+			@if (IsExecuted())
+			{
+				<MudIcon Icon="@Icons.Material.Outlined.Done" Size="Size.Small" Color="@Color.Success"></MudIcon>
+			}
+			else if (IsPending())
+			{
+				<MudIcon Icon="@Icons.Material.Outlined.Schedule" Size="Size.Small"></MudIcon>
+			}
+			else if (IsWaiting())
+			{
+				<MudIcon Icon="@Icons.Material.Outlined.Schedule" Size="Size.Small" Color="Color.Warning"></MudIcon>
+			}
+			else if (IsReady())
+			{
+				<MudIcon Icon="@Icons.Material.Outlined.Schedule" Size="Size.Small" Color="Color.Success"></MudIcon>
+			}
+			else
+			{
+				<MudText Class="mud-text-secondary">...</MudText>
+			}
+		</MudStack>
+	</div>
+}
+
+@code {
+	[Parameter]
+	public FlowDesignContext Context { get; set; } = default!;
+
+	[Parameter]
+	public ActivityNodeModel Node { get; set; } = default!;
+
+	private bool IsExecuted()
+	{
+		if (Context.ExecutionContext is null)
+			return false;
+
+		return Context.ExecutionContext.State.Queue.Any(x => x.ActivityId == Node.Activity.Id && x.ExecutionStatus == ActivityExecutionStatus.Completed);
+	}
+
+	private bool IsPending()
+	{
+		if (Context.ExecutionContext is null)
+			return false;
+
+		return Context.ExecutionContext.State.Queue.Any(x => x.ActivityId == Node.Activity.Id && x.ExecutionStatus == ActivityExecutionStatus.Pending);
+	}
+
+	private bool IsWaiting()
+	{
+		if (Context.ExecutionContext is null)
+			return false;
+
+		return Context.ExecutionContext.State.Queue.Any(x => x.ActivityId == Node.Activity.Id && x.ExecutionStatus == ActivityExecutionStatus.Waiting);
+	}
+
+	private bool IsReady()
+	{
+		if (Context.ExecutionContext is null)
+			return false;
+
+		return Context.ExecutionContext.State.Queue.Any(x => x.ActivityId == Node.Activity.Id && x.ExecutionStatus == ActivityExecutionStatus.Ready);
+	}
+}

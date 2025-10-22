@@ -5,6 +5,8 @@
 @using global::Blazor.Diagrams.Components.Renderers
 
 <div>
+    <ActivityNodeWidgetStatus Context="Context" Node="Node" />
+
     <MudCard Class="@GetCardClass()" Style="@GetCardStyle()">
         <MudCardHeader>
             <CardHeaderContent>
@@ -27,28 +29,6 @@
                     {
                         <MudIcon Icon="@Icons.Material.Outlined.HowToReg" Size="Size.Small"></MudIcon>
                     }
-
-                    @if (Context.DesignExecutionStatus != Enums.FlowDesignContextExecutionStatus.NotStarted)
-                    {
-                        @if (IsExecuted())
-                        {
-                            <MudIcon Icon="@Icons.Material.Outlined.Done" Size="Size.Small" Color="@Color.Success"></MudIcon>
-                        }
-
-                        if (IsPending())
-                        {
-                            <MudIcon Icon="@Icons.Material.Outlined.Schedule" Size="Size.Small"></MudIcon>
-                        }
-                        else if (IsWaiting())
-                        {
-                            <MudIcon Icon="@Icons.Material.Outlined.Schedule" Size="Size.Small" Color="Color.Warning"></MudIcon>
-                        }
-                        else if (IsReady())
-                        {
-                            <MudIcon Icon="@Icons.Material.Outlined.Schedule" Size="Size.Small" Color="Color.Success"></MudIcon>
-                        }
-                    }
-
                 </div>
             </CardHeaderContent>
         </MudCardHeader>
@@ -127,37 +107,5 @@
         style.Append($" min-height: {minHeight}px;");
 
         return style.ToString();
-    }
-
-    private bool IsExecuted()
-    {
-        if (Context.ExecutionContext is null)
-            return false;
-
-        return Context.ExecutionContext.State.Queue.Any(x => x.ActivityId == Node.Activity.Id && x.ExecutionStatus == ActivityExecutionStatus.Completed);
-    }
-
-    private bool IsPending()
-    {
-        if (Context.ExecutionContext is null)
-            return false;
-
-        return Context.ExecutionContext.State.Queue.Any(x => x.ActivityId == Node.Activity.Id && x.ExecutionStatus == ActivityExecutionStatus.Pending);
-    }
-
-    private bool IsWaiting()
-    {
-        if (Context.ExecutionContext is null)
-            return false;
-
-        return Context.ExecutionContext.State.Queue.Any(x => x.ActivityId == Node.Activity.Id && x.ExecutionStatus == ActivityExecutionStatus.Waiting);
-    }
-
-    private bool IsReady()
-    {
-        if (Context.ExecutionContext is null)
-            return false;
-
-        return Context.ExecutionContext.State.Queue.Any(x => x.ActivityId == Node.Activity.Id && x.ExecutionStatus == ActivityExecutionStatus.Pending);
     }
 }
