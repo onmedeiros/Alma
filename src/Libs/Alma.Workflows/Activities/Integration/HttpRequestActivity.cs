@@ -6,6 +6,7 @@ using Alma.Workflows.Enums;
 using Alma.Workflows.Models.Activities;
 using Alma.Workflows.Utils;
 using Microsoft.Extensions.DependencyInjection;
+using System.Diagnostics;
 using System.Text;
 using System.Xml.Serialization;
 
@@ -17,7 +18,7 @@ namespace Alma.Workflows.Activities.Integration
         DisplayName = "Requisição HTTP",
         Description = "Faz uma requisição HTTP.")]
     [ActivityCustomization(Icon = FlowIcons.Http, BorderColor = FlowColors.Integration)]
-    public class HttpRequestActivity : Activity
+    public class HttpRequestActivity : Core.Activities.Base.Activity
     {
         #region Ports
 
@@ -94,13 +95,18 @@ namespace Alma.Workflows.Activities.Integration
                     }
                 }
 
+                var stopwatch = Stopwatch.StartNew();
+
                 var response = await httpClient.SendAsync(request);
+
+                stopwatch.Stop();
 
                 if (response.IsSuccessStatusCode)
                 {
                     var result = new HttpRequestActivityResponse
                     {
                         StatusCode = (int)response.StatusCode,
+                        EllapsedMilliseconds = (int)stopwatch.ElapsedMilliseconds,
                         Content = await response.Content.ReadAsStringAsync(),
                         Body = ConvertResponseToObject(await response.Content.ReadAsStringAsync(), response.Content.Headers.ContentType?.MediaType)
                     };
