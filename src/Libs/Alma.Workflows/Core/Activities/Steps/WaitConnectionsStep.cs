@@ -25,11 +25,28 @@ namespace Alma.Workflows.Core.Activities.Steps
             // Check execution of all connected ports
             foreach (var port in inputPorts)
             {
-                foreach (var connectedPort in port.ConnectedPorts)
+                //foreach (var connectedPort in port.ConnectedPorts)
+                //{
+                //    if (!context.State.ExecutedConnections.Any(x => x.SourceId == connectedPort.Activity.Id && x.SourcePortName == connectedPort.Descriptor.Name))
+                //    {
+                //        _logger.LogDebug("Port {PortName} of activity {ActivityId} is not executed yet.", connectedPort.Descriptor.Name, connectedPort.Activity.Id);
+                //        return new ValueTask<ActivityStepStatus>(ActivityStepStatus.Waiting);
+                //    }
+                //}
+
+                var portsGroupedByActivity = port.ConnectedPorts.GroupBy(x => x.Activity.Id);
+
+                foreach (var group in portsGroupedByActivity)
                 {
-                    if (!context.State.ExecutedConnections.Any(x => x.SourceId == connectedPort.Activity.Id && x.SourcePortName == connectedPort.Descriptor.Name))
+                    var activityId = group.Key;
+
+                    var isAnyPortExecuted = group.Any(connectedPort =>
+                        context.State.ExecutedConnections.Any(x =>
+                            x.SourceId == activityId && x.SourcePortName == connectedPort.Descriptor.Name));
+
+                    if (!isAnyPortExecuted)
                     {
-                        _logger.LogDebug("Port {PortName} of activity {ActivityId} is not executed yet.", connectedPort.Descriptor.Name, connectedPort.Activity.Id);
+                        _logger.LogDebug("No connected ports from activity {ActivityId} are executed yet.", activityId);
                         return new ValueTask<ActivityStepStatus>(ActivityStepStatus.Waiting);
                     }
                 }

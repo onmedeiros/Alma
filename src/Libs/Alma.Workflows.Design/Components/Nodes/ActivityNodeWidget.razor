@@ -5,107 +5,110 @@
 @using global::Blazor.Diagrams.Components.Renderers
 
 <div>
-    <ActivityNodeWidgetStatus Context="Context" Node="Node" />
+	<ActivityNodeWidgetStatus Context="Context" Node="Node" />
 
-    <MudCard Class="@GetCardClass()" Style="@GetCardStyle()">
-        <MudCardHeader>
-            <CardHeaderContent>
-                <div class="d-flex align-center gap-2">
-                    @if (!string.IsNullOrEmpty(Node.Icon))
-                    {
-                        <MudIcon Icon="@Node.Icon" Style="@($"color: {Node.BorderColor}")"></MudIcon>
-                    }
 
-                    @if (!string.IsNullOrEmpty(Node.Activity.CustomDisplayName))
-                    {
-                        <MudText>@Node.Activity.CustomDisplayName - <span class="mud-text-secondary">@Node.ActivityDescriptor.DisplayName</span></MudText>
-                    }
-                    else
-                    {
-                        <MudText>@Node.ActivityDescriptor.DisplayName</MudText>
-                    }
+	<MudCard Class="@GetCardClass()" Style="@GetCardStyle()">
+		<MudCardHeader>
+			<CardHeaderContent>
+				<div class="d-flex align-center gap-2">
+					@if (!string.IsNullOrEmpty(Node.Icon))
+					{
+						<MudIcon Icon="@Node.Icon" Style="@($"color: {Node.BorderColor}")"></MudIcon>
+					}
 
-                    @if (Node.Activity.ApprovalAndChecks.Count > 0)
-                    {
-                        <MudIcon Icon="@Icons.Material.Outlined.HowToReg" Size="Size.Small"></MudIcon>
-                    }
-                </div>
-            </CardHeaderContent>
-        </MudCardHeader>
-        <MudCardContent Class="pt-0">
+					@if (!string.IsNullOrEmpty(Node.Activity.CustomDisplayName))
+					{
+						<MudText>@Node.Activity.CustomDisplayName - <span class="mud-text-secondary">@Node.ActivityDescriptor.DisplayName</span></MudText>
+					}
+					else
+					{
+						<MudText>@Node.ActivityDescriptor.DisplayName</MudText>
+					}
 
-            <!-- PARAMETERS -->
-            <!-- Os parâmetros são editados no Painel lateral ao selecionar a atividade. Componente: FlowDesignParameterEditor.-->
-            @* <NodeParameters Node="Node" /> *@
+					@if (Node.Activity.ApprovalAndChecks.Count > 0)
+					{
+						<MudIcon Icon="@Icons.Material.Outlined.HowToReg" Size="Size.Small"></MudIcon>
+					}
+				</div>
+			</CardHeaderContent>
+		</MudCardHeader>
+		<MudCardContent Class="pt-0">
 
-            <!-- PORTS -->
-            @{
-                // Primeiro, renderiza as portas de entrada.
-                var i = 1;
-                var incomes = Node.ActivityPorts.Where(x => x.Type == Ports.ActivityPortType.In);
+			<!-- PARAMETERS -->
+			<!-- Os parâmetros são editados no Painel lateral ao selecionar a atividade. Componente: FlowDesignParameterEditor.-->
+			@* <NodeParameters Node="Node" /> *@
 
-                @foreach (var port in incomes)
-                {
-                    <PortRenderer @key="port" Port="@port" Class="activity-node-port" Style="@($"--count: {incomes.Count()}; --index: {i++}; --name: \"{port.DisplayName}\"; border-color:{Node.BorderColor}")" />
-                }
+			<!-- PORTS -->
+			@{
+				// Primeiro, renderiza as portas de entrada.
+				var i = 1;
+				var incomes = Node.ActivityPorts.Where(x => x.Type == Ports.ActivityPortType.In);
 
-                // Depois, renderiza as portas de saída.
-                i = 1;
-                var outcomes = Node.ActivityPorts.Where(x => x.Type == Ports.ActivityPortType.Out);
+				@foreach (var port in incomes)
+				{
+					<PortRenderer @key="port" Port="@port" Class="activity-node-port" Style="@($"--count: {incomes.Count()}; --index: {i++}; --name: \"{port.DisplayName}\"; border-color:{Node.BorderColor}")" />
+				}
 
-                @foreach (var port in outcomes)
-                {
-                    <PortRenderer @key="port" Port="@port" Class="activity-node-port" Style="@($"--count: {outcomes.Count()}; --index: {i++}; --name: \"{port.DisplayName}\"; background-color: {port.Color}")" />
-                }
-            }
+				// Depois, renderiza as portas de saída.
+				i = 1;
+				var outcomes = Node.ActivityPorts.Where(x => x.Type == Ports.ActivityPortType.Out);
 
-            <NodeParametersResume Node="Node" />
+				@foreach (var port in outcomes)
+				{
+					<PortRenderer @key="port" Port="@port" Class="activity-node-port" Style="@($"--count: {outcomes.Count()}; --index: {i++}; --name: \"{port.DisplayName}\"; background-color: {port.Color}")" />
+				}
+			}
 
-        </MudCardContent>
-    </MudCard>
+			<NodeParametersResume Node="Node" />
+
+		</MudCardContent>
+	</MudCard>
 </div>
 
 @code {
-    [CascadingParameter]
-    public FlowDesignContext Context { get; set; } = null!;
+	[CascadingParameter]
+	public FlowDesignContext Context { get; set; } = null!;
 
-    [Parameter]
-    public ActivityNodeModel Node { get; set; } = null!;
+	[Parameter]
+	public ActivityNodeModel Node { get; set; } = null!;
 
-    [Parameter]
-    public EventCallback<ActivityNodeModel> ActivityChanged { get; set; }
+	[Parameter]
+	public EventCallback<ActivityNodeModel> ActivityChanged { get; set; }
 
-    // Esta variável é utilizada para calcular o tamanho vertical mínimo do card
-    // levando em consideração o número máximo de portas nas laterais.
-    private int sidePortsCount = 0;
+	// Esta variável é utilizada para calcular o tamanho vertical mínimo do card
+	// levando em consideração o número máximo de portas nas laterais.
+	private int sidePortsCount = 0;
 
-    protected override void OnInitialized()
-    {
-        var inputPortsCount = Node.ActivityPorts.Count(x => x.Type == Ports.ActivityPortType.In);
-        var outputPortsCount = Node.ActivityPorts.Count(x => x.Type == Ports.ActivityPortType.Out);
+	protected override void OnInitialized()
+	{
+		var inputPortsCount = Node.ActivityPorts.Count(x => x.Type == Ports.ActivityPortType.In);
+		var outputPortsCount = Node.ActivityPorts.Count(x => x.Type == Ports.ActivityPortType.Out);
 
-        sidePortsCount = Math.Max(inputPortsCount, outputPortsCount);
-    }
+		sidePortsCount = Math.Max(inputPortsCount, outputPortsCount);
+	}
 
-    private string GetCardClass()
-    {
-        if (Node.Selected)
-            return "activity-node selected";
-        else
-            return "activity-node";
-    }
+	private string GetCardClass()
+	{
+		var builder = new StringBuilder("activity-node rounded-lg");
 
-    private string GetCardStyle()
-    {
-        var style = new StringBuilder();
+		if (Node.Selected)
+			builder.Append(" selected");
 
-        if (!string.IsNullOrEmpty(Node.BorderColor))
-            style.Append($" border-color: {Node.BorderColor};");
+		return builder.ToString();
+	}
 
-        var minHeight = 88 + ((sidePortsCount - 1) * 18);
+	private string GetCardStyle()
+	{
+		var style = new StringBuilder("border-radius: 1rem !important;");
 
-        style.Append($" min-height: {minHeight}px;");
+		if (!string.IsNullOrEmpty(Node.BorderColor))
+			style.Append($" border-color: {Node.BorderColor};");
 
-        return style.ToString();
-    }
+		var minHeight = 88 + ((sidePortsCount - 1) * 18);
+
+		style.Append($" min-height: {minHeight}px;");
+
+		return style.ToString();
+	}
 }

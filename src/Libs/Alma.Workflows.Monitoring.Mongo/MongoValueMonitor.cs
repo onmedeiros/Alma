@@ -1,8 +1,9 @@
-﻿using Alma.Workflows.Monitoring.MonitoringObjects.Entities;
+﻿using Alma.Core.Mongo;
+using Alma.Workflows.Monitoring.MonitoringObjects.Entities;
 using Alma.Workflows.Monitoring.Monitors;
 using Microsoft.Extensions.Logging;
-using MongoDB.Driver;
 using MongoDB.Bson;
+using MongoDB.Driver;
 using System.Globalization;
 
 namespace Alma.Workflows.Monitoring.Mongo
@@ -17,7 +18,7 @@ namespace Alma.Workflows.Monitoring.Mongo
         {
             _logger = logger;
             _database = database;
-            _collection = _database.GetCollection<MonitoringObject>(nameof(MonitoringObject));
+            _collection = _database.GetCollection<MonitoringObject>(CollectionNameResolver.GetCollectionName(typeof(MonitoringObject)));
         }
 
         public async ValueTask<decimal> Average(string? organizationId, string schemaId, string field, DateTime since)

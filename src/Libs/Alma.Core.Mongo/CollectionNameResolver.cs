@@ -1,6 +1,6 @@
 namespace Alma.Core.Mongo
 {
-    internal static class CollectionNameResolver
+    public static class CollectionNameResolver
     {
         public static string GetCollectionName(Type entityType)
         {
