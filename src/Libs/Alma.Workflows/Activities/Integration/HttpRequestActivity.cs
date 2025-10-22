@@ -106,7 +106,7 @@ namespace Alma.Workflows.Activities.Integration
                     var result = new HttpRequestActivityResponse
                     {
                         StatusCode = (int)response.StatusCode,
-                        EllapsedMilliseconds = (int)stopwatch.ElapsedMilliseconds,
+                        ElapsedMilliseconds = (int)stopwatch.ElapsedMilliseconds,
                         Content = await response.Content.ReadAsStringAsync(),
                         Body = ConvertResponseToObject(await response.Content.ReadAsStringAsync(), response.Content.Headers.ContentType?.MediaType)
                     };

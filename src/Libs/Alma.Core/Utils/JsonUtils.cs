@@ -1,4 +1,5 @@
-﻿using System.Text.Json;
+﻿using System.Diagnostics.CodeAnalysis;
+using System.Text.Json;
 
 namespace Alma.Core.Utils
 {
@@ -35,10 +36,12 @@ namespace Alma.Core.Utils
                     return list;
 
                 case JsonValueKind.String:
-                    if (IsValidDatetime(element.GetString() ?? string.Empty))
-                        return element.GetDateTime();
+                    var stringValue = element.GetString() ?? string.Empty;
+
+                    if (IsValidDatetime(stringValue))
+                        return DateTime.Parse(stringValue);
                     else
-                        return element.GetString();
+                        return stringValue;
 
                 case JsonValueKind.Number:
                     return element.GetDouble(); // Ou GetInt32(), dependendo do caso
