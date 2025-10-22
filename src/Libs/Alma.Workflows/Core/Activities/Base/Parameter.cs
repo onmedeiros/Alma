@@ -9,7 +9,7 @@ namespace Alma.Workflows.Core.Activities.Base
 {
     public class Parameter<T>
     {
-        private static Regex _templateRegex = new Regex(@"\$(var|param)\(([\w\.]+)\)", RegexOptions.Compiled);
+        private static Regex _templateRegex = new Regex(@"\$(var|param|now)\(([\w\.]*)\)", RegexOptions.Compiled);
 
         public string? ValueString { get; private set; }
 
@@ -35,9 +35,13 @@ namespace Alma.Workflows.Core.Activities.Base
             {
                 var processedValueStringTemplate = _templateRegex.Replace(ValueString, match =>
                 {
-                    string prefix = match.Groups[1].Value == "var" ? "_variable" : "_parameter";
-
-                    return $"{{{{ {prefix}.{match.Groups[2].Value} }}}}";
+                    return match.Groups[1].Value switch
+                    {
+                        "param" => ReplaceParameterTemplate(match.Groups[2].Value),
+                        "var" => ReplaceVariableTemplate(match.Groups[2].Value),
+                        "now" => ReplaceNowTemplate(),
+                        _ => match.Value
+                    };
                 });
 
                 var template = Template.Parse(processedValueStringTemplate);
@@ -46,6 +50,21 @@ namespace Alma.Workflows.Core.Activities.Base
             }
 
             return ValueConverter.Convert<T>(valueString);
+        }
+
+        public string ReplaceParameterTemplate(string value)
+        {
+            return $"{{{{ _parameter.{value} }}}}";
+        }
+
+        public string ReplaceVariableTemplate(string value)
+        {
+            return $"{{{{ _variable.{value} }}}}";
+        }
+
+        public string ReplaceNowTemplate()
+        {
+            return $"{DateTime.Now}";
         }
 
         public void SetValue(T? value)

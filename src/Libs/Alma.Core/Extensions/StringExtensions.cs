@@ -24,7 +24,7 @@ namespace Alma.Core.Extensions
 
         public static bool IsTemplate(this string value)
         {
-            return value.Contains("$var(") || value.Contains("$param(");
+            return value.Contains("$var(") || value.Contains("$param(") || value.Contains("$now()");
         }
 
         public static bool ContainsLogicalOperator(this string value)
