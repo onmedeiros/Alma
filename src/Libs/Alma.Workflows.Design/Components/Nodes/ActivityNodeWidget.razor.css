@@ -3,6 +3,9 @@
     max-width: 450px;
     padding-right: 50px;
     border-left: 7px solid #777;
+    border-right: 3px solid #777;
+    border-top: 3px solid #777;
+    border-bottom: 3px solid #777;
 }
 
     ::deep .activity-node.selected {
@@ -22,7 +25,7 @@
 }
 
     ::deep .activity-node-port.right {
-        right: 0px;
+        right: 2px;
         background-color: #777;
         border: 3px solid white;
     }
@@ -49,6 +52,14 @@
         opacity: 0.8;
     }
 
+/* Name */
+::deep .activity-node .activity-node-name {
+    position: absolute;
+    margin-top: -32px;
+    background-color: white;
+    padding-left: 8px;
+    padding-right: 8px;
+}
 /* Summary */
 ::deep .activity-node-summary {
     position: absolute;

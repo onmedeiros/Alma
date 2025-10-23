@@ -7,8 +7,9 @@
 
 <CascadingValue Value="Node">
     <MudBlazor.MudStack Style="gap: 0;">
-        @if (Node.ActivityDescriptor.Parameters.Count > 0)
+        @if (Node.ActivityDescriptor.Parameters.Any(x => !IsHidden(x) && !string.IsNullOrEmpty(x.DisplayValue)))
         {
+            <MudDivider Class="my-4"/>
             @foreach (var parameter in Node.ActivityDescriptor.Parameters)
             {
                 if (IsHidden(parameter) || string.IsNullOrEmpty(parameter.DisplayValue))
@@ -16,7 +17,6 @@
 
                 <MudText 
                     Typo="Typo.body2" 
-                    Class="mud-text-secondary" 
                     Style="max-width:200px; overflow: hidden">
                     @if (parameter.DisplayValue.Length > 33)
                     {

@@ -11,20 +11,20 @@
 	<MudCard Class="@GetCardClass()" Style="@GetCardStyle()">
 		<MudCardHeader>
 			<CardHeaderContent>
+				@if (!string.IsNullOrEmpty(Node.Activity.CustomDisplayName))
+				{
+					<div class="activity-node-name rounded-pill mud-elevation-1">
+						@Node.Activity.CustomDisplayName
+					</div>
+				}
+				
 				<div class="d-flex align-center gap-2">
 					@if (!string.IsNullOrEmpty(Node.Icon))
 					{
 						<MudIcon Icon="@Node.Icon" Style="@($"color: {Node.BorderColor}")"></MudIcon>
 					}
 
-					@if (!string.IsNullOrEmpty(Node.Activity.CustomDisplayName))
-					{
-						<MudText>@Node.Activity.CustomDisplayName - <span class="mud-text-secondary">@Node.ActivityDescriptor.DisplayName</span></MudText>
-					}
-					else
-					{
-						<MudText>@Node.ActivityDescriptor.DisplayName</MudText>
-					}
+					<MudText>@Node.ActivityDescriptor.DisplayName</MudText>
 
 					@if (Node.Activity.ApprovalAndChecks.Count > 0)
 					{
@@ -60,7 +60,7 @@
 				}
 			}
 
-			<NodeParametersResume Node="Node" />
+			
 
 		</MudCardContent>
 	</MudCard>

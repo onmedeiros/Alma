@@ -14,7 +14,7 @@ namespace Alma.Workflows.Activities
     [ActivityCustomization(Icon = FlowIcons.Start, BorderColor = FlowColors.Entrypoints)]
     public class StartActivity : Activity, IStart
     {
-        [Port(DisplayName = "Done", Type = PortType.Output, DataType = typeof(string))]
+        [Port(DisplayName = "Concluído", Type = PortType.Output, DataType = typeof(string))]
         public Port Done { get; set; } = default!;
 
         public override void Execute(ActivityExecutionContext context)

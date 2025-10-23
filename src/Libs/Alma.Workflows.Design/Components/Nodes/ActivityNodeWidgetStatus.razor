@@ -4,7 +4,7 @@
 @if (Context.DesignExecutionStatus != Enums.FlowDesignContextExecutionStatus.NotStarted)
 {
 	<div class="activity-node-status">
-		<MudStack Row="true" Class="activity-node-status-stack rounded-pill px-1 mud-elevation-1">
+		<MudStack Row="true" Class="activity-node-status-stack rounded-pill px-1 me-2">
 			@if (IsExecuted())
 			{
 				<MudIcon Icon="@Icons.Material.Outlined.Done" Size="Size.Small" Color="@Color.Success"></MudIcon>
