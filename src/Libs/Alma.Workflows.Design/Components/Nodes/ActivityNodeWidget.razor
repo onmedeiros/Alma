@@ -4,9 +4,9 @@
 @using MudBlazor
 @using global::Blazor.Diagrams.Components.Renderers
 
-<div>
+<div class="activity-node-container">
 	<ActivityNodeWidgetStatus Context="Context" Node="Node" />
-
+	<ActivityNodeWidgetSummary Node="Node"/>
 
 	<MudCard Class="@GetCardClass()" Style="@GetCardStyle()">
 		<MudCardHeader>

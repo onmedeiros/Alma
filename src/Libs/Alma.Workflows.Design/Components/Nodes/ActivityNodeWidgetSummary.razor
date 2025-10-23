@@ -1,0 +1,19 @@
+﻿<div class="activity-node-summary">
+	<div class="d-flex flex-column gap-0">
+		@if (!string.IsNullOrEmpty(Node.Activity.CustomDisplayName))
+		{
+			<span class="mb-0"><b>@Node.Activity.CustomDisplayName</b></span>
+			<span class="mb-2"><small>@Node.ActivityDescriptor.DisplayName</small></span>
+		}
+		else
+		{
+			<span class="mb-2"><b>@Node.ActivityDescriptor.DisplayName</b></span>
+		}
+		<span>@Node.ActivityDescriptor.Description</span>
+	</div>
+</div>
+
+@code {
+	[Parameter]
+	public ActivityNodeModel Node { get; set; } = default!;
+}

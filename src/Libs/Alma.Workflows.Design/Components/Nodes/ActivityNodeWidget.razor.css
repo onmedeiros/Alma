@@ -48,3 +48,31 @@
         border-radius: 3px;
         opacity: 0.8;
     }
+
+/* Summary */
+::deep .activity-node-summary {
+    position: absolute;
+    bottom: calc(100% + 32px);
+    min-width: 250px;
+    width: fit-content;
+    max-width: 300px;
+    overflow:auto;
+    padding: 1rem;
+    background-color: var(--mud-palette-dark);
+    color: var(--mud-palette-dark-text);
+    border-radius: calc(var(--mud-default-borderradius) * 2);
+    z-index: 1900;
+    /* Animations */
+    visibility: hidden;
+    opacity: 0;
+    transition: opacity 0.2s ease-in-out, transform 0.2s ease-in-out, visibility 0s 0.2s;
+    transform: translateY(10px);
+}
+
+.activity-node-container:hover ::deep .activity-node-summary {
+    /* Animations */
+    visibility: visible;
+    opacity: 1;
+    transform: translateY(0);
+    transition: opacity 0.2s ease-in-out, transform 0.2s ease-in-out;
+}
