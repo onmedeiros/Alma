@@ -35,6 +35,8 @@ namespace Alma.Core.Data
 
         Task<PagedList<T>> GetPagedAsync(int page, int pageSize, IQueryable<T>? query = null);
 
+        Task<PagedList<T>> GetPagedAsync(int page, int pageSize, Filters<T>? filters = null);
+
         #endregion
     }
 }

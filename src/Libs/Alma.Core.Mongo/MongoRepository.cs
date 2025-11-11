@@ -173,6 +173,19 @@ namespace Alma.Core.Mongo
             return result;
         }
 
+        public async Task<PagedList<T>> GetPagedAsync(int page, int pageSize, Filters<T>? filters = null)
+        {
+            var query = AsQueryable();
+
+            // Apply filters if provided
+            if (filters is not null)
+            {
+                query = filters.Apply(query);
+            }
+
+            return await GetPagedAsync(page, pageSize, query);
+        }
+
         public Task<List<T>> ToListAsync(IQueryable<T>? query = null)
         {
             query ??= AsQueryable();

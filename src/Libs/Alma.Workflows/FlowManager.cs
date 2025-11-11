@@ -3,21 +3,32 @@ using Alma.Workflows.Stores;
 using Alma.Workflows.Stores.Filters;
 using Microsoft.Extensions.Logging;
 using Alma.Core.Types;
+using Alma.Core.Data;
 
 namespace Alma.Workflows
 {
     public interface IFlowManager
     {
         ValueTask<FlowDefinition> CreateDefinition(string name, string? identifier = null, string? discriminator = null);
+
         ValueTask<FlowDefinition> UpdateDefinition(FlowDefinition definition);
+
         ValueTask<FlowDefinition?> FindDefinitionById(string id, string? discriminator = null);
+
         ValueTask<FlowDefinition?> DeleteDefinition(string id);
+
         ValueTask<string> GetName(string id, string? discriminator = null);
 
         ValueTask<PagedList<FlowDefinition>> ListDefinitions(int page, int pageSize, FlowDefinitionFilters? filters = null);
+
+        ValueTask<PagedList<FlowDefinition>> ListDefinitions(int page, int pageSize, Filters<FlowDefinition>? filters = null);
+
         ValueTask<FlowDefinitionVersion> PublishDefinitionVersion(FlowDefinition definition, string name, string? identifier = null, string? discriminator = null);
+
         ValueTask<FlowDefinitionVersion?> FindDefinitionVersionById(string id, string? discriminator = null);
+
         ValueTask<PagedList<FlowDefinitionVersion>> ListDefinitionVersions(int page, int pageSize, FlowDefinitionVersionFilters? filters = null);
+
         ValueTask<string> GetDefinitionVersionName(string id, string? discriminator = null);
     }
 
@@ -79,11 +90,17 @@ namespace Alma.Workflows
             _logger.LogDebug("Listing flow definitions.");
             return _flowDefinitionStore.ListAsync(page, pageSize, filters);
         }
+
+        public ValueTask<PagedList<FlowDefinition>> ListDefinitions(int page, int pageSize, Filters<FlowDefinition>? filters = null)
+        {
+            _logger.LogDebug("Listing flow definitions.");
+            return _flowDefinitionStore.ListAsync(page, pageSize, filters);
+        }
+
         public ValueTask<string> GetName(string id, string? discriminator = null)
         {
             return _flowDefinitionStore.GetName(id, discriminator);
         }
-
 
         public ValueTask<FlowDefinitionVersion> PublishDefinitionVersion(FlowDefinition definition, string name, string? identifier = null, string? discriminator = null)
         {
@@ -117,6 +134,7 @@ namespace Alma.Workflows
 
             return _flowDefinitionVersionStore.ListAsync(page, pageSize, filters);
         }
+
         public ValueTask<string> GetDefinitionVersionName(string id, string? discriminator = null)
         {
             return _flowDefinitionVersionStore.GetName(id, discriminator);

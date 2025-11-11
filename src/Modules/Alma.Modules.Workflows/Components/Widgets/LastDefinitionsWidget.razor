@@ -1,0 +1,55 @@
+﻿@using Alma.Core.Data
+@using Alma.Workflows
+@using Alma.Workflows.Core.Instances.Services
+@using Alma.Workflows.Core.Instances.Stores
+@using Alma.Workflows.Definitions
+@using Microsoft.Extensions.DependencyInjection
+
+@inject IServiceScopeFactory ScopeFactory
+
+<MudTable Items="@_definitions" Hover="true" Loading="@_isLoading" Elevation="0">
+	<HeaderContent>
+		<MudTh>Nome</MudTh>
+		<MudTh Style="width: 60px;">Opções</MudTh>
+	</HeaderContent>
+	<RowTemplate>
+		<MudTd DataLabel="Name">@context.Name</MudTd>
+		<MudTd>
+			<MudIconButton Href="@($"/Workflows/definitions/edit/{context.Id}")" Icon="@Icons.Material.Outlined.Edit" Size="MudBlazor.Size.Small" />
+		</MudTd>
+	</RowTemplate>
+</MudTable>
+
+@code {
+	[CascadingParameter]
+	public required Organization Organization { get; set; }
+
+	private IEnumerable<FlowDefinition>? _definitions { get; set; } = default;
+
+	private bool _isLoading = true;
+
+	protected override async Task OnAfterRenderAsync(bool firstRender)
+	{
+		if (firstRender)
+		{
+			await Load();
+			_isLoading = false;
+			StateHasChanged();
+		}
+	}
+
+	private async ValueTask Load()
+	{
+		_isLoading = true;
+		StateHasChanged();
+
+		using var scope = ScopeFactory.CreateScope();
+		var instanceManager = scope.ServiceProvider.GetRequiredService<IFlowManager>();
+
+		var filters = new Filters<FlowDefinition>()
+			.Where(x => x.Discriminator == Organization.Id)
+			.OrderByDescending(x => x.LastUpdate);
+
+		_definitions = await instanceManager.ListDefinitions(1, 5, filters);
+	}
+}

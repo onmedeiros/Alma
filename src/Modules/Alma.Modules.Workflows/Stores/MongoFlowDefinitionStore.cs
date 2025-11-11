@@ -6,6 +6,7 @@ using MongoDB.Driver;
 using MongoDB.Driver.Linq;
 using Alma.Core.Types;
 using SimpleCore.Data.Mongo.Extensions;
+using Alma.Core.Data;
 
 namespace Alma.Modules.Workflows.Stores
 {
@@ -108,6 +109,31 @@ namespace Alma.Modules.Workflows.Stores
             query = query.OrderByDescending(x => x.Name);
 
             return new ValueTask<PagedList<FlowDefinition>>(query.ToPagedListAsync(page, pageSize));
+        }
+
+        public ValueTask<PagedList<FlowDefinition>> ListAsync(int page, int pageSize, Filters<FlowDefinition>? filters = null, CancellationToken cancellationToken = default)
+        {
+            var query = _collection.AsQueryable();
+
+            // Apply filters if provided
+            if (filters is not null)
+            {
+                query = filters.Apply(query);
+            }
+
+            var totalCount = query.Count();
+            var items = query.Skip((page - 1) * pageSize).Take(pageSize).ToList();
+
+            var list = new PagedList<FlowDefinition>
+            {
+                PageIndex = page,
+                PageSize = pageSize,
+                TotalCount = totalCount
+            };
+
+            list.AddRange(items);
+
+            return new ValueTask<PagedList<FlowDefinition>>(list);
         }
 
         public ValueTask<string> GetName(string id, string? discriminator = null, CancellationToken cancellationToken = default)

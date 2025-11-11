@@ -1,16 +1,24 @@
 ﻿using Alma.Workflows.Definitions;
 using Alma.Workflows.Stores.Filters;
 using Alma.Core.Types;
+using Alma.Core.Data;
 
 namespace Alma.Workflows.Stores
 {
     public interface IFlowDefinitionStore
     {
         ValueTask<FlowDefinition> InsertAsync(FlowDefinition definition, CancellationToken cancellationToken = default);
+
         ValueTask<FlowDefinition> UpdateAsync(FlowDefinition definition, CancellationToken cancellationToken = default);
+
         ValueTask<FlowDefinition?> DeleteAsync(string id, string? discriminator = null, CancellationToken cancellationToken = default);
+
         ValueTask<FlowDefinition?> FindByIdAsync(string id, string? discriminator = null, CancellationToken cancellationToken = default);
+
         ValueTask<PagedList<FlowDefinition>> ListAsync(int page, int pageSize, FlowDefinitionFilters? filters = null, CancellationToken cancellationToken = default);
+
+        ValueTask<PagedList<FlowDefinition>> ListAsync(int page, int pageSize, Filters<FlowDefinition>? filters = null, CancellationToken cancellationToken = default);
+
         ValueTask<string> GetName(string id, string? discriminator = null, CancellationToken cancellationToken = default);
     }
 
@@ -73,6 +81,31 @@ namespace Alma.Workflows.Stores
 
                 if (!string.IsNullOrWhiteSpace(filters.Discriminator))
                     query = query.Where(x => x.Discriminator == filters.Discriminator);
+            }
+
+            var totalCount = query.Count();
+            var items = query.Skip((page - 1) * pageSize).Take(pageSize).ToList();
+
+            var list = new PagedList<FlowDefinition>
+            {
+                PageIndex = page,
+                PageSize = pageSize,
+                TotalCount = totalCount
+            };
+
+            list.AddRange(items);
+
+            return new ValueTask<PagedList<FlowDefinition>>(list);
+        }
+
+        public ValueTask<PagedList<FlowDefinition>> ListAsync(int page, int pageSize, Filters<FlowDefinition>? filters = null, CancellationToken cancellationToken = default)
+        {
+            var query = Collection.AsQueryable();
+
+            // Apply filters if provided
+            if (filters is not null)
+            {
+                query = filters.Apply(query);
             }
 
             var totalCount = query.Count();

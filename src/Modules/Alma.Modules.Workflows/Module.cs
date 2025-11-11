@@ -94,6 +94,18 @@ namespace Alma.Modules.Workflows
                     MinWidth = 2,
                     MinHeight = 1
                 });
+
+                options.Register<LastDefinitionsWidget>(new WidgetOptions
+                {
+                    Name = "Últimas definições",
+                    Container = "Dashboard",
+                    Width = 2,
+                    Height = 3,
+                    MaxWidth = 4,
+                    MaxHeight = 4,
+                    MinWidth = 2,
+                    MinHeight = 2
+                });
             });
         }
     }
