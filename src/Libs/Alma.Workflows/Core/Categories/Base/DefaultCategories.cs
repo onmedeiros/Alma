@@ -5,6 +5,7 @@ namespace Alma.Workflows.Core.Categories.Base
     public static class DefaultCategories
     {
         public static readonly Category Data = new() { Id = "system.data", ResourceName = "Alma_Category_Data", DefaultName = "Dados", IsSystemDefault = true };
+        public static readonly Category Database = new() { Id = "system.database", ResourceName = "Alma_Category_Database", DefaultName = "Banco de Dados", IsSystemDefault = true };
         public static readonly Category Flow = new() { Id = "system.flow", ResourceName = "Alma_Category_Flow", DefaultName = "Fluxo", IsSystemDefault = true };
         public static readonly Category Integration = new() { Id = "system.integration", ResourceName = "Alma_Category_Integration", DefaultName = "Integração", IsSystemDefault = true };
         public static readonly Category Interaction = new() { Id = "system.interaction", ResourceName = "Alma_Category_Interaction", DefaultName = "Interação", IsSystemDefault = true };
@@ -13,6 +14,7 @@ namespace Alma.Workflows.Core.Categories.Base
         public static readonly IReadOnlyList<Category> All = new List<Category>
         {
             Data,
+            Database,
             Flow,
             Integration,
             Interaction,
