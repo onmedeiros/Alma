@@ -23,6 +23,7 @@ using Alma.Workflows.Options;
 using Alma.Workflows.Parsers;
 using Alma.Workflows.Registries;
 using Alma.Workflows.Runners;
+using Alma.Workflows.Runners.Queue;
 using Alma.Workflows.Runners.Strategies;
 using Alma.Workflows.Scripting;
 using Alma.Workflows.Scripting.Javascript;
@@ -93,7 +94,14 @@ namespace Alma.Workflows
             services.AddScoped<IFlowRunnerFactory, FlowRunnerFactory>();
             services.AddScoped<IActivityStepFactory, ActivityStepFactory>();
             services.AddScoped<IApprovalAndCheckResolverFactory, ApprovalAndCheckResolverFactory>();
-            services.AddTransient<IQueueManager, QueueManager>();
+            
+            // Queue Management - Separated Responsibilities (FASE 1.1)
+            services.AddTransient<IQueueEnqueuer, QueueEnqueuer>();
+            services.AddTransient<IQueueNavigator, QueueNavigator>();
+            services.AddTransient<IQueueStateManager, QueueStateManager>();
+            services.AddTransient<IQueueStatusResolver, QueueStatusResolver>();
+            services.AddTransient<IQueueManager, QueueManagerFacade>();
+            
             services.AddTransient<IParameterSetter, ParameterSetter>();
             services.AddTransient<IDataSetter, DataSetter>();
 
