@@ -33,6 +33,7 @@
   <ItemGroup>
     <ProjectReference Include="..\Libs\Alma.Core.Mongo\Alma.Core.Mongo.csproj" />
     <ProjectReference Include="..\Libs\Alma.Core\Alma.Core.csproj" />
+    <ProjectReference Include="..\Libs\Alma.Workflows.Databases\Alma.Workflows.Databases.csproj" />
     <ProjectReference Include="..\Libs\Alma.Workflows.Monitoring.Mongo\Alma.Workflows.Monitoring.Mongo.csproj" />
     <ProjectReference Include="..\Libs\Alma.Organizations\Alma.Organizations.csproj" />
     <ProjectReference Include="..\Libs\Alma.Workflows.Apis.AspNetCore\Alma.Workflows.Apis.AspNetCore.csproj" />

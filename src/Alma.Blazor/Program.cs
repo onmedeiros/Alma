@@ -29,6 +29,7 @@ using MongoDB.Bson;
 using MudBlazor.Services;
 using Serilog;
 using System.Text.Json.Serialization;
+using Alma.Workflows.Databases;
 
 // Logging
 Log.Logger = Logging.ConfigureLogger();
@@ -196,6 +197,7 @@ builder.Services.AddHangfireServer(options =>
 #endregion
 
 builder.Services.AddAlmaOrganizations();
+builder.Services.AddWorkflowDatabases();
 
 // New model services
 builder.Services.AddHttpContextAccessor();

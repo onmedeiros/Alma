@@ -7,7 +7,6 @@
   </PropertyGroup>
 
   <ItemGroup>
-    <ProjectReference Include="..\Alma.Organizations\Alma.Organizations.csproj" />
     <ProjectReference Include="..\Alma.Workflows\Alma.Workflows.csproj" />
   </ItemGroup>
 
