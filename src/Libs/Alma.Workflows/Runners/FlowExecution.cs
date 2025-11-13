@@ -1,4 +1,5 @@
-﻿using Alma.Workflows.States;
+﻿using Alma.Workflows.Core.Abstractions;
+using Alma.Workflows.States;
 
 namespace Alma.Workflows.Runners
 {
@@ -8,6 +9,7 @@ namespace Alma.Workflows.Runners
         public ActivityRunner Runner { get; set; }
         public bool Selected { get; set; }
         public bool RequireInteraction => Runner.RequireInteraction;
+        public IActivity Activity => QueueItem.Activity;
 
         public FlowExecution(QueueItem queueItem, ActivityRunner runner, bool selected = false)
         {

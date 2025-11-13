@@ -23,6 +23,9 @@ using Alma.Workflows.Options;
 using Alma.Workflows.Parsers;
 using Alma.Workflows.Registries;
 using Alma.Workflows.Runners;
+using Alma.Workflows.Runners.Connections;
+using Alma.Workflows.Runners.Coordination;
+using Alma.Workflows.Runners.ExecutionModes;
 using Alma.Workflows.Runners.Queue;
 using Alma.Workflows.Runners.Strategies;
 using Alma.Workflows.Scripting;
@@ -94,6 +97,17 @@ namespace Alma.Workflows
             services.AddScoped<IFlowRunnerFactory, FlowRunnerFactory>();
             services.AddScoped<IActivityStepFactory, ActivityStepFactory>();
             services.AddScoped<IApprovalAndCheckResolverFactory, ApprovalAndCheckResolverFactory>();
+            
+            // Fase 1: Coordenação de Execução e Modos
+            services.AddScoped<IExecutionCoordinator, Runners.Coordination.ExecutionCoordinator>();
+            services.AddScoped<IActivityExecutor, Runners.Coordination.ActivityExecutor>();
+            services.AddScoped<IExecutionModeStrategyFactory, Runners.ExecutionModes.ExecutionModeStrategyFactory>();
+            services.AddScoped<Runners.ExecutionModes.ManualExecutionModeStrategy>();
+            services.AddScoped<Runners.ExecutionModes.StepByStepExecutionModeStrategy>();
+            services.AddScoped<Runners.ExecutionModes.AutomaticExecutionModeStrategy>();
+            
+            // Fase 1: Gerenciamento de Conexões
+            services.AddScoped<IConnectionManager, Runners.Connections.ConnectionManager>();
             
             // Queue Management - Separated Responsibilities (FASE 1.1)
             services.AddTransient<IQueueEnqueuer, QueueEnqueuer>();
