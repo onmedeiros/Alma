@@ -120,6 +120,23 @@ namespace Alma.Workflows
             services.AddTransient<Core.Activities.Visitors.ActivityValidationVisitor>();
             services.AddTransient<Core.Activities.Visitors.ActivityCloningVisitor>();
             
+            // Fase 3: State Components (Separated State Management)
+            services.AddTransient<Core.States.Components.IQueueState, Core.States.Components.QueueState>();
+            services.AddTransient<Core.States.Components.IVariableState, Core.States.Components.VariableState>();
+            services.AddTransient<Core.States.Components.IParameterState, Core.States.Components.ParameterState>();
+            services.AddTransient<Core.States.Components.IActivityDataState, Core.States.Components.ActivityDataState>();
+            services.AddTransient<Core.States.Components.IApprovalState, Core.States.Components.ApprovalState>();
+            services.AddTransient<Core.States.Components.IHistoryState, Core.States.Components.HistoryState>();
+            services.AddTransient<Core.States.Components.ILogState, Core.States.Components.LogState>();
+            
+            // Fase 3: State Machine Pattern
+            services.AddTransient<Core.States.Machine.IFlowStateMachine, Core.States.Machine.FlowStateMachine>();
+            services.AddSingleton<Core.States.Machine.StateTransitionValidator>();
+            
+            // Fase 3: State Observers (Notification of state changes)
+            services.AddTransient<Core.States.Observers.LoggingStateObserver>();
+            services.AddSingleton<Core.States.Observers.MetricsStateObserver>();
+            
             // Queue Management - Separated Responsibilities (FASE 1.1)
             services.AddTransient<IQueueEnqueuer, QueueEnqueuer>();
             services.AddTransient<IQueueNavigator, QueueNavigator>();
