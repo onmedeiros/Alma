@@ -109,6 +109,17 @@ namespace Alma.Workflows
             // Fase 1: Gerenciamento de Conexões
             services.AddScoped<IConnectionManager, Runners.Connections.ConnectionManager>();
             
+            // Fase 2: Property Accessors (High-Performance Reflection Alternative)
+            services.AddSingleton<Core.Properties.PropertyAccessorFactory>();
+            services.AddSingleton<Core.Properties.ParameterAccessor>();
+            services.AddSingleton<Core.Properties.DataAccessor>();
+            services.AddSingleton<Core.Properties.PortAccessor>();
+            
+            // Fase 2: Activity Visitors (Operations without modifying Activity classes)
+            services.AddTransient<Core.Activities.Visitors.ActivityDescriptionVisitor>();
+            services.AddTransient<Core.Activities.Visitors.ActivityValidationVisitor>();
+            services.AddTransient<Core.Activities.Visitors.ActivityCloningVisitor>();
+            
             // Queue Management - Separated Responsibilities (FASE 1.1)
             services.AddTransient<IQueueEnqueuer, QueueEnqueuer>();
             services.AddTransient<IQueueNavigator, QueueNavigator>();

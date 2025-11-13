@@ -5,14 +5,24 @@ using Alma.Workflows.Core.ApprovalsAndChecks.Interfaces;
 using Alma.Workflows.Core.ApprovalsAndChecks.Models;
 using Alma.Workflows.Core.Contexts;
 using Alma.Workflows.Core.Description.Descriptors;
-using Alma.Workflows.Factories;
+using Alma.Workflows.Core.Properties;
 using System.Reflection;
 
 namespace Alma.Workflows.Core.Activities.Base
 {
+    /// <summary>
+    /// Base class for all activities in a workflow.
+    /// Refactored to use Property Accessors for better performance and maintainability.
+    /// </summary>
     public class Activity : IActivity
     {
         private ApprovalAndCheckStatus _approvalAndCheckStatus = ApprovalAndCheckStatus.Pending;
+        
+        // Property Accessors - lazy initialized for performance
+        private static readonly Lazy<PropertyAccessorFactory> _accessorFactory = 
+            new Lazy<PropertyAccessorFactory>(() => PropertyAccessorFactory.Create());
+        
+        protected static PropertyAccessorFactory Accessors => _accessorFactory.Value;
 
         public string Id { get; set; }
 
@@ -41,30 +51,26 @@ namespace Alma.Workflows.Core.Activities.Base
                 Id = Guid.NewGuid().ToString();
         }
 
-        #region IParametrizable
+        #region IParametrizable - Using Property Accessors for Performance
 
         public virtual PropertyInfo GetParameterProperty(string name)
         {
-            // Get all properties of type Input<>, and find the one with the specified name
-            var parameterProperty = GetType().GetProperties()
-                .Where(p => p.PropertyType.IsGenericType && p.PropertyType.GetGenericTypeDefinition() == typeof(Parameter<>))
-                .FirstOrDefault(p => p.Name == name);
-
-            if (parameterProperty is null)
+            var propertyInfo = Accessors.Parameters.GetPropertyInfo(this, name);
+            
+            if (propertyInfo is null)
                 throw new InvalidOperationException($"Parameter {name} not found.");
 
-            return parameterProperty;
+            return propertyInfo;
         }
 
         public virtual TValue? GetParameterValue<TValue>(string name, ActivityExecutionContext context)
         {
-            // Get the property of type Input<> with the specified name
-            var inputProperty = GetParameterProperty(name);
+            var propertyInfo = Accessors.Parameters.GetPropertyInfo(this, name);
 
-            if (inputProperty is null)
+            if (propertyInfo is null)
                 throw new InvalidOperationException($"Parameter {name} not found.");
 
-            var parameter = (Parameter<TValue>?)inputProperty.GetValue(this);
+            var parameter = (Parameter<TValue>?)propertyInfo.GetValue(this);
 
             if (parameter is null)
                 return default;
@@ -74,177 +80,70 @@ namespace Alma.Workflows.Core.Activities.Base
 
         public virtual string? GetParameterValueAsString(string name)
         {
-            // Get the property of type Parameter<> with the specified name
-            var inputProperty = GetParameterProperty(name);
-
-            if (inputProperty is null)
-                throw new InvalidOperationException($"Parameter {name} not found.");
-
-            var parameter = inputProperty.GetValue(this);
-
-            if (parameter is null)
-                return null;
-
-            var valueProperty = parameter.GetType().GetProperty("Value");
-
-            if (valueProperty is null)
-                throw new InvalidOperationException($"Parameter {name} does not have a Value property.");
-
-            var value = valueProperty.GetValue(parameter);
-
-            return value?.ToString();
+            return Accessors.Parameters.GetValueAsString(this, name);
         }
 
         public virtual void SetParameterValue(string name, object? value)
         {
-            var parameterPropertyInfo = GetParameterProperty(name);
-            var parameterInstance = parameterPropertyInfo.GetValue(this);
-            var valueStringPropertyInfo = parameterPropertyInfo.PropertyType.GetProperty(nameof(Parameter<object>.ValueString));
-
-            if (valueStringPropertyInfo is null)
-                throw new InvalidOperationException($"Property 'ValueString' not found on {parameterPropertyInfo.PropertyType}.");
-
-            if (parameterInstance is null)
-            {
-                var parameterGenericType = parameterPropertyInfo.PropertyType.GenericTypeArguments[0];
-                parameterInstance = ParameterFactory.CreateParameter(parameterGenericType, value);
-                parameterPropertyInfo.SetValue(this, parameterInstance);
-                return;
-            }
-
-            if (value is null)
-            {
-                valueStringPropertyInfo.SetValue(parameterInstance, null);
-                return;
-            }
-
-            valueStringPropertyInfo.SetValue(parameterInstance, value?.ToString());
+            Accessors.Parameters.Set(this, name, value);
         }
 
         #endregion
 
-        #region IDataContaining
+        #region IDataContaining - Using Property Accessors for Performance
 
         public virtual PropertyInfo GetDataProperty(string name)
         {
-            // Get all properties of type Data<>, and find the one with the specified name
-            var dataProperty = GetType().GetProperties()
-                .Where(p => p.PropertyType.IsGenericType && p.PropertyType.GetGenericTypeDefinition() == typeof(Data<>))
-                .FirstOrDefault(p => p.Name == name);
-
-            if (dataProperty is null)
+            var propertyInfo = Accessors.Data.GetPropertyInfo(this, name);
+            
+            if (propertyInfo is null)
                 throw new InvalidOperationException($"Data property {name} not found.");
 
-            return dataProperty;
+            return propertyInfo;
         }
 
         public virtual object? GetDataValue(string name)
         {
-            var dataPropertyInfo = GetDataProperty(name);
-            var dataInstance = dataPropertyInfo.GetValue(this);
-
-            if (dataInstance is null)
-                return null;
-
-            var valuePropertyInfo = dataInstance.GetType().GetProperty("Value");
-
-            if (valuePropertyInfo is null)
-                throw new InvalidOperationException($"Data property {name} does not have a Value property.");
-
-            return valuePropertyInfo.GetValue(dataInstance);
+            return Accessors.Data.Get(this, name);
         }
 
         public virtual void SetDataValue(string name, object? value)
         {
-            var dataPropertyInfo = GetDataProperty(name);
-            var valuePropertyInfo = dataPropertyInfo.PropertyType.GetProperty("Value");
-
-            if (valuePropertyInfo is null)
-                throw new InvalidOperationException($"Data property {name} does not have a Value property.");
-
-            var dataInstance = DataFactory.CreateData(valuePropertyInfo.PropertyType);
-
-            valuePropertyInfo.SetValue(dataInstance, value);
-            dataPropertyInfo.SetValue(this, dataInstance);
+            Accessors.Data.Set(this, name, value);
         }
 
         #endregion
 
-        #region IConnectable
+        #region IConnectable - Using Property Accessors for Performance
 
         public virtual IEnumerable<PropertyInfo> GetPortProperties()
         {
-            // Get all properties of type Port
-            var portProperties = GetType().GetProperties()
-                .Where(p => p.PropertyType.IsAssignableTo(typeof(Port)))
-                .AsEnumerable();
-
-            if (portProperties is null || portProperties.Count() == 0)
-                yield break;
-
-            foreach (var portProperty in portProperties)
-            {
-                yield return portProperty;
-            }
+            return Accessors.Ports.GetPropertyInfos(this);
         }
 
         public virtual PropertyInfo GetPortProperty(string name)
         {
-            var portPropertyInfo = GetType().GetProperty(name);
+            var propertyInfo = Accessors.Ports.GetPropertyInfo(this, name);
 
-            if (portPropertyInfo is null)
+            if (propertyInfo is null)
                 throw new InvalidOperationException($"Port property with name '{name}' doesn't exist.");
 
-            if (!portPropertyInfo.PropertyType.IsAssignableTo(typeof(Port)))
-                throw new InvalidOperationException($"Property with name '{name}' is not of type Port.");
-
-            return portPropertyInfo;
+            return propertyInfo;
         }
 
         public virtual void SetPortProperty(string name, Port value)
         {
-            var property = GetPortProperty(name);
-
-            property.SetValue(this, value);
+            Accessors.Ports.Set(this, name, value);
         }
 
         public virtual IEnumerable<Port> GetPorts()
         {
-            // Get all properties of type Port
-            var portProperties = GetType().GetProperties()
-                .Where(p => p.PropertyType.IsAssignableTo(typeof(Port)))
-                .AsEnumerable();
-
-            if (portProperties is null || portProperties.Count() == 0)
-                yield break;
-
-            foreach (var portProperty in portProperties)
-            {
-                var port = portProperty.GetValue(this) as Port;
-
-                if (port is null)
-                    continue;
-
-                yield return port;
-            }
+            return Accessors.Ports.GetPorts(this);
         }
 
         public virtual void SetPortData(string name, object? value)
         {
-            var property = GetPortProperty(name);
-
-            if (property is null)
-                throw new InvalidOperationException($"Port property with name '{name}' doesn't exist.");
-
-            if (property.PropertyType.IsAssignableTo(typeof(Port)))
-            {
-                var port = property.GetValue(this) as Port;
-
-                if (port is null)
-                    throw new InvalidOperationException($"Port property with name '{name}' is null.");
-
-                port.Data = value;
-            }
+            Accessors.Ports.SetPortData(this, name, value);
         }
 
         #endregion
