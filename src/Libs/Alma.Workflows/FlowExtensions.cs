@@ -50,6 +50,7 @@ namespace Alma.Workflows
                 // Flow
                 options.AddActivity<ConditionActivity>();
                 options.AddActivity<ScheduleInstanceActivity>();
+                options.AddActivity<LoopActivity>();
 
                 // Integration
                 options.AddActivity<HttpRequestActivity>();

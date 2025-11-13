@@ -114,6 +114,9 @@ namespace Alma.Workflows.Runners
                 _logger.LogInformation("Executing activity {ActivityId} ({DisplayName})",
                     _activity.Id, _activity.DisplayName);
 
+                // Reset all port execution states before executing
+                ResetPortExecutionStates();
+
                 // _parameterSetter.SetParameters(Context, _activity);
                 await _activity.ExecuteAsync(Context);
 
@@ -136,6 +139,18 @@ namespace Alma.Workflows.Runners
                 executionResult.ExecutionStatusDetails = ex.Message;
 
                 return executionResult;
+            }
+        }
+
+        /// <summary>
+        /// Resets the execution state of all ports in the activity.
+        /// This allows activities to be re-executed (important for loop activities).
+        /// </summary>
+        private void ResetPortExecutionStates()
+        {
+            foreach (var port in _activity.GetPorts())
+            {
+                port.Executed = false;
             }
         }
 

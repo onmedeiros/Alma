@@ -1,4 +1,5 @@
-﻿using Alma.Workflows.Core.Activities.Base;
+﻿using Alma.Workflows.Activities.Flow;
+using Alma.Workflows.Core.Activities.Base;
 using Alma.Workflows.Core.Activities.Enums;
 using Alma.Workflows.Core.ApprovalsAndChecks.Models;
 using Alma.Workflows.Core.Contexts;
@@ -124,12 +125,31 @@ namespace Alma.Workflows.Runners
 
             if (executionResult.ExecutionStatus == ActivityExecutionStatus.Completed)
             {
-                _queueManager.Complete(Context, execution.QueueItem);
-
                 var executedPorts = executionResult.ExecutedPorts;
 
-                if (executedPorts.Any())
-                    EnqueueExecutedPortConnections(executedPorts);
+                // Check if this is a loop activity that executed the Body port
+                var isLoopBodyExecution = CheckIfLoopBodyExecution(execution.QueueItem.Activity, executedPorts);
+
+                if (isLoopBodyExecution)
+                {
+                    // Loop executed the Body port, now it waits for the body to complete
+                    _logger.LogInformation("Loop activity {ActivityId} executed Body port, waiting for body completion", execution.QueueItem.Activity.Id);
+                    
+                    // Mark loop as waiting (not completed) so it can be re-executed later
+                    _queueManager.Wait(Context, execution.QueueItem);
+
+                    // Enqueue the body connections
+                    if (executedPorts.Any())
+                        EnqueueExecutedPortConnections(executedPorts);
+                }
+                else
+                {
+                    // Normal completion (including loop Done/Error ports)
+                    _queueManager.Complete(Context, execution.QueueItem);
+
+                    if (executedPorts.Any())
+                        EnqueueExecutedPortConnections(executedPorts);
+                }
             }
             else if (executionResult.ExecutionStatus == ActivityExecutionStatus.Waiting)
             {
@@ -139,6 +159,24 @@ namespace Alma.Workflows.Runners
             {
                 _queueManager.Fail(Context, execution.QueueItem);
             }
+        }
+
+        /// <summary>
+        /// Checks if a loop activity just executed the Body port (not Done or Error)
+        /// </summary>
+        private bool CheckIfLoopBodyExecution(Core.Abstractions.IActivity activity, IEnumerable<Port> executedPorts)
+        {
+            // Check if this is a LoopActivity
+            if (activity is not LoopActivity)
+                return false;
+
+            // Check if only the Body port was executed (not Done or Error)
+            var bodyPortExecuted = executedPorts.Any(p => p.Descriptor.Name == nameof(LoopActivity.Body));
+            var donePortExecuted = executedPorts.Any(p => p.Descriptor.Name == nameof(LoopActivity.Done));
+            var errorPortExecuted = executedPorts.Any(p => p.Descriptor.Name == nameof(LoopActivity.Error));
+
+            // The loop executed Body if Body was executed and Done/Error were not
+            return bodyPortExecuted && !donePortExecuted && !errorPortExecuted;
         }
 
         public async Task<bool> PreparePendingExecutionsAsync(string? selectedQueueItemId = null)
@@ -197,9 +235,50 @@ namespace Alma.Workflows.Runners
 
                     var target = Context.Flow.Activities.First(x => x.Id == connection.Target.ActivityId);
 
-                    _queueManager.Enqueue(Context, target);
+                    // Special handling for loop body complete connections
+                    if (IsLoopBodyCompleteConnection(connection))
+                    {
+                        _logger.LogInformation("Loop body complete connection detected from {SourceActivityId} to loop {TargetActivityId}", 
+                            connection.Source.ActivityId, connection.Target.ActivityId);
+                        
+                        // Find the loop activity in the queue and update its phase
+                        var loopQueueItem = Context.State.Queue.FirstOrDefault(q => q.ActivityId == connection.Target.ActivityId);
+                        if (loopQueueItem != null)
+                        {
+                            var loopActivity = loopQueueItem.Activity as LoopActivity;
+                            if (loopActivity != null)
+                            {
+                                // Set phase to BodyCompleted so next execution will increment and check condition
+                                loopActivity.LoopPhase = new Data<string> { Value = LoopConstants.PhaseBodyCompleted };
+                                _dataSetter.UpdateData(Context.State, loopActivity);
+                                
+                                _logger.LogInformation("Loop {ActivityId} phase set to {Phase}", connection.Target.ActivityId, LoopConstants.PhaseBodyCompleted);
+                            }
+                            
+                            // Mark the loop as ready for re-execution
+                            _queueManager.Ready(Context, loopQueueItem);
+                        }
+                    }
+                    else
+                    {
+                        _queueManager.Enqueue(Context, target);
+                    }
                 }
             }
+        }
+
+        /// <summary>
+        /// Checks if a connection is from any activity back to a loop's BodyComplete port
+        /// </summary>
+        private bool IsLoopBodyCompleteConnection(Connection connection)
+        {
+            // Check if the target is a LoopActivity
+            var targetActivity = Context.Flow.Activities.FirstOrDefault(x => x.Id == connection.Target.ActivityId);
+            if (targetActivity is not LoopActivity)
+                return false;
+
+            // Check if the target port is BodyComplete
+            return connection.Target.PortName == nameof(LoopActivity.BodyComplete);
         }
 
         public IEnumerable<QueueItem> GetCompletedQueueItems(bool includeAutomaticExecutions = false)

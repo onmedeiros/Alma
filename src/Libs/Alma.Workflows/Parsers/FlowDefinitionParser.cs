@@ -1,4 +1,5 @@
-﻿using Alma.Workflows.Builders;
+﻿using Alma.Workflows.Activities.Flow;
+using Alma.Workflows.Builders;
 using Alma.Workflows.Core.Activities.Steps;
 using Alma.Workflows.Core.Description.Descriptors;
 using Alma.Workflows.Definitions;
@@ -72,10 +73,21 @@ namespace Alma.Workflows.Parsers
                 }
 
                 // Adiciona o preset de etapas antes da execução da atividade
-                activityBuilder
-                    .WithBeforeExecutionStep<WaitConnectionsStep>()
-                    .WithBeforeExecutionStep<CheckReadynessStep>()
-                    .WithBeforeExecutionStep<ApprovalsStep>();
+                // Para LoopActivity, usa o step customizado que ignora a porta BodyComplete
+                if (activityDescriptor.Type == typeof(LoopActivity))
+                {
+                    activityBuilder
+                        .WithBeforeExecutionStep<LoopWaitConnectionsStep>()
+                        .WithBeforeExecutionStep<CheckReadynessStep>()
+                        .WithBeforeExecutionStep<ApprovalsStep>();
+                }
+                else
+                {
+                    activityBuilder
+                        .WithBeforeExecutionStep<WaitConnectionsStep>()
+                        .WithBeforeExecutionStep<CheckReadynessStep>()
+                        .WithBeforeExecutionStep<ApprovalsStep>();
+                }
 
                 // Adiciona o preset de etapas após a execução da atividade
 
