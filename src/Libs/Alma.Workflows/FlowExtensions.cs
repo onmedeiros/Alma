@@ -23,6 +23,7 @@ using Alma.Workflows.Options;
 using Alma.Workflows.Parsers;
 using Alma.Workflows.Registries;
 using Alma.Workflows.Runners;
+using Alma.Workflows.Runners.Strategies;
 using Alma.Workflows.Scripting;
 using Alma.Workflows.Scripting.Javascript;
 using Alma.Workflows.Stores;
@@ -95,6 +96,13 @@ namespace Alma.Workflows
             services.AddTransient<IQueueManager, QueueManager>();
             services.AddTransient<IParameterSetter, ParameterSetter>();
             services.AddTransient<IDataSetter, DataSetter>();
+
+            // Activity execution strategies
+            services.AddScoped<StandardActivityExecutionStrategy>();
+            services.AddScoped<IActivityExecutionStrategy, LoopActivityExecutionStrategy>();
+            services.AddScoped<IActivityExecutionStrategy, UserInteractionActivityExecutionStrategy>();
+            services.AddScoped<IActivityExecutionStrategy>(sp => sp.GetRequiredService<StandardActivityExecutionStrategy>());
+            services.AddScoped<IActivityExecutionStrategyResolver, ActivityExecutionStrategyResolver>();
 
             // Add stores
             services.AddScoped<IFlowDefinitionStore, FlowDefinitionStore>();

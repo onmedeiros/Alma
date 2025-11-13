@@ -34,4 +34,8 @@
     <Using Include="NUnit.Framework" />
   </ItemGroup>
 
+  <ItemGroup>
+    <Folder Include="Runners\Strategies\" />
+  </ItemGroup>
+
 </Project>
