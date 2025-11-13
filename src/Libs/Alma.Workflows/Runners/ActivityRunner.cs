@@ -2,7 +2,6 @@
 using Alma.Workflows.Core.Activities.Enums;
 using Alma.Workflows.Core.Activities.Models;
 using Alma.Workflows.Core.ApprovalsAndChecks.Enums;
-using Alma.Workflows.Core.ApprovalsAndChecks.Models;
 using Alma.Workflows.Core.Contexts;
 using Alma.Workflows.Enums;
 using Alma.Workflows.Options;
@@ -18,7 +17,6 @@ namespace Alma.Workflows.Runners
         private readonly ILogger<ActivityRunner> _logger;
         private readonly IParameterSetter _parameterSetter;
         private readonly IDataSetter _dataSetter;
-        private readonly IApprovalAndCheckResolverFactory _approvalAndCheckResolverFactory;
         private readonly IActivity _activity;
 
         public bool RequireInteraction => _activity.Descriptor.RequireInteraction || Context.Options.ExecutionMode == Core.InstanceExecutions.Enums.InstanceExecutionMode.StepByStep;
@@ -32,7 +30,6 @@ namespace Alma.Workflows.Runners
             _logger = serviceProvider.GetRequiredService<ILogger<ActivityRunner>>();
             _parameterSetter = serviceProvider.GetRequiredService<IParameterSetter>();
             _dataSetter = serviceProvider.GetRequiredService<IDataSetter>();
-            _approvalAndCheckResolverFactory = serviceProvider.GetRequiredService<IApprovalAndCheckResolverFactory>();
 
             Context = new ActivityExecutionContext(_serviceProvider, state, options);
             Context.Id = activity.Id;
@@ -46,29 +43,25 @@ namespace Alma.Workflows.Runners
         /// </summary>
         public async Task<ActivityExecutionResult> ExecuteAsync()
         {
-            // First validate if the activity can be executed
-            var validationResult = await ValidateActivityAsync();
+            // Run before execution steps (includes all validations via Steps)
+            var beforeExecutionStatus = await RunBeforeExecutionSteps();
 
-            _logger.LogDebug("Activity {ActivityId} validation result: CanExecute={CanExecute}, " +
-                            "ReadinessStatus={ReadinessStatus}, ApprovalStatus={ApprovalStatus}",
-                            _activity.Id, validationResult.CanExecute,
-                            validationResult.ReadinessStatus, validationResult.ApprovalStatus);
+            _logger.LogDebug("Activity {ActivityId} before execution steps status: {Status}",
+                            _activity.Id, beforeExecutionStatus);
 
-            // Create execution result from validation result
+            // Create execution result based on step status
             var executionResult = new ActivityExecutionResult
             {
-                ExecutionStatus = validationResult.ReadinessStatus,
-                ExecutionStatusDetails = validationResult.ReadinessDetails,
-                ApprovalAndCheckStatus = validationResult.ApprovalStatus
+                ExecutionStatus = ConvertStepStatusToActivityStatus(beforeExecutionStatus),
+                ExecutionStatusDetails = GetStatusDetails(beforeExecutionStatus),
+                ApprovalAndCheckStatus = ApprovalAndCheckStatus.Pending
             };
 
-            // If validation failed, return without executing
-            if (!validationResult.CanExecute)
+            // If steps didn't complete, return without executing
+            if (beforeExecutionStatus != ActivityStepStatus.Completed)
             {
-                _logger.LogInformation("Activity {ActivityId} cannot be executed: ReadinessStatus={ReadinessStatus}, " +
-                                      "ApprovalStatus={ApprovalStatus}, Details={Details}",
-                                      _activity.Id, validationResult.ReadinessStatus,
-                                      validationResult.ApprovalStatus, validationResult.ReadinessDetails);
+                _logger.LogInformation("Activity {ActivityId} cannot be executed. Step status: {Status}",
+                                      _activity.Id, beforeExecutionStatus);
                 return executionResult;
             }
 
@@ -77,35 +70,32 @@ namespace Alma.Workflows.Runners
         }
 
         /// <summary>
-        /// Validates if the activity is ready to execute and has all required approvals.
+        /// Executes all before execution steps.
+        /// Steps include all validations (readiness, approvals, etc).
         /// </summary>
-        public async Task<ActivityValidationResult> ValidateActivityAsync()
+        public async ValueTask<ActivityStepStatus> RunBeforeExecutionSteps()
         {
-            // Run before execution steps
-            var beforeExecutionStatus = await RunBeforeExecutionSteps();
-
-            if (beforeExecutionStatus != ActivityStepStatus.Completed)
+            foreach (var step in _activity.BeforeExecutionSteps)
             {
-                return ActivityValidationResult.NotReady("Before execution steps failed", ApprovalAndCheckStatus.Pending);
+                var status = await step.GetStatus(Context);
+
+                if (status == ActivityStepStatus.Completed)
+                    continue;
+
+                if (status == ActivityStepStatus.Failed)
+                    return ActivityStepStatus.Failed;
+
+                status = await step.ExecuteAsync(Context);
+
+                if (status != ActivityStepStatus.Completed)
+                    return status;
             }
 
-            // Check if activity is ready to execute
-            var isReadyResult = await CheckIsReadyAsync();
-
-            // Check approvals status
-            var approvalStatus = await CheckApprovalsAsync();
-
-            // Create validation result
-            if (!isReadyResult.IsReady)
-            {
-                return ActivityValidationResult.NotReady(isReadyResult.Reason ?? "Activity is not ready", approvalStatus);
-            }
-
-            return ActivityValidationResult.Ready(approvalStatus);
+            return ActivityStepStatus.Completed;
         }
 
         /// <summary>
-        /// Executes the activity after all validations have passed.
+        /// Executes the activity after all steps have completed.
         /// </summary>
         private async Task<ActivityExecutionResult> ExecuteActivityAsync(ActivityExecutionResult executionResult)
         {
@@ -155,54 +145,32 @@ namespace Alma.Workflows.Runners
         }
 
         /// <summary>
-        /// Checks if the activity is ready to be executed.
+        /// Converts ActivityStepStatus to ActivityExecutionStatus.
         /// </summary>
-        public ValueTask<IsReadyResult> CheckIsReadyAsync()
+        private ActivityExecutionStatus ConvertStepStatusToActivityStatus(ActivityStepStatus stepStatus)
         {
-            return _activity.IsReadyToExecuteAsync(Context);
+            return stepStatus switch
+            {
+                ActivityStepStatus.Completed => ActivityExecutionStatus.Ready,
+                ActivityStepStatus.Waiting => ActivityExecutionStatus.Waiting,
+                ActivityStepStatus.Failed => ActivityExecutionStatus.Failed,
+                ActivityStepStatus.Pending => ActivityExecutionStatus.Pending,
+                _ => ActivityExecutionStatus.Pending
+            };
         }
 
         /// <summary>
-        /// Checks if the activity has all required approvals.
+        /// Gets status details message based on step status.
         /// </summary>
-        public async ValueTask<ApprovalAndCheckStatus> CheckApprovalsAsync()
+        private string GetStatusDetails(ActivityStepStatus stepStatus)
         {
-            var approvalAndCheckResults = new List<ApprovalAndCheckResult>();
-
-            foreach (var approvalAndCheck in _activity.ApprovalAndChecks)
+            return stepStatus switch
             {
-                var resolver = _approvalAndCheckResolverFactory.Create(approvalAndCheck, Context.State, Context.Options);
-                approvalAndCheckResults.Add(await resolver.Resolve());
-            }
-
-            if (approvalAndCheckResults.Any(x => x.Status == ApprovalAndCheckStatus.Rejected))
-                return ApprovalAndCheckStatus.Rejected;
-
-            if (approvalAndCheckResults.All(x => x.Status == ApprovalAndCheckStatus.Approved))
-                return ApprovalAndCheckStatus.Approved;
-
-            return ApprovalAndCheckStatus.Pending;
-        }
-
-        public async ValueTask<ActivityStepStatus> RunBeforeExecutionSteps()
-        {
-            foreach (var step in _activity.BeforeExecutionSteps)
-            {
-                var status = await step.GetStatus(Context);
-
-                if (status == ActivityStepStatus.Completed)
-                    continue;
-
-                if (status == ActivityStepStatus.Failed)
-                    return ActivityStepStatus.Failed;
-
-                status = await step.ExecuteAsync(Context);
-
-                if (status != ActivityStepStatus.Completed)
-                    return status;
-            }
-
-            return ActivityStepStatus.Completed;
+                ActivityStepStatus.Waiting => "Waiting for steps to complete",
+                ActivityStepStatus.Failed => "Steps failed",
+                ActivityStepStatus.Pending => "Steps pending",
+                _ => string.Empty
+            };
         }
     }
 }

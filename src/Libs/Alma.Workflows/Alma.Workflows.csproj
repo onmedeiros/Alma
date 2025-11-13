@@ -21,4 +21,8 @@
     <ProjectReference Include="..\Alma.Core\Alma.Core.csproj" />
   </ItemGroup>
 
+  <ItemGroup>
+    <Folder Include="Runners\StepHandlers\" />
+  </ItemGroup>
+
 </Project>

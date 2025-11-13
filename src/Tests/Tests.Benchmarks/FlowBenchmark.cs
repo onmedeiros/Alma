@@ -121,7 +121,7 @@ namespace Tests.Benchmarks
 
         private async Task ExecuteFlowOnceAsync()
         {
-            var runner = _runnerFactory.CreateV2(_flow);
+            var runner = _runnerFactory.Create(_flow);
             while (await runner.ExecuteNextAsync().ConfigureAwait(false))
             {
                 // flow execution

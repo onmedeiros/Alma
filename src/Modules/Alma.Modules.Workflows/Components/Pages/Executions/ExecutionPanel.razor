@@ -1,4 +1,4 @@
-ï»¿@using Alma.Modules.Workflows.Components.Registries
+@using Alma.Modules.Workflows.Components.Registries
 @using Alma.Modules.Workflows.Components.Shared
 @using Alma.Workflows
 @using Alma.Workflows.Core.Abstractions
@@ -28,7 +28,7 @@
 @inject IActivityComponentRegistry _activityComponentRegistry;
 
 <MudStack Class="mud-width-full">
-    @if (_isLoading || _runnerV2 is null)
+    @if (_isLoading || _runner is null)
     {
         <MudProgressCircular Color="Color.Primary" Indeterminate="true" />
     }
@@ -82,7 +82,7 @@
                                         Parameters="@(new Dictionary<string, object> 
                                                     { 
                                                         ["Activity"] = _currentQueueItem.Activity,
-                                                        ["ActivityExecutionContext"] = _runnerV2.Context,
+                                                        ["ActivityExecutionContext"] = _runner.Context,
                                                         ["ActivityExecutionStatus"] = _currentQueueItem.ExecutionStatus,        
                                                         ["ActivityChanged"] = EventCallback.Factory.Create<IActivity>(this, HandleActivityChanged)
                                                     })" 
@@ -99,9 +99,9 @@
                 </MudCard>
             </MudItem>
 
-            <!-- PrÃ³ximas atividades -->
+            <!-- Próximas atividades -->
             <MudItem xs="12" md="6" lg="4">
-                <ExecutionQueue Runner="_runnerV2" CurrentQueueItemSequential="_currentQueueItem?.Sequential" OnQueueItemSelected="SetCurrentQueryItem" />
+                <ExecutionQueue Runner="_runner" CurrentQueueItemSequential="_currentQueueItem?.Sequential" OnQueueItemSelected="SetCurrentQueryItem" />
             </MudItem>
 
         </MudGrid>
@@ -123,7 +123,7 @@
     private string _versionName = string.Empty;
 
     private FlowDefinition _definition = default!;
-    private FlowRunnerV2 _runnerV2 = default!;
+    private FlowRunner _runner = default!;
 
     private QueueItem? _currentQueueItem;
 
@@ -156,16 +156,16 @@
         try
         {
             var definitionVersion = await _flowManager.FindDefinitionVersionById(Execution.DefinitionVersionId ?? string.Empty)
-                ?? throw new Exception("VersÃ£o da definiÃ§Ã£o nÃ£o encontrada.");
+                ?? throw new Exception("Versão da definição não encontrada.");
 
             _definition = definitionVersion.FlowDefinition;
             var parsed = _definitionParser.TryParse(definitionVersion.FlowDefinition, out var flow);
 
             if (!parsed)
-                throw new Exception("Erro ao tentar analisar a definiÃ§Ã£o do fluxo de trabalho.");
+                throw new Exception("Erro ao tentar analisar a definição do fluxo de trabalho.");
 
-            _runnerV2 = _runnerFactory.CreateV2(flow, Execution.State, Execution.Options);
-            await _runnerV2.PreparePendingExecutionsAsync();
+            _runner = _runnerFactory.Create(flow, Execution.State, Execution.Options);
+            await _runner.PreparePendingExecutionsAsync();
         }
         catch (Exception ex)
         {
@@ -177,34 +177,34 @@
     {
         if (item is null)
         {
-            if (_runnerV2.PendingExecutions.Count == 0)
+            if (_runner.PendingExecutions.Count == 0)
             {
                 _currentQueueItem = null;
                 return;
             }
 
-            var nextExecution = _runnerV2.PendingExecutions.First();
+            var nextExecution = _runner.PendingExecutions.First();
 
             _currentQueueItem = nextExecution.QueueItem;
         }
         else
         {
-            await _runnerV2.PreparePendingExecutionsAsync(item.Id);
+            await _runner.PreparePendingExecutionsAsync(item.Id);
             _currentQueueItem = item;
         }
     }
 
     private async Task ExecuteCurrent()
     {
-        await _runnerV2.ExecuteNextAsync();
-        await _executionManager.Update(Execution, _runnerV2.Context.State);
+        await _runner.ExecuteNextAsync();
+        await _executionManager.Update(Execution, _runner.Context.State);
         await SetCurrentQueryItem();
         StateHasChanged();
     }
 
     private async Task ExecutionError(string message)
     {
-        await DialogService.ShowErrorDialog("Erro de execuÃ§Ã£o", message);
+        await DialogService.ShowErrorDialog("Erro de execução", message);
     }
 
     private bool IsExecutionDisabled()
@@ -220,10 +220,10 @@
         if (activity is null)
             return;
 
-        var execution = _runnerV2.PendingExecutions.FirstOrDefault(x => x.QueueItem.Activity.Id == activity.Id);
+        var execution = _runner.PendingExecutions.FirstOrDefault(x => x.QueueItem.Activity.Id == activity.Id);
         if (execution is null)
             return;
 
-        await _runnerV2.CheckActivityStepStatus(execution);
+        await _runner.CheckActivityStepStatus(execution);
     }
 }

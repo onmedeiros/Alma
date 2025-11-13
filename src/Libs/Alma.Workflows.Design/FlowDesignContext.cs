@@ -56,7 +56,7 @@ namespace Alma.Workflows.Design
         public bool AutoSaveEnabled { get; private set; }
         public ActivityNodeModel? SelectedNode { get; private set; }
         public FlowExecutionContext? ExecutionContext => Runner?.Context;
-        public FlowRunnerV2? Runner { get; private set; }
+        public FlowRunner? Runner { get; private set; }
 
         // Mouse states
         public bool IsDragging { get; private set; }
@@ -383,7 +383,7 @@ namespace Alma.Workflows.Design
                 ExecutionMode = InstanceExecutionMode.StepByStep
             };
 
-            Runner = _flowRunnerFactory.CreateV2(flow, options: options);
+            Runner = _flowRunnerFactory.Create(flow, options: options);
 
             _logger.LogInformation("Executing flow definition {FlowId}.", Definition.Id);
 

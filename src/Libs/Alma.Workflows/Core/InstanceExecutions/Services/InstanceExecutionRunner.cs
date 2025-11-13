@@ -85,7 +85,7 @@ namespace Alma.Workflows.Core.InstanceExecutions.Services
             var instanceExecution = await _instanceExecutionManager.Begin(instance, options);
 
             // Cria uma instância do runner
-            var runner = _flowRunnerFactory.CreateV2(flow, instanceExecution.State, instanceExecution.Options);
+            var runner = _flowRunnerFactory.Create(flow, instanceExecution.State, instanceExecution.Options);
 
             // Define o tempo limite de execução (exemplo: 30 segundos)
             var timeout = TimeSpan.FromSeconds(30);

@@ -16,10 +16,7 @@ namespace Alma.Workflows.Runners
         /// <param name="state">The current execution state. If null, a new state will be created.</param>
         /// <param name="options">The execution options. If null, default options will be used.</param>
         /// <returns>A new instance of <see cref="FlowRunner"/>.</returns>
-        [Obsolete("Use CreateV2 instead.")]
         FlowRunner Create(Flow flow, ExecutionState? state = null, ExecutionOptions? options = null);
-
-        FlowRunnerV2 CreateV2(Flow flow, ExecutionState? state = null, ExecutionOptions? options = null);
     }
 
     /// <summary>
@@ -42,22 +39,12 @@ namespace Alma.Workflows.Runners
         }
 
         /// <inheritdoc />
-        [Obsolete("Use CreateV2 instead.")]
         public FlowRunner Create(Flow flow, ExecutionState? state = null, ExecutionOptions? options = null)
         {
             options ??= new ExecutionOptions();
             state ??= new ExecutionState();
 
-            // TODO: Create a unique service scope for the flow.
             return new FlowRunner(_serviceProvider, flow, state, options);
-        }
-
-        public FlowRunnerV2 CreateV2(Flow flow, ExecutionState? state = null, ExecutionOptions? options = null)
-        {
-            options ??= new ExecutionOptions();
-            state ??= new ExecutionState();
-
-            return new FlowRunnerV2(_serviceProvider, flow, state, options);
         }
     }
 }

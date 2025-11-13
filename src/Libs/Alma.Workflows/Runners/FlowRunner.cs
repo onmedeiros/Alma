@@ -1,10 +1,12 @@
-﻿using Alma.Workflows.Core.Abstractions;
+﻿using Alma.Workflows.Activities.Flow;
 using Alma.Workflows.Core.Activities.Base;
-using Alma.Workflows.Core.Activities.Models;
+using Alma.Workflows.Core.Activities.Enums;
 using Alma.Workflows.Core.ApprovalsAndChecks.Models;
 using Alma.Workflows.Core.Contexts;
+using Alma.Workflows.Core.InstanceExecutions.Enums;
 using Alma.Workflows.Enums;
 using Alma.Workflows.Options;
+using Alma.Workflows.Runners.Strategies;
 using Alma.Workflows.States;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Logging;
@@ -13,6 +15,7 @@ namespace Alma.Workflows.Runners
 {
     /// <summary>
     /// Responsible for running Workflows and managing their execution state.
+    /// Uses Strategy Pattern for activity-specific execution logic.
     /// </summary>
     public class FlowRunner
     {
@@ -21,18 +24,17 @@ namespace Alma.Workflows.Runners
         private readonly IActivityRunnerFactory _activityRunnerFactory;
         private readonly IQueueManager _queueManager;
         private readonly IDataSetter _dataSetter;
+        private readonly IParameterSetter _parameterSetter;
+        private readonly IActivityExecutionStrategyResolver _strategyResolver;
 
         public FlowExecutionContext Context { get; private set; }
-        public ICollection<FlowExecution> NextExecutions { get; } = [];
+        public ICollection<FlowExecution> PendingExecutions { get; set; } = [];
 
-        /// <summary>
-        /// Initializes a new instance of the <see cref="FlowRunner"/> class.
-        /// </summary>
-        /// <param name="serviceProvider">The service provider for dependency injection.</param>
-        /// <param name="flow">The flow to be executed.</param>
-        /// <param name="state">The current execution state.</param>
-        /// <param name="options">The execution options.</param>
-        public FlowRunner(IServiceProvider serviceProvider, Flow flow, ExecutionState state, ExecutionOptions options)
+        public FlowRunner(
+            IServiceProvider serviceProvider, 
+            Flow flow, 
+            ExecutionState state, 
+            ExecutionOptions options)
         {
             _serviceProvider = serviceProvider;
 
@@ -40,16 +42,16 @@ namespace Alma.Workflows.Runners
             _activityRunnerFactory = serviceProvider.GetRequiredService<IActivityRunnerFactory>();
             _queueManager = serviceProvider.GetRequiredService<IQueueManager>();
             _dataSetter = serviceProvider.GetRequiredService<IDataSetter>();
+            _parameterSetter = serviceProvider.GetRequiredService<IParameterSetter>();
+            _strategyResolver = serviceProvider.GetRequiredService<IActivityExecutionStrategyResolver>();
 
             Context = new FlowExecutionContext(flow, _serviceProvider, state, options);
 
+            LoadStateData();
+
             _queueManager.LoadNavigations(Context);
             _queueManager.EnqueueStart(Context);
-
-            LoadStateData();
         }
-
-        #region Load state
 
         public void LoadStateData()
         {
@@ -59,185 +61,150 @@ namespace Alma.Workflows.Runners
             }
         }
 
-        #endregion
-
-        #region Execution controllers
-
-        public async Task<bool> SelectNext(string? queueItemId = null)
+        public async Task<bool> ExecuteNextAsync()
         {
-            NextExecutions.Clear();
-
-            await _queueManager.UpdateExecutionStatus(Context);
-
-            if (!string.IsNullOrEmpty(queueItemId))
-            {
-                var queueItem = _queueManager.PeekById(Context, queueItemId);
-
-                if (queueItem is not null)
-                {
-                    var activityRunner = _activityRunnerFactory.Create(queueItem.Activity, Context.State, Context.Options);
-                    NextExecutions.Add(new FlowExecution(queueItem, activityRunner));
-                    return true;
-                }
-            }
-            else
-            {
-                var queueItems = _queueManager.PeekNext(Context, Context.Options.MaxDegreeOfParallelism);
-
-                if (!queueItems.Any())
-                    return false;
-
-                foreach (var queueItem in queueItems)
-                {
-                    var activityRunner = _activityRunnerFactory.Create(queueItem.Activity, Context.State, Context.Options);
-                    NextExecutions.Add(new FlowExecution(queueItem, activityRunner));
-                }
-
-                return true;
-            }
-
-            return false;
-        }
-
-        public async Task<bool> ExecuteNext()
-        {
-            if (NextExecutions.Count == 0 && !await SelectNext())
-                return false;
-
-            await Task.WhenAll(NextExecutions.Select(Execute));
-
             if (Context.Options.Delay > 0)
                 await Task.Delay(Context.Options.Delay);
 
-            await SelectNext();
+            if (PendingExecutions.Count == 0 && !await PreparePendingExecutionsAsync())
+                return false;
 
-            return NextExecutions.Any(x => x.QueueItem.CanExecute);
+            var continueExecuting = true;
+
+            while (continueExecuting)
+            {
+                // Primeiro, executa todas as atividades prontas para execução que não requerem interação.
+                var toExecute = PendingExecutions
+                    .Where(x => x.QueueItem.CanExecute && !x.RequireInteraction)
+                    .Take(Context.Options.MaxDegreeOfParallelism);
+
+                if (toExecute.Any())
+                {
+                    await Task.WhenAll(toExecute.Select(ExecuteAsync));
+                    await PreparePendingExecutionsAsync();
+
+                    // Enquanto estiver executando atividades que não requerem interação, verifica se há mais atividades
+                    // sem interação para continuar executando automaticamente. Se não houverem mais e o modo de execução
+                    // for manual, para a execução automática.
+                    if (!PendingExecutions.Any(x => !x.RequireInteraction && x.QueueItem.CanExecute)
+                        && Context.Options.ExecutionMode == InstanceExecutionMode.Manual)
+                    {
+                        continueExecuting = false;
+                    }
+
+                    continue;
+                }
+
+                // Em seguida, executa as próximas atividades que requerem interação.
+                var take = Context.Options.ExecutionMode == InstanceExecutionMode.Manual || Context.Options.ExecutionMode == InstanceExecutionMode.StepByStep
+                    ? 1
+                    : Context.Options.MaxDegreeOfParallelism;
+
+                toExecute = PendingExecutions
+                    .Where(x => x.QueueItem.CanExecute)
+                    .OrderByDescending(x => x.Selected)
+                    .Take(take);
+
+                await Task.WhenAll(toExecute.Select(ExecuteAsync));
+                await PreparePendingExecutionsAsync();
+
+                // Após executar as atividades que requerem interação, verifica se há atividades
+                // sem interação para rodar.
+                if (PendingExecutions.Any(x => !x.RequireInteraction && x.QueueItem.CanExecute))
+                    continue;
+
+                // Se não houver mais atividades para executar, verifica se o modo de execução é manual.
+                // O modo manual permite que as atividades sejam executadas uma a uma.
+                if (Context.Options.ExecutionMode == InstanceExecutionMode.Manual || Context.Options.ExecutionMode == InstanceExecutionMode.StepByStep)
+                {
+                    continueExecuting = false;
+                    continue;
+                }
+
+                continueExecuting = PendingExecutions.Any(x => x.QueueItem.CanExecute);
+            }
+
+            return PendingExecutions.Any(x => x.QueueItem.CanExecute);
         }
 
-        public async Task Execute(FlowExecution execution)
+        /// <summary>
+        /// Executes a single flow execution using the Strategy Pattern.
+        /// The appropriate strategy is resolved based on the activity type.
+        /// </summary>
+        public async Task ExecuteAsync(FlowExecution execution)
         {
             if (!execution.QueueItem.CanExecute)
                 return;
 
-            var executionResult = await execution.Runner.ExecuteAsync();
+            var activity = execution.QueueItem.Activity;
 
-            EnqueueExecutedPortConnections(executionResult.ExecutedPorts);
+            // Resolve the appropriate execution strategy for this activity type
+            var strategy = _strategyResolver.Resolve(activity);
 
-            if (executionResult.ExecutionStatus == ActivityExecutionStatus.Completed)
+            _logger.LogDebug("Executing activity {ActivityId} ({ActivityType}) using strategy {StrategyType}",
+                activity.Id, activity.GetType().Name, strategy.GetType().Name);
+
+            // Execute the activity using the resolved strategy
+            var executionResult = await strategy.ExecuteAsync(activity, Context, execution.Runner);
+
+            // Handle post-execution logic using the strategy
+            await strategy.HandlePostExecutionAsync(activity, Context, executionResult, execution.QueueItem);
+
+            // Enqueue connections if activity completed successfully
+            if (executionResult.ExecutionStatus == ActivityExecutionStatus.Completed && executionResult.ExecutedPorts.Any())
             {
-                _queueManager.Complete(Context, execution.QueueItem);
+                EnqueueExecutedPortConnections(executionResult.ExecutedPorts);
             }
-            else if (executionResult.ExecutionStatus == ActivityExecutionStatus.Waiting)
+        }
+
+        public async Task<bool> PreparePendingExecutionsAsync(string? selectedQueueItemId = null)
+        {
+            var pendingExecutions = new List<FlowExecution>();
+
+            foreach (var queueItem in _queueManager.PeekNext(Context, int.MaxValue))
             {
-                _queueManager.Wait(Context, execution.QueueItem);
+                var execution = PendingExecutions.FirstOrDefault(x => x.QueueItem.Id == queueItem.Id);
+
+                if (execution is null)
+                {
+                    var activityRunner = _activityRunnerFactory.Create(queueItem.Activity, Context.State, Context.Options);
+                    execution = new FlowExecution(queueItem, activityRunner);
+                }
+
+                await CheckActivityStepStatus(execution);
+
+                pendingExecutions.Add(execution);
+
+                if (selectedQueueItemId is not null && queueItem.Id == selectedQueueItemId)
+                    execution.Selected = true;
             }
-            else
+
+            PendingExecutions = pendingExecutions;
+
+            return PendingExecutions.Any();
+        }
+
+        public async Task CheckActivityStepStatus(FlowExecution execution)
+        {
+            if (execution.QueueItem.ExecutionStatus == ActivityExecutionStatus.Waiting || execution.QueueItem.ExecutionStatus == ActivityExecutionStatus.Pending)
             {
-                _queueManager.Fail(Context, execution.QueueItem);
+                var activityStepStatus = await execution.Runner.RunBeforeExecutionSteps();
+
+                if (activityStepStatus == ActivityStepStatus.Waiting)
+                    _queueManager.Wait(Context, execution.QueueItem);
+                else if (activityStepStatus == ActivityStepStatus.Failed)
+                    _queueManager.Fail(Context, execution.QueueItem);
+                else if (activityStepStatus == ActivityStepStatus.Completed)
+                    _queueManager.Ready(Context, execution.QueueItem);
+                else
+                    _queueManager.Pending(Context, execution.QueueItem);
             }
         }
 
         /// <summary>
-        /// Executes the next activity in the flow asynchronously.
+        /// Enqueues connections from executed ports to their target activities.
+        /// Handles special cases like loop body completion.
         /// </summary>
-        /// <returns>True if there are more activities to be executed, otherwise false.</returns>
-        public async Task<bool> ExecuteNextAsync()
-        {
-            // Peek returns only the activities that are ready for execution
-            var queueItems = _queueManager.PeekNextReady(Context);
-            await Task.WhenAll(queueItems.Select(ExecuteQueueItem));
-
-            if (Context.Options.Delay > 0)
-                await Task.Delay(Context.Options.Delay);
-
-            return await HasNext();
-        }
-
-        /// <summary>
-        /// Executes a specific queue item asynchronously.
-        /// </summary>
-        /// <param name="item">The queue item to be executed.</param>
-        public async Task ExecuteQueueItem(QueueItem item)
-        {
-            var activity = Context.Flow.Activities.First(a => a.Id == item.ActivityId);
-
-            var executionResult = await ExecuteActivity(activity);
-
-            if (executionResult.ExecutionStatus == ActivityExecutionStatus.Completed)
-            {
-                _queueManager.Complete(Context, item);
-            }
-            else if (executionResult.ExecutionStatus == ActivityExecutionStatus.Waiting)
-            {
-                _queueManager.Wait(Context, item);
-            }
-            else
-            {
-                _queueManager.Fail(Context, item);
-            }
-        }
-
-        /// <summary>
-        /// Executes a specific activity asynchronously.
-        /// </summary>
-        /// <param name="activity">The activity to be executed.</param>
-        /// <returns>The result of the activity execution.</returns>
-        public async Task<ActivityExecutionResult> ExecuteActivity(IActivity activity)
-        {
-            var runner = _activityRunnerFactory.Create(activity, Context.State, Context.Options);
-
-            var executionResult = await runner.ExecuteAsync();
-
-            EnqueueExecutedPortConnections(executionResult.ExecutedPorts);
-
-            return executionResult;
-        }
-
-        public async Task Resume()
-        {
-            await _queueManager.UpdateExecutionStatus(Context);
-        }
-
-        #endregion
-
-        #region Queue
-
-        /// <summary>
-        /// Checks if there are any activities ready to be executed in the flow.
-        /// </summary>
-        /// <returns>True if there are activities ready to be executed, otherwise false.</returns>
-        public async Task<bool> HasNext()
-        {
-            // Update the status of pending and waiting activities to check if they are just ready for execution.
-            await _queueManager.UpdateExecutionStatus(Context);
-
-            return _queueManager.HasNext(Context);
-        }
-
-        public IEnumerable<QueueItem> GetNext(int count)
-        {
-            return _queueManager.PeekNext(Context, count);
-        }
-
-        public IEnumerable<QueueItem> GetCompletedQueueItems()
-        {
-            return _queueManager.PeekCompleted(Context);
-        }
-
-        public async Task UpdateQueueItemExecutionStatus()
-        {
-            await _queueManager.UpdateExecutionStatus(Context);
-        }
-
-        public Task UpdateQueueItemExecutionStatus(QueueItem item)
-        {
-            return _queueManager.UpdateExecutionStatus(Context, item);
-        }
-
-        /// <summary>
-        /// Enqueues the connections of the executed ports.
-        /// </summary>
-        /// <param name="executedPorts">The executed ports.</param>
         public void EnqueueExecutedPortConnections(IEnumerable<Port> executedPorts)
         {
             foreach (var port in executedPorts)
@@ -250,11 +217,75 @@ namespace Alma.Workflows.Runners
 
                     var target = Context.Flow.Activities.First(x => x.Id == connection.Target.ActivityId);
 
-                    _queueManager.Enqueue(Context, target);
+                    // Special handling for loop body complete connections
+                    if (IsLoopBodyCompleteConnection(connection))
+                    {
+                        HandleLoopBodyCompleteConnection(connection);
+                    }
+                    else
+                    {
+                        _queueManager.Enqueue(Context, target);
+                    }
                 }
             }
         }
 
-        #endregion
+        /// <summary>
+        /// Checks if a connection is from any activity back to a loop's BodyComplete port.
+        /// </summary>
+        private bool IsLoopBodyCompleteConnection(Connection connection)
+        {
+            // Check if the target is a LoopActivity
+            var targetActivity = Context.Flow.Activities.FirstOrDefault(x => x.Id == connection.Target.ActivityId);
+            if (targetActivity is not LoopActivity)
+                return false;
+
+            // Check if the target port is BodyComplete
+            return connection.Target.PortName == nameof(LoopActivity.BodyComplete);
+        }
+
+        /// <summary>
+        /// Handles the special case when a loop body completes and reconnects to the loop.
+        /// Updates the loop phase and prepares it for the next iteration.
+        /// </summary>
+        private void HandleLoopBodyCompleteConnection(Connection connection)
+        {
+            _logger.LogInformation("Loop body complete connection detected from {SourceActivityId} to loop {TargetActivityId}",
+                connection.Source.ActivityId, connection.Target.ActivityId);
+
+            // Find the loop activity in the queue
+            var loopQueueItem = Context.State.Queue.FirstOrDefault(q => q.ActivityId == connection.Target.ActivityId);
+            if (loopQueueItem == null)
+            {
+                _logger.LogWarning("Loop queue item not found for activity {ActivityId}", connection.Target.ActivityId);
+                return;
+            }
+
+            var loopActivity = loopQueueItem.Activity as LoopActivity;
+            if (loopActivity == null)
+            {
+                _logger.LogWarning("Activity {ActivityId} is not a LoopActivity", connection.Target.ActivityId);
+                return;
+            }
+
+            // Set phase to BodyCompleted so next execution will increment and check condition
+            loopActivity.LoopPhase = new Data<string> { Value = LoopConstants.PhaseBodyCompleted };
+            _dataSetter.UpdateData(Context.State, loopActivity);
+
+            _logger.LogInformation("Loop {ActivityId} phase set to {Phase}", connection.Target.ActivityId, LoopConstants.PhaseBodyCompleted);
+
+            // Mark the loop as ready for re-execution
+            _queueManager.Ready(Context, loopQueueItem);
+        }
+
+        public IEnumerable<QueueItem> GetCompletedQueueItems(bool includeAutomaticExecutions = false)
+        {
+            var queueItems = _queueManager.PeekCompleted(Context);
+
+            if (!includeAutomaticExecutions)
+                queueItems = queueItems.Where(x => x.Activity.Descriptor.RequireInteraction);
+
+            return queueItems;
+        }
     }
 }
