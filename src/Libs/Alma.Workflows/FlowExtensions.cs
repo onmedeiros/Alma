@@ -107,7 +107,8 @@ namespace Alma.Workflows
             services.AddScoped<Runners.ExecutionModes.AutomaticExecutionModeStrategy>();
             
             // Fase 1: Gerenciamento de Conexões
-            services.AddScoped<IConnectionManager, Runners.Connections.ConnectionManager>();
+            // ConnectionManager mantém cache interno; evitar compartilhamento entre execuções concorrentes
+            services.AddTransient<IConnectionManager, Runners.Connections.ConnectionManager>();
             
             // Fase 2: Property Accessors (High-Performance Reflection Alternative)
             services.AddSingleton<Core.Properties.PropertyAccessorFactory>();
@@ -126,7 +127,6 @@ namespace Alma.Workflows
             services.AddTransient<Core.States.Components.IParameterState, Core.States.Components.ParameterState>();
             services.AddTransient<Core.States.Components.IActivityDataState, Core.States.Components.ActivityDataState>();
             services.AddTransient<Core.States.Components.IApprovalState, Core.States.Components.ApprovalState>();
-            services.AddTransient<Core.States.Components.IHistoryState, Core.States.Components.HistoryState>();
             services.AddTransient<Core.States.Components.ILogState, Core.States.Components.LogState>();
             
             // Fase 3: State Machine Pattern

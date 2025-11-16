@@ -20,8 +20,9 @@ namespace Alma.Workflows.Runners.Connections
         private readonly IQueueManager _queueManager;
         private readonly IDataSetter _dataSetter;
         
-        // Cache de conexões para performance
+        // Cache de conexões para performance (proteção contra acesso concorrente)
         private readonly Dictionary<string, List<Connection>> _connectionCache = new();
+        private readonly object _cacheLock = new();
 
         public ConnectionManager(
             ILogger<ConnectionManager> logger,
@@ -37,16 +38,19 @@ namespace Alma.Workflows.Runners.Connections
         {
             var cacheKey = $"{activity.Id}:{port.Descriptor.Name}";
 
-            if (!_connectionCache.ContainsKey(cacheKey))
+            lock (_cacheLock)
             {
-                _logger.LogDebug(
-                    "Caching connections for activity {ActivityId}, port {PortName}",
-                    activity.Id, port.Descriptor.Name);
+                if (!_connectionCache.ContainsKey(cacheKey))
+                {
+                    _logger.LogDebug(
+                        "Caching connections for activity {ActivityId}, port {PortName}",
+                        activity.Id, port.Descriptor.Name);
                     
-                _connectionCache[cacheKey] = new List<Connection>();
-            }
+                    _connectionCache[cacheKey] = new List<Connection>();
+                }
 
-            return _connectionCache[cacheKey];
+                return _connectionCache[cacheKey];
+            }
         }
 
         public void EnqueueConnectedActivities(
@@ -150,23 +154,26 @@ namespace Alma.Workflows.Runners.Connections
         /// </summary>
         public void InitializeConnectionCache(Flow flow)
         {
-            _connectionCache.Clear();
-
-            foreach (var connection in flow.Connections)
+            lock (_cacheLock)
             {
-                var cacheKey = $"{connection.Source.ActivityId}:{connection.Source.PortName}";
-                
-                if (!_connectionCache.ContainsKey(cacheKey))
+                _connectionCache.Clear();
+
+                foreach (var connection in flow.Connections)
                 {
-                    _connectionCache[cacheKey] = new List<Connection>();
+                    var cacheKey = $"{connection.Source.ActivityId}:{connection.Source.PortName}";
+                    
+                    if (!_connectionCache.ContainsKey(cacheKey))
+                    {
+                        _connectionCache[cacheKey] = new List<Connection>();
+                    }
+
+                    _connectionCache[cacheKey].Add(connection);
                 }
 
-                _connectionCache[cacheKey].Add(connection);
+                _logger.LogDebug(
+                    "Connection cache initialized with {Count} unique source ports",
+                    _connectionCache.Count);
             }
-
-            _logger.LogDebug(
-                "Connection cache initialized with {Count} unique source ports",
-                _connectionCache.Count);
         }
     }
 }
