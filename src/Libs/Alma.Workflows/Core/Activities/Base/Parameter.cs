@@ -51,7 +51,7 @@ namespace Alma.Workflows.Core.Activities.Base
                 valueString = template.Render(hash, CultureInfo.InvariantCulture);
             }
 
-            return ValueConverter.Convert<T>(valueString);
+            return ParameterValueConverter.Convert<T>(valueString);
         }
 
         public string ReplaceParameterTemplate(string value)

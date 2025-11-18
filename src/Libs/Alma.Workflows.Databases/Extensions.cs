@@ -1,4 +1,7 @@
-﻿using Alma.Workflows.Databases.Activities;
+﻿using Alma.Workflows.Core.Activities.Abstractions;
+using Alma.Workflows.Databases.Activities;
+using Alma.Workflows.Databases.Providers;
+using Alma.Workflows.Databases.Registry;
 using Alma.Workflows.Options;
 using Microsoft.Extensions.DependencyInjection;
 
@@ -12,6 +15,11 @@ namespace Alma.Workflows.Databases
             {
                 options.AddActivity<QueryDatabaseActivity>();
             });
+
+            services.AddScoped<IDatabaseProviderRegistry, DatabaseProviderRegistry>();
+            services.AddScoped<IDatabaseProvider, MongoDBDatabaseProvider>();
+
+            services.AddKeyedScoped<IParameterProvider, DatabaseProviderParameterProvider>(typeof(DatabaseProviderParameterProvider));
 
             return services;
         }

@@ -4,7 +4,7 @@ using System.Text.Json;
 
 namespace Alma.Workflows.Utils
 {
-    public static class ValueConverter
+    public static class ParameterValueConverter
     {
         public static T? Convert<T>(string? value)
         {

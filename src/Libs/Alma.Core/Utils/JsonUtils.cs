@@ -7,6 +7,15 @@ namespace Alma.Core.Utils
     {
         public static Dictionary<string, object?>? ConvertToDictionary(string json)
         {
+            json = json.Trim();
+
+            if (string.IsNullOrEmpty(json))
+                return null;
+
+            // Wrap array JSON in an object with "items" key
+            if (json.StartsWith('['))
+                json = $"{{\"items\": {json}}}";
+
             JsonDocument doc = JsonDocument.Parse(json);
             var data = (Dictionary<string, object?>?)ConvertJsonElement(doc.RootElement);
 
