@@ -8,8 +8,8 @@ namespace Alma.Workflows.Databases.Providers
 
         ValueTask<ConnectionResult> ConnectAsync(string connectionString, CancellationToken cancellationToken = default);
 
-        ValueTask<QueryResult<T>> QueryAsync<T>(string query, CancellationToken cancellationToken = default);
+        ValueTask<CommandResult<T>> RunCommandAsync<T>(string query, CancellationToken cancellationToken = default);
 
-        ValueTask<QueryResult<string>> QueryJsonAsync(string query, CancellationToken cancellationToken = default);
+        ValueTask<CommandResult<string>> RunCommandJsonAsync(string query, CancellationToken cancellationToken = default);
     }
 }

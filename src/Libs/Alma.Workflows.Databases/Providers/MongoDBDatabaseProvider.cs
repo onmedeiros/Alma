@@ -51,18 +51,18 @@ namespace Alma.Workflows.Databases.Providers
             }
         }
 
-        public async ValueTask<QueryResult<T>> QueryAsync<T>(string query, CancellationToken cancellationToken = default)
+        public async ValueTask<CommandResult<T>> RunCommandAsync<T>(string command, CancellationToken cancellationToken = default)
         {
             if (_client is null)
-                return new QueryResult<T> { Succeeded = false, Message = "Não conectado." };
+                return new CommandResult<T> { Succeeded = false, Message = "Não conectado." };
             if (_database is null)
-                return new QueryResult<T> { Succeeded = false, Message = "Database não inicializada." };
-            if (string.IsNullOrWhiteSpace(query))
-                return new QueryResult<T> { Succeeded = false, Message = "Query vazia." };
+                return new CommandResult<T> { Succeeded = false, Message = "Database não inicializada." };
+            if (string.IsNullOrWhiteSpace(command))
+                return new CommandResult<T> { Succeeded = false, Message = "Query vazia." };
 
-            var jsonResult = await QueryJsonAsync(query, cancellationToken);
+            var jsonResult = await RunCommandJsonAsync(command, cancellationToken);
 
-            return new QueryResult<T>
+            return new CommandResult<T>
             {
                 Succeeded = jsonResult.Succeeded,
                 Message = jsonResult.Message,
@@ -73,32 +73,32 @@ namespace Alma.Workflows.Databases.Providers
             };
         }
 
-        public async ValueTask<QueryResult<string>> QueryJsonAsync(string query, CancellationToken cancellationToken = default)
+        public async ValueTask<CommandResult<string>> RunCommandJsonAsync(string command, CancellationToken cancellationToken = default)
         {
             if (_client is null)
-                return new QueryResult<string> { Succeeded = false, Message = "Não conectado." };
+                return new CommandResult<string> { Succeeded = false, Message = "Não conectado." };
             if (_database is null)
-                return new QueryResult<string> { Succeeded = false, Message = "Database não inicializada." };
-            if (string.IsNullOrWhiteSpace(query))
-                return new QueryResult<string> { Succeeded = false, Message = "Query vazia." };
+                return new CommandResult<string> { Succeeded = false, Message = "Database não inicializada." };
+            if (string.IsNullOrWhiteSpace(command))
+                return new CommandResult<string> { Succeeded = false, Message = "Query vazia." };
 
-            QueryRequest queryRequest;
+            CommandRequest runCommandRequest;
             try
             {
-                queryRequest = ParseQuery(query);
+                runCommandRequest = ParseCommand(command);
             }
             catch (Exception ex)
             {
-                return new QueryResult<string> { Succeeded = false, Message = "Query inválida.", Details = ex.Message };
+                return new CommandResult<string> { Succeeded = false, Message = "Query inválida.", Details = ex.Message };
             }
 
-            if (string.IsNullOrWhiteSpace(queryRequest.Collection))
-                return new QueryResult<string> { Succeeded = false, Message = "Collection inválida." };
+            if (string.IsNullOrWhiteSpace(runCommandRequest.Collection))
+                return new CommandResult<string> { Succeeded = false, Message = "Collection inválida." };
 
             try
             {
-                var collection = _database.GetCollection<BsonDocument>(queryRequest.Collection);
-                var filter = string.IsNullOrWhiteSpace(queryRequest.Filter) ? new BsonDocument() : BsonDocument.Parse(queryRequest.Filter);
+                var collection = _database.GetCollection<BsonDocument>(runCommandRequest.Collection);
+                var filter = string.IsNullOrWhiteSpace(runCommandRequest.Filter) ? new BsonDocument() : BsonDocument.Parse(runCommandRequest.Filter);
 
                 var docCount = await collection.AsQueryable().CountAsync();
 
@@ -107,27 +107,27 @@ namespace Alma.Workflows.Databases.Providers
                     .ToListAsync(cancellationToken);
 
                 if (docs.Count == 0)
-                    return new QueryResult<string> { Succeeded = true, Data = "[]", Message = "Nenhum resultado." };
+                    return new CommandResult<string> { Succeeded = true, Data = "[]", Message = "Nenhum resultado." };
 
                 // Build JSON array
                 var jsonArray = "[" + string.Join(',', docs.Select(d => d.ToJson())) + "]";
-                return new QueryResult<string> { Succeeded = true, Data = jsonArray, Message = "OK" };
+                return new CommandResult<string> { Succeeded = true, Data = jsonArray, Message = "OK" };
             }
             catch (Exception ex)
             {
-                return new QueryResult<string> { Succeeded = false, Message = "Falha na consulta.", Details = ex.Message };
+                return new CommandResult<string> { Succeeded = false, Message = "Falha na consulta.", Details = ex.Message };
             }
         }
 
-        private static QueryRequest ParseQuery(string query)
+        private static CommandRequest ParseCommand(string query)
         {
             JsonSerializerOptions options = new JsonSerializerOptions
             {
                 PropertyNameCaseInsensitive = true
             };
 
-            return JsonSerializer.Deserialize<QueryRequest>(query, options)
-                ?? throw new ArgumentException("Invalid query.");
+            return JsonSerializer.Deserialize<CommandRequest>(query, options)
+                ?? throw new ArgumentException("Invalid command.");
         }
     }
 }

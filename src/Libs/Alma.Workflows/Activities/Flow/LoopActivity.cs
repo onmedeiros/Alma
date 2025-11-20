@@ -9,13 +9,6 @@ using System.Collections;
 
 namespace Alma.Workflows.Activities.Flow
 {
-    /// <summary>
-    /// Atividade de loop que executa iterações sobre contagens, coleções ou condições.
-    /// O loop funciona em três fases:
-    /// 1. Start: Inicialização e início de nova iteração
-    /// 2. WaitingBody: Aguardando corpo do loop completar
-    /// 3. BodyCompleted: Corpo completado, incrementa e verifica próxima iteração
-    /// </summary>
     [Activity(
         Namespace = "Alma.Workflows",
         Category = "Fluxo",
@@ -48,7 +41,7 @@ namespace Alma.Workflows.Activities.Flow
 
         #region Parameters
 
-        [ActivityParameter(DisplayName = "Tipo de Loop", DisplayValue = "<b>Tipo:</b> {{value}}")]
+        [ActivityParameter(DisplayName = "Tipo", DisplayValue = "<b>Tipo:</b> {{value}}")]
         public Parameter<LoopType>? Type { get; set; }
 
         [ActivityParameter(DisplayName = "Contador inicial", DisplayValue = "<b>Início:</b> {{value}}")]
@@ -60,7 +53,7 @@ namespace Alma.Workflows.Activities.Flow
         [ActivityParameter(DisplayName = "Coleção (JSON ou nome da variável)", DisplayValue = "<b>Coleção:</b> {{value}}", AutoGrow = true, MaxLines = 4)]
         public Parameter<string>? Collection { get; set; }
 
-        [ActivityParameter(DisplayName = "Condição While", DisplayValue = "<b>Condição:</b> {{value}}", AutoGrow = true, MaxLines = 4)]
+        [ActivityParameter(DisplayName = "Condição", DisplayValue = "<b>Condição:</b> {{value}}", AutoGrow = true, MaxLines = 4)]
         public Parameter<string>? WhileCondition { get; set; }
 
         [ActivityParameter(DisplayName = "Nome da variável do item atual", DisplayValue = "<b>Variável:</b> {{value}}")]
@@ -79,32 +72,32 @@ namespace Alma.Workflows.Activities.Flow
         /// <summary>
         /// Índice atual da iteração do loop
         /// </summary>
-        public Core.Activities.Base.Data<int>? CurrentIndex { get; set; }
+        public Data<int>? CurrentIndex { get; set; }
 
         /// <summary>
         /// Número total de iterações esperadas
         /// </summary>
-        public Core.Activities.Base.Data<int>? TotalIterations { get; set; }
+        public Data<int>? TotalIterations { get; set; }
 
         /// <summary>
         /// Indica se o loop foi inicializado
         /// </summary>
-        public Core.Activities.Base.Data<bool>? IsLoopInitialized { get; set; }
+        public Data<bool>? IsLoopInitialized { get; set; }
 
         /// <summary>
         /// Indica se o loop foi completado
         /// </summary>
-        public Core.Activities.Base.Data<bool>? IsLoopComplete { get; set; }
+        public Data<bool>? IsLoopComplete { get; set; }
 
         /// <summary>
         /// Armazena a coleção para iteração (tipo Collection)
         /// </summary>
-        public Core.Activities.Base.Data<List<object>>? CollectionData { get; set; }
+        public Data<List<object>>? CollectionData { get; set; }
 
         /// <summary>
         /// Indica qual fase do loop estamos (Start, WaitingBody, BodyCompleted, Completed)
         /// </summary>
-        public Core.Activities.Base.Data<string>? LoopPhase { get; set; }
+        public Data<string>? LoopPhase { get; set; }
 
         #endregion
 
@@ -113,7 +106,7 @@ namespace Alma.Workflows.Activities.Flow
             // Se o loop já foi completado, não executar novamente
             if (IsLoopComplete?.Value == true)
             {
-                return IsReadyResult.NotReady("Loop já concluído");
+                return IsReadyResult.NotReady("Loop already done.");
             }
 
             return IsReadyResult.Ready();
@@ -125,32 +118,34 @@ namespace Alma.Workflows.Activities.Flow
             {
                 var loopType = Type?.GetValue(context) ?? LoopType.Count;
                 var phase = LoopPhase?.Value ?? LoopConstants.PhaseStart;
+                var isLoopInitialized = IsLoopInitialized?.Value ?? false;
 
-                context.State.Log($"Loop executando na fase: {phase}, Iteração: {CurrentIndex?.Value ?? 0}", Enums.LogSeverity.Information);
+                context.State.Log($"Loop executando na fase: {phase}, Iteração: {CurrentIndex?.Value ?? 0}", Enums.LogSeverity.Debug);
 
-                // Fase 1: Inicialização ou início de nova iteração
-                if (phase == LoopConstants.PhaseStart || IsLoopInitialized?.Value != true)
+                // Phase 1: Initialization
+                if (phase == LoopConstants.PhaseStart || !isLoopInitialized)
                 {
-                    if (IsLoopInitialized?.Value != true)
+                    // Initilize loop if it's not initialized
+                    if (!isLoopInitialized)
                     {
                         InitializeLoop(context, loopType);
-                        IsLoopInitialized = new Core.Activities.Base.Data<bool> { Value = true };
+                        IsLoopInitialized = new Data<bool> { Value = true };
                     }
 
-                    // Verifica se deve continuar o loop
+                    // Verify if should continue
                     if (ShouldContinueLoop(context, loopType))
                     {
                         SetLoopVariables(context, loopType);
-                        
-                        // Muda para a fase de aguardar corpo completo
-                        LoopPhase = new Core.Activities.Base.Data<string> { Value = LoopConstants.PhaseWaitingBody };
-                        
-                        // Executa o corpo do loop
+
+                        // Change to waiting body phase
+                        LoopPhase = new Data<string> { Value = LoopConstants.PhaseWaitingBody };
+
+                        // Execute loop body
                         Body.Execute();
                     }
                     else
                     {
-                        // Loop completo desde o início
+                        // Loop complete from start
                         FinalizeLoop(context);
                         Done.Execute();
                     }
@@ -160,18 +155,18 @@ namespace Alma.Workflows.Activities.Flow
                 {
                     // Incrementa o índice
                     IncrementLoop();
-                    
+
                     // Reseta a fase para início
                     LoopPhase = new Core.Activities.Base.Data<string> { Value = LoopConstants.PhaseStart };
-                    
+
                     // Verifica se deve continuar
                     if (ShouldContinueLoop(context, loopType))
                     {
                         SetLoopVariables(context, loopType);
-                        
+
                         // Muda para a fase de aguardar corpo completo
                         LoopPhase = new Core.Activities.Base.Data<string> { Value = LoopConstants.PhaseWaitingBody };
-                        
+
                         // Executa o corpo do loop novamente
                         Body.Execute();
                     }
@@ -199,9 +194,9 @@ namespace Alma.Workflows.Activities.Flow
 
         private void InitializeLoop(ActivityExecutionContext context, LoopType loopType)
         {
-            CurrentIndex = new Core.Activities.Base.Data<int> { Value = 0 };
-            IsLoopComplete = new Core.Activities.Base.Data<bool> { Value = false };
-            LoopPhase = new Core.Activities.Base.Data<string> { Value = LoopConstants.PhaseStart };
+            CurrentIndex = new Data<int> { Value = 0 };
+            IsLoopComplete = new Data<bool> { Value = false };
+            LoopPhase = new Data<string> { Value = LoopConstants.PhaseStart };
 
             switch (loopType)
             {
@@ -378,10 +373,10 @@ namespace Alma.Workflows.Activities.Flow
         {
             IsLoopComplete = new Core.Activities.Base.Data<bool> { Value = true };
             LoopPhase = new Core.Activities.Base.Data<string> { Value = LoopConstants.PhaseCompleted };
-            
+
             var iterations = CurrentIndex?.Value ?? 0;
             var loopType = Type?.GetValue(context) ?? LoopType.Count;
-            
+
             context.State.Log($"Loop {loopType} concluído após {iterations} iterações", Enums.LogSeverity.Information);
         }
     }

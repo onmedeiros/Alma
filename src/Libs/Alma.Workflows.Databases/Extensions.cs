@@ -13,7 +13,7 @@ namespace Alma.Workflows.Databases
         {
             services.Configure<FlowOptions>(options =>
             {
-                options.AddActivity<QueryDatabaseActivity>();
+                options.AddActivity<RunCommandActivity>();
             });
 
             services.AddScoped<IDatabaseProviderRegistry, DatabaseProviderRegistry>();

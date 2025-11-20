@@ -1,23 +1,43 @@
 ﻿using Alma.Core.Json;
 using System.Text.Json;
+using System.Text.Json.Serialization;
 
 namespace Alma.Workflows.Core.ApprovalsAndChecks.Models
 {
+    /// <summary>
+    /// Represents a value object that can serialize and deserialize its value.
+    /// Value objects are used to store any value that needs to be persisted in the workflow state.
+    /// </summary>
     public class ValueObject
     {
         private bool _desserialized = false;
         private object? _value;
 
+        /// <summary>
+        /// Gets the runtime type of the value stored in the ValueObject.
+        /// </summary>
         public string Type { get; init; } = default!;
+
+        /// <summary>
+        /// Gets the value stored in the ValueObject.
+        /// </summary>
         public object? Value => GetValue();
+
+        /// <summary>
+        /// Gets the string representation of the value, or <see langword="null"/> if no value is set.
+        /// </summary>
         public string? ValueString { get; init; }
 
-        private static JsonSerializerOptions _jsonOptions = new JsonSerializerOptions
+        private static readonly JsonSerializerOptions _jsonOptions = new()
         {
             PropertyNameCaseInsensitive = true,
-            Converters = { new System.Text.Json.Serialization.JsonStringEnumConverter(), new ObjectToInferredTypesConverter() }
+            Converters = { new JsonStringEnumConverter(), new ObjectToInferredTypesConverter() }
         };
 
+        /// <summary>
+        /// Initializes a new instance of the <see cref="ValueObject"/> class with the specified value.
+        /// </summary>
+        /// <param name="value">Value to be stored.</param>
         public ValueObject(object? value)
         {
             Type = value?.GetType().FullName ?? "null";
@@ -42,6 +62,10 @@ namespace Alma.Workflows.Core.ApprovalsAndChecks.Models
             }
         }
 
+        /// <summary>
+        /// Gets the value stored in the ValueObject.
+        /// </summary>
+        /// <returns>Returns value.</returns>
         public object? GetValue()
         {
             if (_desserialized)
@@ -87,6 +111,11 @@ namespace Alma.Workflows.Core.ApprovalsAndChecks.Models
             }
         }
 
+        /// <summary>
+        /// Deserializes the stored JSON string to an object of the specified type.
+        /// </summary>
+        /// <returns>An object representing the deserialized value, or null if the stored value is "null" or empty.</returns>
+        /// <exception cref="Exception">Thrown if the specified type cannot be found.</exception>
         public object? GetDesserializedValue()
         {
             if (ValueString == "null" || string.IsNullOrEmpty(ValueString))

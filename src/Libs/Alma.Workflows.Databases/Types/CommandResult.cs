@@ -1,6 +1,6 @@
 ﻿namespace Alma.Workflows.Databases.Types
 {
-    public class QueryResult<T>
+    public class CommandResult<T>
     {
         public bool Succeeded { get; init; }
         public T? Data { get; init; }

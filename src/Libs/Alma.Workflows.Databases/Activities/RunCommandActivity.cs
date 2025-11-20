@@ -7,7 +7,6 @@ using Alma.Workflows.Core.Contexts;
 using Alma.Workflows.Customizations;
 using Alma.Workflows.Databases.Common;
 using Alma.Workflows.Databases.Registry;
-using Alma.Workflows.Utils;
 using Microsoft.Extensions.DependencyInjection;
 
 namespace Alma.Workflows.Databases.Activities
@@ -15,10 +14,10 @@ namespace Alma.Workflows.Databases.Activities
     [Activity(
         Namespace = "Alma.Workflows.Databases",
         Category = "Banco de dados",
-        DisplayName = "Consulta",
+        DisplayName = "Executar comando",
         Description = "Realiza uma consulta ao banco de dados com as informações configuradas.")]
     [ActivityCustomization(Icon = DatabaseIcons.Database, BorderColor = DatabaseColors.Default)]
-    public class QueryDatabaseActivity : Activity
+    public class RunCommandActivity : Activity
     {
         #region Ports
 
@@ -44,8 +43,8 @@ namespace Alma.Workflows.Databases.Activities
         [ActivityParameter(DisplayName = "String de Conexão", DisplayValue = "{{value}}", AutoGrow = true, Lines = 1, MaxLines = 3)]
         public Parameter<string>? ConnectionString { get; set; }
 
-        [ActivityParameter(DisplayName = "Consulta", DisplayValue = "{{value}}", AutoGrow = true, Lines = 4, MaxLines = 10)]
-        public Parameter<string>? Query { get; set; }
+        [ActivityParameter(DisplayName = "Comando", DisplayValue = "{{value}}", AutoGrow = true, Lines = 4, MaxLines = 10)]
+        public Parameter<string>? Command { get; set; }
 
         [ActivityParameter(DisplayName = "Variável", DisplayValue = "{{value}}")]
         public Parameter<string>? Variable { get; set; }
@@ -56,7 +55,7 @@ namespace Alma.Workflows.Databases.Activities
         {
             var databaseProviderOption = DatabaseProvider?.GetValue(context);
             var connectionString = ConnectionString?.GetValue(context);
-            var query = Query?.GetValue(context);
+            var command = Command?.GetValue(context);
             var variable = Variable?.GetValue(context);
 
             if (databaseProviderOption is null || string.IsNullOrEmpty(databaseProviderOption.Value))
@@ -73,7 +72,7 @@ namespace Alma.Workflows.Databases.Activities
                 return;
             }
 
-            if (string.IsNullOrWhiteSpace(query))
+            if (string.IsNullOrWhiteSpace(command))
             {
                 context.State.Log("Query is required", Enums.LogSeverity.Error);
                 Fail.Execute();
@@ -81,7 +80,7 @@ namespace Alma.Workflows.Databases.Activities
             }
 
             if (string.IsNullOrEmpty(variable))
-                variable = "QueryResult";
+                variable = "CommandResult";
 
             var databaseProviderRegistry = context.ServiceProvider.GetRequiredService<IDatabaseProviderRegistry>();
             var databaseProvider = await databaseProviderRegistry.GetProvider(databaseProviderOption.Value);
@@ -102,21 +101,21 @@ namespace Alma.Workflows.Databases.Activities
                 return;
             }
 
-            var queryResult = await databaseProvider.QueryJsonAsync(query!);
+            var comandResult = await databaseProvider.RunCommandJsonAsync(command!);
 
-            if (queryResult.Succeeded)
+            if (comandResult.Succeeded)
             {
-                context.State.Log("Query executed successfully", Enums.LogSeverity.Information);
+                context.State.Log("Command executed successfully", Enums.LogSeverity.Information);
 
-                var resultDictionary = JsonUtils.ConvertToDictionary(queryResult.Data ?? "{}");
+                var resultDictionary = JsonUtils.ConvertToDictionary(comandResult.Data ?? "{}");
 
                 context.State.SetVariable(variable, resultDictionary);
-                Done.Execute(queryResult);
+                Done.Execute(comandResult);
             }
             else
             {
-                context.State.Log($"Query failed: {queryResult.Message}", Enums.LogSeverity.Error);
-                Fail.Execute(queryResult);
+                context.State.Log($"Command failed: {comandResult.Message}", Enums.LogSeverity.Error);
+                Fail.Execute(comandResult);
             }
         }
     }
