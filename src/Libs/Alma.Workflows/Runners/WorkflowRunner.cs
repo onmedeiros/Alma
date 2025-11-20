@@ -16,9 +16,9 @@ namespace Alma.Workflows.Runners
     /// Refactored to follow Single Responsibility Principle - delegates execution
     /// concerns to specialized managers and coordinators.
     /// </summary>
-    public class FlowRunner
+    public class WorkflowRunner
     {
-        private readonly ILogger<FlowRunner> _logger;
+        private readonly ILogger<WorkflowRunner> _logger;
         private readonly IServiceProvider _serviceProvider;
         private readonly IActivityRunnerFactory _activityRunnerFactory;
         private readonly IQueueManager _queueManager;
@@ -29,7 +29,7 @@ namespace Alma.Workflows.Runners
         public FlowExecutionContext Context { get; private set; }
         public ICollection<FlowExecution> PendingExecutions { get; set; } = [];
 
-        public FlowRunner(
+        public WorkflowRunner(
             IServiceProvider serviceProvider, 
             Flow flow, 
             ExecutionState state, 
@@ -37,7 +37,7 @@ namespace Alma.Workflows.Runners
         {
             _serviceProvider = serviceProvider;
 
-            _logger = serviceProvider.GetRequiredService<ILogger<FlowRunner>>();
+            _logger = serviceProvider.GetRequiredService<ILogger<WorkflowRunner>>();
             _activityRunnerFactory = serviceProvider.GetRequiredService<IActivityRunnerFactory>();
             _queueManager = serviceProvider.GetRequiredService<IQueueManager>();
             _dataSetter = serviceProvider.GetRequiredService<IDataSetter>();

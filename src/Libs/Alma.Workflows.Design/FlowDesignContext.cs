@@ -29,7 +29,7 @@ namespace Alma.Workflows.Design
         private readonly IActivityRegistry _activityRegistry;
         private readonly ICustomActivityRegistry _customActivityRegistry;
         private readonly IFlowDefinitionParser _flowDefinitionParser;
-        private readonly IFlowRunnerFactory _flowRunnerFactory;
+        private readonly IWorkflowRunnerFactory _flowRunnerFactory;
 
         // Fields
         private FlowDesignOptions _options = null!;
@@ -56,7 +56,7 @@ namespace Alma.Workflows.Design
         public bool AutoSaveEnabled { get; private set; }
         public ActivityNodeModel? SelectedNode { get; private set; }
         public FlowExecutionContext? ExecutionContext => Runner?.Context;
-        public FlowRunner? Runner { get; private set; }
+        public WorkflowRunner? Runner { get; private set; }
 
         // Mouse states
         public bool IsDragging { get; private set; }
@@ -79,7 +79,7 @@ namespace Alma.Workflows.Design
 
         #endregion
 
-        public FlowDesignContext(ILogger<FlowDesignContext> logger, IActivityRegistry activityRegistry, ICustomActivityRegistry customActivityRegistry, IFlowDefinitionParser flowDefinitionParser, IFlowRunnerFactory flowRunnerFactory)
+        public FlowDesignContext(ILogger<FlowDesignContext> logger, IActivityRegistry activityRegistry, ICustomActivityRegistry customActivityRegistry, IFlowDefinitionParser flowDefinitionParser, IWorkflowRunnerFactory flowRunnerFactory)
         {
             _logger = logger;
             _activityRegistry = activityRegistry;

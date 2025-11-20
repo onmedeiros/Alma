@@ -23,9 +23,9 @@ namespace Alma.Workflows.Core.InstanceExecutions.Services
         private readonly IFlowDefinitionParser _flowDefinitionParser;
         private readonly IInstanceManager _flowInstanceManager;
         private readonly IInstanceExecutionManager _instanceExecutionManager;
-        private readonly IFlowRunnerFactory _flowRunnerFactory;
+        private readonly IWorkflowRunnerFactory _flowRunnerFactory;
 
-        public InstanceExecutionRunner(ILogger<InstanceExecutionRunner> logger, IFlowManager flowManager, IFlowDefinitionParser flowDefinitionParser, IInstanceManager flowInstanceManager, IInstanceExecutionManager instanceExecutionManager, IFlowRunnerFactory flowRunnerFactory)
+        public InstanceExecutionRunner(ILogger<InstanceExecutionRunner> logger, IFlowManager flowManager, IFlowDefinitionParser flowDefinitionParser, IInstanceManager flowInstanceManager, IInstanceExecutionManager instanceExecutionManager, IWorkflowRunnerFactory flowRunnerFactory)
         {
             _logger = logger;
             _flowManager = flowManager;

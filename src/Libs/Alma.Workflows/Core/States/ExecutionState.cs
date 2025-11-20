@@ -1,11 +1,12 @@
 ﻿using Alma.Workflows.Core.ApprovalsAndChecks.Models;
+using Alma.Workflows.Core.States.Abstractions;
 using Alma.Workflows.Enums;
 using Alma.Workflows.Models;
 using Alma.Workflows.Models.Activities;
 
 namespace Alma.Workflows.States
 {
-    public class ExecutionState
+    public class ExecutionState : IExecutionState
     {
         private Dictionary<string, object>? _templateVariables = null;
 

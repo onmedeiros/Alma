@@ -94,7 +94,7 @@ namespace Alma.Workflows
 
             // Execution services
             services.AddScoped<IActivityRunnerFactory, ActivityRunnerFactory>();
-            services.AddScoped<IFlowRunnerFactory, FlowRunnerFactory>();
+            services.AddScoped<IWorkflowRunnerFactory, WorkflowRunnerFactory>();
             services.AddScoped<IActivityStepFactory, ActivityStepFactory>();
             services.AddScoped<IApprovalAndCheckResolverFactory, ApprovalAndCheckResolverFactory>();
             

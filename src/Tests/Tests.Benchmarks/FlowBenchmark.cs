@@ -17,7 +17,7 @@ namespace Tests.Benchmarks
     public class FlowBenchmark
     {
         private IServiceProvider _serviceProvider = default!;
-        private IFlowRunnerFactory _runnerFactory = default!;
+        private IWorkflowRunnerFactory _runnerFactory = default!;
         private Flow _flow = default!;
 
         [GlobalSetup]
@@ -32,7 +32,7 @@ namespace Tests.Benchmarks
             });
 
             _serviceProvider = services.BuildServiceProvider();
-            _runnerFactory = _serviceProvider.GetRequiredService<IFlowRunnerFactory>();
+            _runnerFactory = _serviceProvider.GetRequiredService<IWorkflowRunnerFactory>();
 
             var builder = _serviceProvider.GetRequiredService<IFlowBuilder>();
 

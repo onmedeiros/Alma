@@ -9,7 +9,7 @@ namespace Alma.Workflows.Core.Activities.Base
 {
     public class Parameter<T>
     {
-        private static Regex _templateRegex = new Regex(@"\$(var|param|now)\(([\w\.]*)\)", RegexOptions.Compiled);
+        private static readonly Regex _templateRegex = new Regex(@"\$(var|param|now)\(([\w\.]*)\)", RegexOptions.Compiled);
 
         public string? ValueString { get; private set; }
 

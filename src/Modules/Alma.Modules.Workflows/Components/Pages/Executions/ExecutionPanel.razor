@@ -22,7 +22,7 @@
 @inject IInstanceManager _instanceManager;
 @inject IInstanceExecutionManager _executionManager;
 @inject IFlowDefinitionParser _definitionParser;
-@inject IFlowRunnerFactory _runnerFactory;
+@inject IWorkflowRunnerFactory _runnerFactory;
 @inject IParameterSetter _parameterSetter;
 
 @inject IActivityComponentRegistry _activityComponentRegistry;
@@ -123,7 +123,7 @@
     private string _versionName = string.Empty;
 
     private FlowDefinition _definition = default!;
-    private FlowRunner _runner = default!;
+    private WorkflowRunner _runner = default!;
 
     private QueueItem? _currentQueueItem;
 
