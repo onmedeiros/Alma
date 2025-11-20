@@ -40,26 +40,31 @@ namespace Alma.Workflows.Core.ApprovalsAndChecks.Models
         /// <param name="value">Value to be stored.</param>
         public ValueObject(object? value)
         {
-            Type = value?.GetType().FullName ?? "null";
-
-            _value = value;
-            _desserialized = true;
-
-            if (value != null)
+            // For non-primitive, non-string types, store the assembly-qualified name so we can reliably resolve the type later
+            if (value is null)
             {
-                if (value.GetType().IsPrimitive || value is string)
-                {
-                    ValueString = value.ToString();
-                }
-                else
-                {
-                    ValueString = JsonSerializer.Serialize(value);
-                }
+                Type = "null";
+                ValueString = "null";
+                _desserialized = true;
+                return;
+            }
+
+            var valueType = value.GetType();
+            if (valueType.IsPrimitive || value is string || value is decimal || value is DateTime)
+            {
+                // Keep previous behavior/compat for primitives and common BCL scalars
+                Type = valueType.FullName ?? valueType.Name;
+                ValueString = value.ToString();
             }
             else
             {
-                ValueString = "null";
+                // Use assembly-qualified name so Type resolution works even if the assembly is not yet loaded
+                Type = valueType.AssemblyQualifiedName ?? (valueType.FullName ?? valueType.Name);
+                ValueString = JsonSerializer.Serialize(value);
             }
+
+            _value = value;
+            _desserialized = true;
         }
 
         /// <summary>
@@ -98,6 +103,7 @@ namespace Alma.Workflows.Core.ApprovalsAndChecks.Models
                     return _value;
 
                 case "String":
+                case "System.String":
                     _value = ValueString;
                     return ValueString;
 
@@ -121,7 +127,19 @@ namespace Alma.Workflows.Core.ApprovalsAndChecks.Models
             if (ValueString == "null" || string.IsNullOrEmpty(ValueString))
                 return null;
 
-            Type? type = System.Type.GetType(Type);
+            // Try direct resolution first (works for assembly-qualified names and mscorlib types)
+            var type = System.Type.GetType(Type);
+
+            // Fallback: search already loaded assemblies by FullName
+            if (type is null)
+            {
+                foreach (var asm in AppDomain.CurrentDomain.GetAssemblies())
+                {
+                    type = asm.GetType(Type, throwOnError: false, ignoreCase: false);
+                    if (type is not null)
+                        break;
+                }
+            }
 
             if (type is null)
                 throw new Exception($"Type {Type} not found.");
