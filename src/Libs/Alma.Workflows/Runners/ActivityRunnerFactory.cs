@@ -1,6 +1,10 @@
 ﻿using Alma.Workflows.Core.Abstractions;
+using Alma.Workflows.Core.States.Abstractions;
+using Alma.Workflows.Core.States.Data;
 using Alma.Workflows.Options;
+using Alma.Workflows.Runners.Scopes;
 using Alma.Workflows.States;
+using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Logging;
 
 namespace Alma.Workflows.Runners
@@ -17,7 +21,7 @@ namespace Alma.Workflows.Runners
         /// <param name="state">The current execution state. If null, a new state will be created.</param>
         /// <param name="options">The execution options. If null, default options will be used.</param>
         /// <returns>A new instance of <see cref="ActivityRunner"/>.</returns>
-        ActivityRunner Create(IActivity activity, ExecutionState? state = null, ExecutionOptions? options = null);
+        ActivityRunner Create(IActivity activity, StateData? state = null, ExecutionOptions? options = null);
     }
 
     /// <summary>
@@ -40,12 +44,21 @@ namespace Alma.Workflows.Runners
         }
 
         /// <inheritdoc />
-        public ActivityRunner Create(IActivity activity, ExecutionState? state = null, ExecutionOptions? options = null)
+        public ActivityRunner Create(IActivity activity, StateData? state = null, ExecutionOptions? options = null)
         {
-            options ??= new ExecutionOptions();
-            state ??= new ExecutionState();
+            var executionScope = _serviceProvider.GetRequiredService<IExecutionScope>();
 
-            return new ActivityRunner(_serviceProvider, activity, state, options);
+            if (!executionScope.HasCurrentScope)
+            {
+                executionScope.Initialize();
+
+                var executionState = executionScope.Current.ServiceProvider.GetRequiredService<IExecutionState>();
+                executionState.Initialize(state ?? new StateData());
+            }
+
+            options ??= new ExecutionOptions();
+
+            return new ActivityRunner(_serviceProvider, activity, options);
         }
     }
 }

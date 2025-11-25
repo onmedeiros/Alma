@@ -53,18 +53,18 @@ namespace Alma.Workflows.Activities.Data
 
             if (type == VariableType.String)
             {
-                context.State.SetVariable(name, value);
+                context.State.Variables.Set(name, value);
                 Done.Execute();
             }
             else if (type == VariableType.JsonObject)
             {
                 var obj = DotLiquidUtils.ConvertJsonToHash(value ?? "{}");
-                context.State.SetVariable(name, obj);
+                context.State.Variables.Set(name, obj);
                 Done.Execute();
             }
             else
             {
-                context.State.SetVariable(name, value);
+                context.State.Variables.Set(name, value);
                 Done.Execute();
             }
         }

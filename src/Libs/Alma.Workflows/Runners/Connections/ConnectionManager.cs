@@ -18,20 +18,18 @@ namespace Alma.Workflows.Runners.Connections
     {
         private readonly ILogger<ConnectionManager> _logger;
         private readonly IQueueManager _queueManager;
-        private readonly IDataSetter _dataSetter;
-        
+
         // Cache de conexões para performance (proteção contra acesso concorrente)
         private readonly Dictionary<string, List<Connection>> _connectionCache = new();
+
         private readonly object _cacheLock = new();
 
         public ConnectionManager(
             ILogger<ConnectionManager> logger,
-            IQueueManager queueManager,
-            IDataSetter dataSetter)
+            IQueueManager queueManager)
         {
             _logger = logger;
             _queueManager = queueManager;
-            _dataSetter = dataSetter;
         }
 
         public IEnumerable<Connection> GetOutgoingConnections(IActivity activity, Port port)
@@ -45,7 +43,7 @@ namespace Alma.Workflows.Runners.Connections
                     _logger.LogDebug(
                         "Caching connections for activity {ActivityId}, port {PortName}",
                         activity.Id, port.Descriptor.Name);
-                    
+
                     _connectionCache[cacheKey] = new List<Connection>();
                 }
 
@@ -54,14 +52,14 @@ namespace Alma.Workflows.Runners.Connections
         }
 
         public void EnqueueConnectedActivities(
-            FlowExecutionContext context,
+            WorkflowExecutionContext context,
             IEnumerable<Port> executedPorts)
         {
             foreach (var port in executedPorts)
             {
                 var connections = context.Flow.Connections
-                    .Where(x => 
-                        x.Source.ActivityId == port.Activity.Id && 
+                    .Where(x =>
+                        x.Source.ActivityId == port.Activity.Id &&
                         x.Source.PortName == port.Descriptor.Name);
 
                 foreach (var connection in connections)
@@ -78,7 +76,7 @@ namespace Alma.Workflows.Runners.Connections
         }
 
         private void ProcessConnection(
-            FlowExecutionContext context,
+            WorkflowExecutionContext context,
             Connection connection,
             Port sourcePort)
         {
@@ -86,7 +84,7 @@ namespace Alma.Workflows.Runners.Connections
                 connection,
                 new ValueObject(sourcePort.Data));
 
-            context.State.ExecutedConnections.Add(executedConnection);
+            context.State.Connections.Add(executedConnection);
 
             var targetActivity = context.Flow.Activities
                 .First(x => x.Id == connection.Target.ActivityId);
@@ -103,7 +101,7 @@ namespace Alma.Workflows.Runners.Connections
         }
 
         private void HandleLoopBodyCompleteConnection(
-            FlowExecutionContext context,
+            WorkflowExecutionContext context,
             Connection connection,
             IActivity loopActivity)
         {
@@ -112,7 +110,7 @@ namespace Alma.Workflows.Runners.Connections
                 connection.Source.ActivityId, connection.Target.ActivityId);
 
             // Encontra o item do loop na fila
-            var loopQueueItem = context.State.Queue
+            var loopQueueItem = context.State.Queue.AsCollection()
                 .FirstOrDefault(q => q.ActivityId == connection.Target.ActivityId);
 
             if (loopQueueItem == null)
@@ -133,12 +131,7 @@ namespace Alma.Workflows.Runners.Connections
             }
 
             // Define a fase do loop para BodyCompleted para que a próxima execução incremente
-            loop.LoopPhase = new Core.Activities.Base.Data<string> 
-            { 
-                Value = LoopConstants.PhaseBodyCompleted 
-            };
-            
-            _dataSetter.UpdateData(context.State, loop);
+            context.State.Memory.Set(loop.Id, "phase", LoopConstants.PhaseBodyCompleted);
 
             _logger.LogInformation(
                 "Loop {ActivityId} phase set to {Phase}",
@@ -161,7 +154,7 @@ namespace Alma.Workflows.Runners.Connections
                 foreach (var connection in flow.Connections)
                 {
                     var cacheKey = $"{connection.Source.ActivityId}:{connection.Source.PortName}";
-                    
+
                     if (!_connectionCache.ContainsKey(cacheKey))
                     {
                         _connectionCache[cacheKey] = new List<Connection>();

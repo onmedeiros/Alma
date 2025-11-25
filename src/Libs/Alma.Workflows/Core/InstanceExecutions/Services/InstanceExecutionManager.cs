@@ -7,6 +7,7 @@ using Alma.Workflows.Options;
 using Alma.Workflows.States;
 using Microsoft.Extensions.Logging;
 using Alma.Core.Types;
+using Alma.Workflows.Core.States.Data;
 
 namespace Alma.Workflows.Core.InstanceExecutions.Services
 {
@@ -14,7 +15,7 @@ namespace Alma.Workflows.Core.InstanceExecutions.Services
     {
         ValueTask<InstanceExecution> Begin(FlowInstance instance, ExecutionOptions? options = null);
 
-        ValueTask<InstanceExecution> Update(InstanceExecution instance, ExecutionState state);
+        ValueTask<InstanceExecution> Update(InstanceExecution instance);
 
         ValueTask<InstanceExecution?> FindById(string id, string discriminator);
 
@@ -54,35 +55,18 @@ namespace Alma.Workflows.Core.InstanceExecutions.Services
 
             if (options.Parameters.Count > 0)
             {
-                execution.State = new ExecutionState
+                execution.State = new StateData
                 {
-                    Parameters = options.Parameters
+                    {"Parameters", options.Parameters}
                 };
             }
 
             return _instanceExecutionStore.InsertAsync(execution);
         }
 
-        public ValueTask<InstanceExecution> Update(InstanceExecution instance, ExecutionState state)
+        public ValueTask<InstanceExecution> Update(InstanceExecution instance)
         {
-            instance.State = state;
             instance.UpdatedAt = DateTime.Now;
-
-            switch (state.GetExecutionStatus())
-            {
-                case ExecutionStatus.Completed:
-                    instance.Status = InstanceExecutionStatus.Completed;
-                    break;
-
-                case ExecutionStatus.Failed:
-                    instance.Status = InstanceExecutionStatus.Failed;
-                    break;
-
-                case ExecutionStatus.Waiting:
-                    instance.Status = InstanceExecutionStatus.Waiting;
-                    break;
-            }
-
             return _instanceExecutionStore.UpdateAsync(instance);
         }
 

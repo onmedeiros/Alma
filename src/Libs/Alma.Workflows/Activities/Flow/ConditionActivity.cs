@@ -47,7 +47,7 @@ namespace Alma.Workflows.Activities.Flow
             // Verifica se a expressão não contém erros
             if (expression.HasErrors())
             {
-                context.State.Log($"A expressão '{Expression?.GetValue(context)}' é invalida: {expression.Error.Message}", Enums.LogSeverity.Error);
+                context.State.Logs.Add($"A expressão '{Expression?.GetValue(context)}' é invalida: {expression.Error.Message}", Enums.LogSeverity.Error);
                 Fail.Execute($"A expressão '{Expression?.GetValue(context)}' é invalida.");
                 return;
             }
@@ -69,7 +69,7 @@ namespace Alma.Workflows.Activities.Flow
             }
             else
             {
-                context.State.Log($"A expressão '{Expression?.GetValue(context)}' não é uma expressão lógica.", Enums.LogSeverity.Error);
+                context.State.Logs.Add($"A expressão '{Expression?.GetValue(context)}' não é uma expressão lógica.", Enums.LogSeverity.Error);
                 Fail.Execute($"A expressão '{Expression?.GetValue(context)}' não é uma expressão lógica.");
             }
         }

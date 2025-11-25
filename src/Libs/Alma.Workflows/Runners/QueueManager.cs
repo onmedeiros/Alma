@@ -20,7 +20,7 @@ namespace Alma.Workflows.Runners
         /// Load property navigations of the queue;
         /// </summary>
         /// <param name="context">The flow execution context.</param>
-        void LoadNavigations(FlowExecutionContext context);
+        void LoadNavigations(WorkflowExecutionContext context);
 
         #endregion
 
@@ -28,127 +28,127 @@ namespace Alma.Workflows.Runners
         /// Enqueues the start activity of the flow.
         /// </summary>
         /// <param name="context">The flow execution context.</param>
-        void EnqueueStart(FlowExecutionContext context);
+        void EnqueueStart(WorkflowExecutionContext context);
 
         /// <summary>
         /// Enqueues an activity to the flow execution queue.
         /// </summary>
         /// <param name="context">The flow execution context.</param>
         /// <param name="activity">The activity to be enqueued.</param>
-        void Enqueue(FlowExecutionContext context, IActivity activity);
+        void Enqueue(WorkflowExecutionContext context, IActivity activity);
 
         /// <summary>
         /// Enqueues an activity to the flow execution queue.
         /// </summary>
         /// <param name="context">The flow execution context.</param>
         /// <param name="executedConnection">The executed connection containing the activity to be enqueued.</param>
-        void Enqueue(FlowExecutionContext context, ExecutedConnection executedConnection);
+        void Enqueue(WorkflowExecutionContext context, ExecutedConnection executedConnection);
 
         /// <summary>
         /// Gets the next sequential number for the queue.
         /// </summary>
         /// <param name="context">The flow execution context.</param>
         /// <returns>The next sequential number.</returns>
-        int GetNextSequential(FlowExecutionContext context);
+        int GetNextSequential(WorkflowExecutionContext context);
 
         /// <summary>
         /// Checks if there are any activities ready to be executed in the queue.
         /// </summary>
         /// <param name="context">The flow execution context.</param>
         /// <returns>True if there are activities ready to be executed, otherwise false.</returns>
-        bool HasNext(FlowExecutionContext context);
+        bool HasNext(WorkflowExecutionContext context);
 
         /// <summary>
         /// Peeks the next activities ready to be executed in the queue.
         /// </summary>
         /// <param name="context">The flow execution context.</param>
         /// <returns>A collection of queue items ready to be executed.</returns>
-        IEnumerable<QueueItem> PeekNextReady(FlowExecutionContext context);
+        IEnumerable<QueueItem> PeekNextReady(WorkflowExecutionContext context);
 
         /// <summary>
         /// Peeks the pending activities in the queue.
         /// </summary>
         /// <param name="context">The flow execution context.</param>
         /// <returns>A collection of pending queue items.</returns>
-        IEnumerable<QueueItem> PeekPending(FlowExecutionContext context);
+        IEnumerable<QueueItem> PeekPending(WorkflowExecutionContext context);
 
         /// <summary>
         /// Peeks the waiting activities in the queue.
         /// </summary>
         /// <param name="context">The flow execution context.</param>
         /// <returns>A collection of waiting queue items.</returns>
-        IEnumerable<QueueItem> PeekWaiting(FlowExecutionContext context);
+        IEnumerable<QueueItem> PeekWaiting(WorkflowExecutionContext context);
 
-        IEnumerable<QueueItem> PeekWaitingAndReady(FlowExecutionContext context);
+        IEnumerable<QueueItem> PeekWaitingAndReady(WorkflowExecutionContext context);
 
-        IEnumerable<QueueItem> PeekCompleted(FlowExecutionContext context);
+        IEnumerable<QueueItem> PeekCompleted(WorkflowExecutionContext context);
 
-        IEnumerable<QueueItem> PeekNext(FlowExecutionContext context, int count);
+        IEnumerable<QueueItem> PeekNext(WorkflowExecutionContext context, int count);
 
-        QueueItem PeekById(FlowExecutionContext context, string id);
+        QueueItem PeekById(WorkflowExecutionContext context, string id);
 
         /// <summary>
         /// Marks a queue item as completed.
         /// </summary>
         /// <param name="context">The flow execution context.</param>
         /// <param name="queueItem">The queue item to be marked as completed.</param>
-        void Complete(FlowExecutionContext context, QueueItem queueItem);
+        void Complete(WorkflowExecutionContext context, QueueItem queueItem);
 
         /// <summary>
         /// Marks a queue item as pending.
         /// </summary>
         /// <param name="context">The flow execution context.</param>
         /// <param name="queueItem">The queue item to be marked as pending.</param>
-        void Pending(FlowExecutionContext context, QueueItem queueItem);
+        void Pending(WorkflowExecutionContext context, QueueItem queueItem);
 
         /// <summary>
         /// Marks a queue item as waiting.
         /// </summary>
         /// <param name="context">The flow execution context.</param>
         /// <param name="queueItem">The queue item to be marked as waiting.</param>
-        void Wait(FlowExecutionContext context, QueueItem queueItem, string? reason = null);
+        void Wait(WorkflowExecutionContext context, QueueItem queueItem, string? reason = null);
 
         /// <summary>
         /// Marks a queue item as ready.
         /// </summary>
         /// <param name="context">The flow execution context.</param>
         /// <param name="queueItem">The queue item to be marked as ready.</param>
-        void Ready(FlowExecutionContext context, QueueItem queueItem);
+        void Ready(WorkflowExecutionContext context, QueueItem queueItem);
 
         /// <summary>
         /// Marks a queue item as failed.
         /// </summary>
         /// <param name="context">The flow execution context.</param>
         /// <param name="queueItem">The queue item to be marked as failed.</param>
-        void Fail(FlowExecutionContext context, QueueItem queueItem);
+        void Fail(WorkflowExecutionContext context, QueueItem queueItem);
 
         /// <summary>
         /// Marks a queue item as rejected.
         /// </summary>
         /// <param name="context">The flow execution context.</param>
         /// <param name="queueItem">The queue item to be marked as rejected.</param>
-        void Reject(FlowExecutionContext context, QueueItem queueItem);
+        void Reject(WorkflowExecutionContext context, QueueItem queueItem);
 
         /// <summary>
         /// Marks a queue item as approved.
         /// </summary>
         /// <param name="context">The flow execution context.</param>
         /// <param name="queueItem">The queue item to be marked as approved.</param>
-        void Approve(FlowExecutionContext context, QueueItem queueItem);
+        void Approve(WorkflowExecutionContext context, QueueItem queueItem);
 
         /// <summary>
         /// Updates the execution status of the queue.
         /// </summary>
         /// <param name="context"></param>
         /// <returns></returns>
-        Task UpdateExecutionStatus(FlowExecutionContext context);
+        Task UpdateExecutionStatus(WorkflowExecutionContext context);
 
         /// <summary>
         /// Updates the execution status of a specific queue item.
         /// </summary>
-        Task UpdateExecutionStatus(FlowExecutionContext context, QueueItem queueItem);
+        Task UpdateExecutionStatus(WorkflowExecutionContext context, QueueItem queueItem);
 
-        void UpdateExecutionStatus(FlowExecutionContext context, QueueItem item, ActivityValidationResult validationResult);
+        void UpdateExecutionStatus(WorkflowExecutionContext context, QueueItem item, ActivityValidationResult validationResult);
     }
 
     /// <summary>
@@ -171,9 +171,9 @@ namespace Alma.Workflows.Runners
 
         #region Navigation loading
 
-        public void LoadNavigations(FlowExecutionContext context)
+        public void LoadNavigations(WorkflowExecutionContext context)
         {
-            foreach (var item in context.State.Queue)
+            foreach (var item in context.State.Queue.AsCollection())
             {
                 item.Activity = context.Flow.Activities.First(x => x.Id == item.ActivityId);
 
@@ -182,7 +182,10 @@ namespace Alma.Workflows.Runners
 
                 foreach (var executedConnectionId in item.ExecutedConnectionIds)
                 {
-                    var executedConnection = context.State.ExecutedConnections.First(x => x.Id == executedConnectionId);
+                    var executedConnection = context.State.Connections
+                        .AsCollection()
+                        .First(x => x.Id == executedConnectionId);
+
                     item.ExecutedConnections.Add(executedConnection);
                 }
             }
@@ -193,12 +196,12 @@ namespace Alma.Workflows.Runners
         #region Enqueueing
 
         /// <inheritdoc />
-        public void EnqueueStart(FlowExecutionContext context)
+        public void EnqueueStart(WorkflowExecutionContext context)
         {
             var startActivity = context.Flow.GetStart();
 
             // To avoid duplicate execution, if the start activity is already in the queue, do not add it again.
-            if (context.State.Queue.Any(x => x.ActivityId == startActivity.Id))
+            if (context.State.Queue.AsCollection().Any(x => x.ActivityId == startActivity.Id))
                 return;
 
             var item = new QueueItem(startActivity, 0);
@@ -209,7 +212,7 @@ namespace Alma.Workflows.Runners
         }
 
         /// <inheritdoc />
-        public void Enqueue(FlowExecutionContext context, IActivity activity)
+        public void Enqueue(WorkflowExecutionContext context, IActivity activity)
         {
             if (!CanEnqueue(context, activity))
                 return;
@@ -219,7 +222,7 @@ namespace Alma.Workflows.Runners
             context.State.Queue.Add(item);
         }
 
-        public void Enqueue(FlowExecutionContext context, ExecutedConnection executedConnection)
+        public void Enqueue(WorkflowExecutionContext context, ExecutedConnection executedConnection)
         {
             if (!CanEnqueue(context, executedConnection.Target))
                 return;
@@ -230,9 +233,9 @@ namespace Alma.Workflows.Runners
         }
 
         /// <inheritdoc />
-        public int GetNextSequential(FlowExecutionContext context)
+        public int GetNextSequential(WorkflowExecutionContext context)
         {
-            return context.State.Queue.Count + 1;
+            return context.State.Queue.AsCollection().Count + 1;
         }
 
         #endregion
@@ -240,21 +243,24 @@ namespace Alma.Workflows.Runners
         #region Peeking
 
         /// <inheritdoc />
-        public bool HasNext(FlowExecutionContext context)
+        public bool HasNext(WorkflowExecutionContext context)
         {
-            return context.State.Queue.Any(x => x.CanExecute);
+            return context.State.Queue
+                .AsCollection()
+                .Any(x => x.CanExecute);
         }
 
         /// <inheritdoc />
-        public IEnumerable<QueueItem> PeekNextReady(FlowExecutionContext context)
+        public IEnumerable<QueueItem> PeekNextReady(WorkflowExecutionContext context)
         {
-            if (context.State.Queue.Count == 0)
+            if (context.State.Queue.AsCollection().Count == 0)
                 EnqueueStart(context);
 
             var count = context.Options.MaxDegreeOfParallelism;
             count = count > 0 ? count : 1;
 
             var items = context.State.Queue
+                .AsCollection()
                 .Where(x => x.ExecutionStatus == ActivityExecutionStatus.Ready)
                 .OrderBy(x => x.Sequential)
                 .Take(count);
@@ -266,32 +272,39 @@ namespace Alma.Workflows.Runners
         }
 
         /// <inheritdoc />
-        public IEnumerable<QueueItem> PeekPending(FlowExecutionContext context)
+        public IEnumerable<QueueItem> PeekPending(WorkflowExecutionContext context)
         {
-            return context.State.Queue.Where(x => x.ExecutionStatus == ActivityExecutionStatus.Pending);
+            return context.State.Queue
+                .AsCollection()
+                .Where(x => x.ExecutionStatus == ActivityExecutionStatus.Pending);
         }
 
         /// <inheritdoc />
-        public IEnumerable<QueueItem> PeekWaiting(FlowExecutionContext context)
+        public IEnumerable<QueueItem> PeekWaiting(WorkflowExecutionContext context)
         {
-            return context.State.Queue.Where(x => x.ExecutionStatus == ActivityExecutionStatus.Waiting);
+            return context.State.Queue
+                .AsCollection()
+                .Where(x => x.ExecutionStatus == ActivityExecutionStatus.Waiting);
         }
 
-        public IEnumerable<QueueItem> PeekWaitingAndReady(FlowExecutionContext context)
+        public IEnumerable<QueueItem> PeekWaitingAndReady(WorkflowExecutionContext context)
         {
-            return context.State.Queue.Where(x =>
-                x.ExecutionStatus == ActivityExecutionStatus.Waiting
-                || x.ExecutionStatus == ActivityExecutionStatus.Ready);
+            return context.State.Queue
+                .AsCollection()
+                .Where(x => x.ExecutionStatus == ActivityExecutionStatus.Waiting || x.ExecutionStatus == ActivityExecutionStatus.Ready);
         }
 
-        public IEnumerable<QueueItem> PeekCompleted(FlowExecutionContext context)
+        public IEnumerable<QueueItem> PeekCompleted(WorkflowExecutionContext context)
         {
-            return context.State.Queue.Where(x => x.ExecutionStatus == ActivityExecutionStatus.Completed);
+            return context.State.Queue
+                .AsCollection()
+                .Where(x => x.ExecutionStatus == ActivityExecutionStatus.Completed);
         }
 
-        public IEnumerable<QueueItem> PeekNext(FlowExecutionContext context, int count)
+        public IEnumerable<QueueItem> PeekNext(WorkflowExecutionContext context, int count)
         {
-            return context.State.Queue.OrderBy(x => x.Sequential)
+            return context.State.Queue.AsCollection()
+                .OrderBy(x => x.Sequential)
                 .Where(x =>
                     x.ExecutionStatus == ActivityExecutionStatus.Pending
                     || x.ExecutionStatus == ActivityExecutionStatus.Waiting
@@ -300,28 +313,30 @@ namespace Alma.Workflows.Runners
                 .Take(count);
         }
 
-        public QueueItem PeekById(FlowExecutionContext context, string id)
+        public QueueItem PeekById(WorkflowExecutionContext context, string id)
         {
-            return context.State.Queue.First(x => x.Id == id);
+            return context.State.Queue
+                .AsCollection()
+                .First(x => x.Id == id);
         }
 
         #endregion
 
         #region Queue execution status managing
 
-        public async Task UpdateExecutionStatus(FlowExecutionContext context)
+        public async Task UpdateExecutionStatus(WorkflowExecutionContext context)
         {
             UpdatePendingItems(context);
             await UpdateWaitingAndReadyStatus(context);
         }
 
-        public async Task UpdateExecutionStatus(FlowExecutionContext context, QueueItem queueItem)
+        public async Task UpdateExecutionStatus(WorkflowExecutionContext context, QueueItem queueItem)
         {
             await ResolveReadyStatus(context, queueItem);
             await ResolveApprovalAndChecks(context, queueItem);
         }
 
-        public void UpdatePendingItems(FlowExecutionContext context)
+        public void UpdatePendingItems(WorkflowExecutionContext context)
         {
             // Check if there are any pending activities that can be executed.
             // Pending activities are those that are waiting for the execution of
@@ -333,7 +348,7 @@ namespace Alma.Workflows.Runners
             }
         }
 
-        public async Task UpdateWaitingAndReadyStatus(FlowExecutionContext context)
+        public async Task UpdateWaitingAndReadyStatus(WorkflowExecutionContext context)
         {
             // Check if there are any waiting activities that can be executed.
             foreach (var item in PeekWaitingAndReady(context))
@@ -343,7 +358,7 @@ namespace Alma.Workflows.Runners
             }
         }
 
-        public async Task ResolveReadyStatus(FlowExecutionContext context, QueueItem item)
+        public async Task ResolveReadyStatus(WorkflowExecutionContext context, QueueItem item)
         {
             // if (!RequiredConnectionsExecuted(context, item))
             // {
@@ -360,14 +375,14 @@ namespace Alma.Workflows.Runners
                 Wait(context, item, isReadyResult.Reason);
         }
 
-        public async Task ResolveApprovalAndChecks(FlowExecutionContext context, QueueItem item)
+        public async Task ResolveApprovalAndChecks(WorkflowExecutionContext context, QueueItem item)
         {
             var activity = context.Flow.Activities.First(x => x.Id == item.ActivityId);
             var approvalAndCheckResults = new List<ApprovalAndCheckResult>();
 
             foreach (var approvalAndCheck in activity.ApprovalAndChecks)
             {
-                var resolver = _approvalAndCheckResolverFactory.Create(approvalAndCheck, context.State, context.Options);
+                var resolver = _approvalAndCheckResolverFactory.Create(approvalAndCheck, context.Options);
                 approvalAndCheckResults.Add(await resolver.Resolve());
             }
 
@@ -379,7 +394,7 @@ namespace Alma.Workflows.Runners
                 Wait(context, item);
         }
 
-        public void UpdateExecutionStatus(FlowExecutionContext context, QueueItem item, ActivityValidationResult validationResult)
+        public void UpdateExecutionStatus(WorkflowExecutionContext context, QueueItem item, ActivityValidationResult validationResult)
         {
             item.ExecutionStatus = validationResult.ReadinessStatus;
             item.ExecutionStatusReason = validationResult.ReadinessDetails;
@@ -391,54 +406,75 @@ namespace Alma.Workflows.Runners
         #region Status modifiers
 
         /// <inheritdoc />
-        public void Complete(FlowExecutionContext context, QueueItem queueItem)
+        public void Complete(WorkflowExecutionContext context, QueueItem queueItem)
         {
-            var item = context.State.Queue.First(x => x.Sequential == queueItem.Sequential);
+            var item = context.State.Queue
+                .AsCollection()
+                .First(x => x.Sequential == queueItem.Sequential);
+
             item.ExecutionStatus = ActivityExecutionStatus.Completed;
         }
 
         /// <inheritdoc />
-        public void Pending(FlowExecutionContext context, QueueItem queueItem)
+        public void Pending(WorkflowExecutionContext context, QueueItem queueItem)
         {
-            var item = context.State.Queue.First(x => x.Sequential == queueItem.Sequential);
+            var item = context.State.Queue
+                .AsCollection()
+                .First(x => x.Sequential == queueItem.Sequential);
+
             item.ExecutionStatus = ActivityExecutionStatus.Pending;
         }
 
         /// <inheritdoc />
-        public void Wait(FlowExecutionContext context, QueueItem queueItem, string? reason = null)
+        public void Wait(WorkflowExecutionContext context, QueueItem queueItem, string? reason = null)
         {
-            var item = context.State.Queue.First(x => x.Sequential == queueItem.Sequential);
+            var item = context.State.Queue
+                .AsCollection()
+                .First(x => x.Sequential == queueItem.Sequential);
+
             item.ExecutionStatus = ActivityExecutionStatus.Waiting;
             item.ExecutionStatusReason = reason;
         }
 
         /// <inheritdoc />
-        public void Fail(FlowExecutionContext context, QueueItem queueItem)
+        public void Fail(WorkflowExecutionContext context, QueueItem queueItem)
         {
-            var item = context.State.Queue.First(x => x.Sequential == queueItem.Sequential);
+            var item = context.State.Queue
+                .AsCollection()
+                .First(x => x.Sequential == queueItem.Sequential);
+
             item.ExecutionStatus = ActivityExecutionStatus.Failed;
         }
 
         /// <inheritdoc />
-        public void Ready(FlowExecutionContext context, QueueItem queueItem)
+        public void Ready(WorkflowExecutionContext context, QueueItem queueItem)
         {
-            var item = context.State.Queue.First(x => x.Sequential == queueItem.Sequential);
+            var item = context.State.Queue
+                .AsCollection()
+                .First(x => x.Sequential == queueItem.Sequential);
+
             item.ExecutionStatus = ActivityExecutionStatus.Ready;
             item.ExecutionStatusReason = null;
         }
 
         /// <inheritdoc />
-        public void Reject(FlowExecutionContext context, QueueItem queueItem)
+        public void Reject(WorkflowExecutionContext context, QueueItem queueItem)
         {
-            var item = context.State.Queue.First(x => x.Sequential == queueItem.Sequential);
+            var item = context.State.Queue
+                .AsCollection()
+                .First(x => x.Sequential == queueItem.Sequential);
+
             item.ApprovalAndCheckStatus = ApprovalAndCheckStatus.Rejected;
             item.ExecutionStatus = ActivityExecutionStatus.Failed;
         }
 
         /// <inheritdoc />
-        public void Approve(FlowExecutionContext context, QueueItem queueItem)
+        public void Approve(WorkflowExecutionContext context, QueueItem queueItem)
         {
-            var item = context.State.Queue.First(x => x.Sequential == queueItem.Sequential);
+            var item = context.State.Queue
+                .AsCollection()
+                .First(x => x.Sequential == queueItem.Sequential);
+
             item.ApprovalAndCheckStatus = ApprovalAndCheckStatus.Approved;
         }
 
@@ -446,7 +482,7 @@ namespace Alma.Workflows.Runners
 
         #region Private methods
 
-        private static bool RequiredConnectionsExecuted(FlowExecutionContext context, QueueItem item)
+        private static bool RequiredConnectionsExecuted(WorkflowExecutionContext context, QueueItem item)
         {
             var activity = context.Flow.Activities.First(x => x.Id == item.ActivityId);
 
@@ -460,7 +496,7 @@ namespace Alma.Workflows.Runners
 
             foreach (var connection in connections)
             {
-                if (!context.State.ExecutedConnections.Any(x => x.ConnectionId == connection.Id))
+                if (!context.State.Connections.AsCollection().Any(x => x.ConnectionId == connection.Id))
                 {
                     allConnectionExecuted = false;
                     break;
@@ -474,11 +510,11 @@ namespace Alma.Workflows.Runners
             return false;
         }
 
-        private static bool CanEnqueue(FlowExecutionContext context, IActivity activity)
+        private static bool CanEnqueue(WorkflowExecutionContext context, IActivity activity)
         {
             // To avoid duplicate execution, if the same activity is already in the queue
             // and its status is not completed or failed, do not add it again.
-            if (context.State.Queue.Any(x => x.ActivityId == activity.Id && (x.ExecutionStatus != ActivityExecutionStatus.Completed && x.ExecutionStatus != ActivityExecutionStatus.Failed)))
+            if (context.State.Queue.AsCollection().Any(x => x.ActivityId == activity.Id && (x.ExecutionStatus != ActivityExecutionStatus.Completed && x.ExecutionStatus != ActivityExecutionStatus.Failed)))
                 return false;
 
             return true;

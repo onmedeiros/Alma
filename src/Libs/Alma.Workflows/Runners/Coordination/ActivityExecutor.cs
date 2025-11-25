@@ -27,7 +27,7 @@ namespace Alma.Workflows.Runners.Coordination
             _connectionManager = connectionManager;
         }
 
-        public async Task ExecuteAsync(FlowExecution execution, FlowExecutionContext context)
+        public async Task ExecuteAsync(FlowExecution execution, WorkflowExecutionContext context)
         {
             if (!execution.QueueItem.CanExecute)
             {

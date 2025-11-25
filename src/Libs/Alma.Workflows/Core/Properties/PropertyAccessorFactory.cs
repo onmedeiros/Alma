@@ -9,13 +9,11 @@ namespace Alma.Workflows.Core.Properties
     public class PropertyAccessorFactory
     {
         private readonly Lazy<ParameterAccessor> _parameterAccessor;
-        private readonly Lazy<DataAccessor> _dataAccessor;
         private readonly Lazy<PortAccessor> _portAccessor;
 
         public PropertyAccessorFactory()
         {
             _parameterAccessor = new Lazy<ParameterAccessor>(() => new ParameterAccessor());
-            _dataAccessor = new Lazy<DataAccessor>(() => new DataAccessor());
             _portAccessor = new Lazy<PortAccessor>(() => new PortAccessor());
         }
 
@@ -23,11 +21,6 @@ namespace Alma.Workflows.Core.Properties
         /// Gets the accessor for Parameter properties.
         /// </summary>
         public ParameterAccessor Parameters => _parameterAccessor.Value;
-
-        /// <summary>
-        /// Gets the accessor for Data properties.
-        /// </summary>
-        public DataAccessor Data => _dataAccessor.Value;
 
         /// <summary>
         /// Gets the accessor for Port properties.

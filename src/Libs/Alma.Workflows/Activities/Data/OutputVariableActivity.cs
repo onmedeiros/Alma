@@ -33,10 +33,10 @@ namespace Alma.Workflows.Activities.Data
 
         public override void Execute(ActivityExecutionContext context)
         {
-            var lastExecution = context.State.ExecutedConnections.LastOrDefault(x => x.TargetId == Id && x.TargetPortName == nameof(Input));
+            var lastExecution = context.State.Connections.AsCollection().LastOrDefault(x => x.TargetId == Id && x.TargetPortName == nameof(Input));
 
             if (!string.IsNullOrEmpty(Name?.GetValue(context)))
-                context.State.SetVariable(Name.GetValue(context), lastExecution?.Data?.Value);
+                context.State.Variables.Set(Name.GetValue(context)!, lastExecution?.Data?.GetValue());
 
             Done.Execute(lastExecution?.Data);
         }

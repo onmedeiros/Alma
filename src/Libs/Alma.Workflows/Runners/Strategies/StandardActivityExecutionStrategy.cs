@@ -39,7 +39,7 @@ namespace Alma.Workflows.Runners.Strategies
 
         public virtual async Task<ActivityExecutionResult> ExecuteAsync(
             IActivity activity,
-            FlowExecutionContext context,
+            WorkflowExecutionContext context,
             ActivityRunner runner)
         {
             _logger.LogDebug("Executing activity {ActivityId} ({ActivityType}) using StandardExecutionStrategy",
@@ -53,7 +53,7 @@ namespace Alma.Workflows.Runners.Strategies
 
         public virtual Task HandlePostExecutionAsync(
             IActivity activity,
-            FlowExecutionContext context,
+            WorkflowExecutionContext context,
             ActivityExecutionResult result,
             QueueItem queueItem)
         {

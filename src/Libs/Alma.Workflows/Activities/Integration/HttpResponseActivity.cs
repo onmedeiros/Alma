@@ -47,7 +47,7 @@ namespace Alma.Workflows.Activities.Integration
                 Content = content
             };
 
-            context.State.SetVariable("HttpResponse", httpResponse);
+            context.State.Variables.Set("HttpResponse", httpResponse);
 
             Done.Execute(httpResponse);
 

@@ -17,27 +17,24 @@ namespace Alma.Workflows.Runners
         private readonly IServiceProvider _serviceProvider;
         private readonly ILogger<ApprovalAndCheckResolver> _logger;
         private readonly IParameterSetter _parameterSetter;
-        private readonly IApprovalAndCheck _approvalAndCheck;
+        private readonly IApprovalAndCheck _approval;
         private readonly ActivityExecutionContext _context;
         private readonly ExecutionOptions _options;
-        private readonly ExecutionState _state;
 
         /// <summary>
         /// Initializes a new instance of the <see cref="ApprovalAndCheckResolver"/> class.
         /// </summary>
         /// <param name="serviceProvider">The service provider for dependency injection.</param>
         /// <param name="approvalAndCheck">The approval and check to be resolved.</param>
-        /// <param name="state">The current execution state.</param>
         /// <param name="options">The execution options.</param>
-        public ApprovalAndCheckResolver(IServiceProvider serviceProvider, IApprovalAndCheck approvalAndCheck, ExecutionState state, ExecutionOptions options)
+        public ApprovalAndCheckResolver(IServiceProvider serviceProvider, IApprovalAndCheck approvalAndCheck, ExecutionOptions options)
         {
             _serviceProvider = serviceProvider;
-            _approvalAndCheck = approvalAndCheck;
+            _approval = approvalAndCheck;
             _logger = serviceProvider.GetRequiredService<ILogger<ApprovalAndCheckResolver>>();
             _parameterSetter = serviceProvider.GetRequiredService<IParameterSetter>();
-            _state = state;
             _options = options;
-            _context = new ActivityExecutionContext(_serviceProvider, state, options);
+            _context = new ActivityExecutionContext(_serviceProvider, options);
         }
 
         /// <summary>
@@ -46,19 +43,19 @@ namespace Alma.Workflows.Runners
         /// <returns>The result of the approval and check resolution.</returns>
         public async Task<ApprovalAndCheckResult> Resolve()
         {
-            var currentState = _context.State.ApprovalAndChecks.FirstOrDefault(x => x.Id == _approvalAndCheck.Id);
+            var currentState = _context.State.Approvals.Get(_approval.Id);
 
             if (currentState is null)
             {
-                currentState = new ApprovalAndCheckState
+                currentState = new ApprovalStateData
                 {
-                    Id = _approvalAndCheck.Id,
-                    FullName = _approvalAndCheck.Descriptor.FullName,
+                    Id = _approval.Id,
+                    FullName = _approval.Descriptor.FullName,
                     Status = ApprovalAndCheckStatus.Pending,
-                    ParentActivityId = _approvalAndCheck.ParentActivity?.Id
+                    ParentActivityId = _approval.ParentActivity?.Id
                 };
 
-                _context.State.ApprovalAndChecks.Add(currentState);
+                _context.State.Approvals.Add(currentState);
             }
             else if (currentState.Status != ApprovalAndCheckStatus.Pending)
             {
@@ -68,9 +65,7 @@ namespace Alma.Workflows.Runners
                 };
             }
 
-            // _parameterSetter.SetParameters(_context, _approvalAndCheck);
-
-            var result = await _approvalAndCheck.Resolve(_context);
+            var result = await _approval.Resolve(_context);
 
             currentState.Status = result.Status;
 

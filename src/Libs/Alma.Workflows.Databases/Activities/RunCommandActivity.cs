@@ -60,21 +60,21 @@ namespace Alma.Workflows.Databases.Activities
 
             if (databaseProviderOption is null || string.IsNullOrEmpty(databaseProviderOption.Value))
             {
-                context.State.Log("Invalid Database Provider", Enums.LogSeverity.Error);
+                context.State.Logs.Add("Invalid Database Provider", Enums.LogSeverity.Error);
                 Fail.Execute();
                 return;
             }
 
             if (string.IsNullOrWhiteSpace(connectionString))
             {
-                context.State.Log("Connection String is required", Enums.LogSeverity.Error);
+                context.State.Logs.Add("Connection String is required", Enums.LogSeverity.Error);
                 Fail.Execute();
                 return;
             }
 
             if (string.IsNullOrWhiteSpace(command))
             {
-                context.State.Log("Query is required", Enums.LogSeverity.Error);
+                context.State.Logs.Add("Query is required", Enums.LogSeverity.Error);
                 Fail.Execute();
                 return;
             }
@@ -87,7 +87,7 @@ namespace Alma.Workflows.Databases.Activities
 
             if (databaseProvider is null)
             {
-                context.State.Log($"Database Provider '{databaseProviderOption.Value}' not found", Enums.LogSeverity.Error);
+                context.State.Logs.Add($"Database Provider '{databaseProviderOption.Value}' not found", Enums.LogSeverity.Error);
                 Fail.Execute();
                 return;
             }
@@ -96,7 +96,7 @@ namespace Alma.Workflows.Databases.Activities
 
             if (!connectionResult.Succeeded)
             {
-                context.State.Log($"Connection failed: {connectionResult.Message}", Enums.LogSeverity.Error);
+                context.State.Logs.Add($"Connection failed: {connectionResult.Message}", Enums.LogSeverity.Error);
                 Fail.Execute();
                 return;
             }
@@ -105,16 +105,16 @@ namespace Alma.Workflows.Databases.Activities
 
             if (comandResult.Succeeded)
             {
-                context.State.Log("Command executed successfully", Enums.LogSeverity.Information);
+                context.State.Logs.Add("Command executed successfully", Enums.LogSeverity.Information);
 
                 var resultDictionary = JsonUtils.ConvertToDictionary(comandResult.Data ?? "{}");
 
-                context.State.SetVariable(variable, resultDictionary);
+                context.State.Variables.Set(variable, resultDictionary);
                 Done.Execute(comandResult);
             }
             else
             {
-                context.State.Log($"Command failed: {comandResult.Message}", Enums.LogSeverity.Error);
+                context.State.Logs.Add($"Command failed: {comandResult.Message}", Enums.LogSeverity.Error);
                 Fail.Execute(comandResult);
             }
         }

@@ -16,26 +16,21 @@ namespace Alma.Workflows.Runners
         private readonly IServiceProvider _serviceProvider;
         private readonly ILogger<ActivityRunner> _logger;
         private readonly IParameterSetter _parameterSetter;
-        private readonly IDataSetter _dataSetter;
         private readonly IActivity _activity;
 
         public bool RequireInteraction => _activity.Descriptor.RequireInteraction || Context.Options.ExecutionMode == Core.InstanceExecutions.Enums.InstanceExecutionMode.StepByStep;
 
         public ActivityExecutionContext Context { get; private set; }
 
-        public ActivityRunner(IServiceProvider serviceProvider, IActivity activity, ExecutionState state, ExecutionOptions options)
+        public ActivityRunner(IServiceProvider serviceProvider, IActivity activity, ExecutionOptions options)
         {
             _serviceProvider = serviceProvider;
             _activity = activity;
             _logger = serviceProvider.GetRequiredService<ILogger<ActivityRunner>>();
             _parameterSetter = serviceProvider.GetRequiredService<IParameterSetter>();
-            _dataSetter = serviceProvider.GetRequiredService<IDataSetter>();
 
-            Context = new ActivityExecutionContext(_serviceProvider, state, options);
+            Context = new ActivityExecutionContext(_serviceProvider, options);
             Context.Id = activity.Id;
-
-            // Load data from state
-            _dataSetter.LoadData(Context.State, _activity);
         }
 
         /// <summary>
@@ -112,9 +107,6 @@ namespace Alma.Workflows.Runners
 
                 var executedPorts = _activity.GetPorts()
                     .Where(x => x is not null && x.Executed);
-
-                // Update data in state
-                _dataSetter.UpdateData(Context.State, _activity);
 
                 executionResult.ExecutedPorts = executedPorts;
                 executionResult.ExecutionStatus = ActivityExecutionStatus.Completed;

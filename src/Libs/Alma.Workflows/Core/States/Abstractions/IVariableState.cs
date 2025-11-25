@@ -2,10 +2,8 @@
 
 namespace Alma.Workflows.Core.States.Abstractions
 {
-    public interface IVariablesState
+    public interface IVariableState : IStateComponent
     {
-        // Dictionary<string, ValueObject> Variables { get; }
-
         void Set(string name, object? value);
 
         ValueObject? Get(string name);

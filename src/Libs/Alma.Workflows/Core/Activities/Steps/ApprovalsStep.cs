@@ -28,7 +28,7 @@ namespace Alma.Workflows.Core.Activities.Steps
             // Resolve approvals
             foreach (var approvalAndCheck in Activity.ApprovalAndChecks)
             {
-                var resolver = approvalResolverFactory.Create(approvalAndCheck, context.State, context.Options);
+                var resolver = approvalResolverFactory.Create(approvalAndCheck, context.Options);
                 var result = await resolver.Resolve();
                 approvalResults.Add(result);
             }

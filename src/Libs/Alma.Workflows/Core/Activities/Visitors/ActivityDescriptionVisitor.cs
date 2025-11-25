@@ -55,25 +55,6 @@ namespace Alma.Workflows.Core.Activities.Visitors
                 }
             }
 
-            if (_includeData)
-            {
-                // Data outputs would go here if descriptor had them
-                // For now, just list that data outputs are available
-                var dataProps = activity.GetType().GetProperties()
-                    .Where(p => p.PropertyType.IsGenericType && 
-                                p.PropertyType.GetGenericTypeDefinition() == typeof(Core.Activities.Base.Data<>));
-                
-                if (dataProps.Any())
-                {
-                    sb.AppendLine("\nData Properties:");
-                    foreach (var dataProp in dataProps)
-                    {
-                        var value = activity.GetDataValue(dataProp.Name);
-                        sb.AppendLine($"  - {dataProp.Name}: {value?.ToString() ?? "null"}");
-                    }
-                }
-            }
-
             if (activity.ApprovalAndChecks.Any())
             {
                 sb.AppendLine($"\nApprovals & Checks: {activity.ApprovalAndChecks.Count}");

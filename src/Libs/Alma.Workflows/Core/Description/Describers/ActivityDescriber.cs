@@ -29,10 +29,6 @@ namespace Alma.Workflows.Core.Description.Describers
                 .Where(p => p.PropertyType.IsAssignableTo(typeof(Port)))
                 .AsEnumerable();
 
-            var dataProperties = activityType.GetProperties()
-                .Where(p => p.PropertyType.IsGenericType && p.PropertyType.GetGenericTypeDefinition() == typeof(Data<>))
-                .AsEnumerable();
-
             var name = activityType.Name;
             var typeName = activityType.FullName ?? throw new Exception("Invalid activity FullName");
 
@@ -76,8 +72,7 @@ namespace Alma.Workflows.Core.Description.Describers
                 RequireInteraction = requireInteraction,
                 Attributes = attributes,
                 Parameters = parameters.Select(ParameterDescriber.Describe).ToList(),
-                Ports = ports.Select(PortDescriber.Describe).ToList(),
-                DataProperties = dataProperties.Select(DataDescriber.Describe).ToList()
+                Ports = ports.Select(PortDescriber.Describe).ToList()
             };
 
             return descriptor;

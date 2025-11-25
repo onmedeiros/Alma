@@ -1,4 +1,5 @@
 ﻿using Alma.Workflows.Core.InstanceExecutions.Enums;
+using Alma.Workflows.Core.States.Data;
 using Alma.Workflows.Options;
 using Alma.Workflows.States;
 using System.ComponentModel.DataAnnotations.Schema;
@@ -23,6 +24,6 @@ namespace Alma.Workflows.Core.InstanceExecutions.Entities
 
         public InstanceExecutionStatus Status { get; set; }
 
-        public ExecutionState? State { get; set; }
+        public StateData? State { get; set; }
     }
 }

@@ -19,11 +19,6 @@ namespace Alma.Workflows.Core.ApprovalsAndChecks.Models
         public string Type { get; init; } = default!;
 
         /// <summary>
-        /// Gets the value stored in the ValueObject.
-        /// </summary>
-        public object? Value => GetValue();
-
-        /// <summary>
         /// Gets the string representation of the value, or <see langword="null"/> if no value is set.
         /// </summary>
         public string? ValueString { get; init; }
@@ -31,7 +26,10 @@ namespace Alma.Workflows.Core.ApprovalsAndChecks.Models
         private static readonly JsonSerializerOptions _jsonOptions = new()
         {
             PropertyNameCaseInsensitive = true,
-            Converters = { new JsonStringEnumConverter(), new ObjectToInferredTypesConverter() }
+            Converters = {
+                new JsonStringEnumConverter(),
+                new ObjectToInferredTypesConverter()
+            }
         };
 
         /// <summary>

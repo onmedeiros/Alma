@@ -38,12 +38,6 @@ namespace Alma.Workflows.Activities.Interaction
 
         #endregion Parameters
 
-        #region Data
-
-        public Data<Dictionary<string, object?>>? FormState { get; set; }
-
-        #endregion Data
-
         public override IsReadyResult IsReadyToExecute(ActivityExecutionContext context)
         {
             // Validate fields
@@ -57,7 +51,7 @@ namespace Alma.Workflows.Activities.Interaction
                 // Validate required field
                 if (field.Required)
                 {
-                    var value = FormState?.Value?.GetValueOrDefault(field.Name);
+                    var value = context.State.Memory.Get<Dictionary<string, object?>>(Id, "FormState")?.GetValueOrDefault(field.Name);
 
                     // Valida valor nulo
                     if (value is null)
@@ -74,7 +68,7 @@ namespace Alma.Workflows.Activities.Interaction
 
         public override void Execute(ActivityExecutionContext context)
         {
-            Done.Execute(FormState?.Value);
+            Done.Execute(context.State.Memory.Get<Dictionary<string, object?>>(Id, "FormState"));
         }
     }
 }

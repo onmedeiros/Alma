@@ -40,20 +40,28 @@ namespace Alma.Workflows.Core.Activities.Base
             return data.Status;
         }
 
-        public ValueTask<ActivityStepData?> GetData(ActivityExecutionContext context)
+        public ValueTask<ActivityStepData> GetData(ActivityExecutionContext context)
         {
-            var activityData = context.State.GetActivityData(context.Id);
+            var stepData = context.State.Steps.GetStepData(Activity.Id, Id);
 
-            if (activityData.TryGetValue(Id, out var stepData) && stepData is ActivityStepData data)
+            if (stepData is null)
             {
-                return new ValueTask<ActivityStepData?>(data);
+                stepData = new ActivityStepData
+                {
+                    Id = Id,
+                    ActivityId = Activity.Id,
+                    Status = ActivityStepStatus.Pending
+                };
+
+                context.State.Steps.SetStepData(stepData);
             }
 
-            return new ValueTask<ActivityStepData?>();
+            return ValueTask.FromResult(stepData);
         }
 
         public virtual ValueTask<ActivityStepStatus> ExecuteAsync(ActivityExecutionContext context)
         {
+            // This is a base implementation that should be overridden by derived classes.
             throw new NotImplementedException();
         }
     }

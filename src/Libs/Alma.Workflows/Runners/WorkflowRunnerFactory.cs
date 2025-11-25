@@ -1,5 +1,7 @@
-﻿using Alma.Workflows.Options;
-using Alma.Workflows.States;
+﻿using Alma.Workflows.Core.States.Abstractions;
+using Alma.Workflows.Core.States.Data;
+using Alma.Workflows.Options;
+using Alma.Workflows.Runners.Scopes;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Logging;
 
@@ -17,7 +19,7 @@ namespace Alma.Workflows.Runners
         /// <param name="state">The current execution state. If null, a new state will be created.</param>
         /// <param name="options">The execution options. If null, default options will be used.</param>
         /// <returns>A new instance of <see cref="WorkflowRunner"/>.</returns>
-        WorkflowRunner Create(Flow flow, ExecutionState? state = null, ExecutionOptions? options = null);
+        WorkflowRunner Create(Flow flow, StateData? state = null, ExecutionOptions? options = null);
     }
 
     /// <summary>
@@ -26,24 +28,26 @@ namespace Alma.Workflows.Runners
     public class WorkflowRunnerFactory : IWorkflowRunnerFactory
     {
         private readonly ILogger<WorkflowRunnerFactory> _logger;
-        private readonly IServiceScopeFactory _scopeFactory;
+        private readonly IExecutionScope _executionScope;
 
-        public WorkflowRunnerFactory(ILogger<WorkflowRunnerFactory> logger, IServiceScopeFactory scopeFactory)
+        public WorkflowRunnerFactory(ILogger<WorkflowRunnerFactory> logger, IExecutionScope executionScope)
         {
             _logger = logger;
-            _scopeFactory = scopeFactory;
+            _executionScope = executionScope;
         }
 
         /// <inheritdoc />
-        public WorkflowRunner Create(Flow flow, ExecutionState? state = null, ExecutionOptions? options = null)
+        public WorkflowRunner Create(Flow flow, StateData? state = null, ExecutionOptions? options = null)
         {
             // Create isolated scope for workflow execution.
-            var scope = _scopeFactory.CreateScope();
+            _executionScope.Initialize();
+
+            var executionState = _executionScope.Current.ServiceProvider.GetRequiredService<IExecutionState>();
+            executionState.Initialize(state ?? new StateData());
 
             options ??= new ExecutionOptions();
-            state ??= new ExecutionState();
 
-            return new WorkflowRunner(scope.ServiceProvider, flow, state, options);
+            return new WorkflowRunner(_executionScope, flow, options);
         }
     }
 }

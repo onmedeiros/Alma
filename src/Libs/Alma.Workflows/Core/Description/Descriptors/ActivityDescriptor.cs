@@ -3,7 +3,7 @@ using System.ComponentModel.DataAnnotations.Schema;
 
 namespace Alma.Workflows.Core.Description.Descriptors
 {
-    public class ActivityDescriptor : IParameterizableDescriptor, IDataContainingDescriptor
+    public class ActivityDescriptor : IParameterizableDescriptor
     {
         /// <summary>
         /// The full qualified type name of the activity class.

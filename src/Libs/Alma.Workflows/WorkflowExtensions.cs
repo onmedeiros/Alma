@@ -19,6 +19,9 @@ using Alma.Workflows.Core.Instances.Services;
 using Alma.Workflows.Core.Instances.Stores;
 using Alma.Workflows.Core.InstanceSchedules.Services;
 using Alma.Workflows.Core.InstanceSchedules.Stores;
+using Alma.Workflows.Core.States.Abstractions;
+using Alma.Workflows.Core.States.Components;
+using Alma.Workflows.Core.Templates;
 using Alma.Workflows.Options;
 using Alma.Workflows.Parsers;
 using Alma.Workflows.Registries;
@@ -27,15 +30,17 @@ using Alma.Workflows.Runners.Connections;
 using Alma.Workflows.Runners.Coordination;
 using Alma.Workflows.Runners.ExecutionModes;
 using Alma.Workflows.Runners.Queue;
+using Alma.Workflows.Runners.Scopes;
 using Alma.Workflows.Runners.Strategies;
 using Alma.Workflows.Scripting;
 using Alma.Workflows.Scripting.Javascript;
+using Alma.Workflows.States;
 using Alma.Workflows.Stores;
 using Microsoft.Extensions.DependencyInjection;
 
 namespace Alma.Workflows
 {
-    public static class FlowExtensions
+    public static class WorkflowExtensions
     {
         public static AlmaFlowBuilder AddAlmaWorkflows(this IServiceCollection services, Action<FlowOptions> configure)
         {
@@ -97,7 +102,21 @@ namespace Alma.Workflows
             services.AddScoped<IWorkflowRunnerFactory, WorkflowRunnerFactory>();
             services.AddScoped<IActivityStepFactory, ActivityStepFactory>();
             services.AddScoped<IApprovalAndCheckResolverFactory, ApprovalAndCheckResolverFactory>();
-            
+            services.AddScoped<IExecutionScope, ExecutionScope>();
+            services.AddScoped<ITemplateParser, TemplateParser>();
+
+            // State services
+            services.AddScoped<IExecutionState, ExecutionState>();
+            services.AddScoped<IParameterState, ParameterState>();
+            services.AddScoped<IVariableState, VariableState>();
+            services.AddScoped<IMemoryState, MemoryState>();
+            services.AddScoped<IQueueState, QueueState>();
+            services.AddScoped<IStepState, StepState>();
+            services.AddScoped<IApprovalState, ApprovalState>();
+            services.AddScoped<IConnectionState, ConnectionState>();
+            services.AddScoped<IHistoryState, HistoryState>();
+            services.AddScoped<ILogState, LogState>();
+
             // Fase 1: Coordenação de Execução e Modos
             services.AddScoped<IExecutionCoordinator, Runners.Coordination.ExecutionCoordinator>();
             services.AddScoped<IActivityExecutor, Runners.Coordination.ActivityExecutor>();
@@ -105,31 +124,29 @@ namespace Alma.Workflows
             services.AddScoped<Runners.ExecutionModes.ManualExecutionModeStrategy>();
             services.AddScoped<Runners.ExecutionModes.StepByStepExecutionModeStrategy>();
             services.AddScoped<Runners.ExecutionModes.AutomaticExecutionModeStrategy>();
-            
+
             // Fase 1: Gerenciamento de Conexões
             // ConnectionManager mantém cache interno; evitar compartilhamento entre execuções concorrentes
             services.AddTransient<IConnectionManager, Runners.Connections.ConnectionManager>();
-            
+
             // Fase 2: Property Accessors (High-Performance Reflection Alternative)
             services.AddSingleton<Core.Properties.PropertyAccessorFactory>();
             services.AddSingleton<Core.Properties.ParameterAccessor>();
-            services.AddSingleton<Core.Properties.DataAccessor>();
             services.AddSingleton<Core.Properties.PortAccessor>();
-            
+
             // Fase 2: Activity Visitors (Operations without modifying Activity classes)
             services.AddTransient<Core.Activities.Visitors.ActivityDescriptionVisitor>();
             services.AddTransient<Core.Activities.Visitors.ActivityValidationVisitor>();
             services.AddTransient<Core.Activities.Visitors.ActivityCloningVisitor>();
-            
+
             // Queue Management - Separated Responsibilities (FASE 1.1)
             services.AddTransient<IQueueEnqueuer, QueueEnqueuer>();
             services.AddTransient<IQueueNavigator, QueueNavigator>();
             services.AddTransient<IQueueStateManager, QueueStateManager>();
             services.AddTransient<IQueueStatusResolver, QueueStatusResolver>();
             services.AddTransient<IQueueManager, QueueManagerFacade>();
-            
+
             services.AddTransient<IParameterSetter, ParameterSetter>();
-            services.AddTransient<IDataSetter, DataSetter>();
 
             // Activity execution strategies
             services.AddScoped<StandardActivityExecutionStrategy>();

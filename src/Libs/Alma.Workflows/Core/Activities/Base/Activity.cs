@@ -17,11 +17,11 @@ namespace Alma.Workflows.Core.Activities.Base
     public class Activity : IActivity
     {
         private ApprovalAndCheckStatus _approvalAndCheckStatus = ApprovalAndCheckStatus.Pending;
-        
+
         // Property Accessors - lazy initialized for performance
-        private static readonly Lazy<PropertyAccessorFactory> _accessorFactory = 
+        private static readonly Lazy<PropertyAccessorFactory> _accessorFactory =
             new Lazy<PropertyAccessorFactory>(() => PropertyAccessorFactory.Create());
-        
+
         protected static PropertyAccessorFactory Accessors => _accessorFactory.Value;
 
         public string Id { get; set; }
@@ -56,7 +56,7 @@ namespace Alma.Workflows.Core.Activities.Base
         public virtual PropertyInfo GetParameterProperty(string name)
         {
             var propertyInfo = Accessors.Parameters.GetPropertyInfo(this, name);
-            
+
             if (propertyInfo is null)
                 throw new InvalidOperationException($"Parameter {name} not found.");
 
@@ -86,30 +86,6 @@ namespace Alma.Workflows.Core.Activities.Base
         public virtual void SetParameterValue(string name, object? value)
         {
             Accessors.Parameters.Set(this, name, value);
-        }
-
-        #endregion
-
-        #region IDataContaining - Using Property Accessors for Performance
-
-        public virtual PropertyInfo GetDataProperty(string name)
-        {
-            var propertyInfo = Accessors.Data.GetPropertyInfo(this, name);
-            
-            if (propertyInfo is null)
-                throw new InvalidOperationException($"Data property {name} not found.");
-
-            return propertyInfo;
-        }
-
-        public virtual object? GetDataValue(string name)
-        {
-            return Accessors.Data.Get(this, name);
-        }
-
-        public virtual void SetDataValue(string name, object? value)
-        {
-            Accessors.Data.Set(this, name, value);
         }
 
         #endregion

@@ -19,7 +19,7 @@ namespace Alma.Workflows.Runners.Queue
             _logger = logger;
         }
 
-        public void Complete(FlowExecutionContext context, QueueItem queueItem)
+        public void Complete(WorkflowExecutionContext context, QueueItem queueItem)
         {
             var item = FindQueueItem(context, queueItem);
             item.ExecutionStatus = ActivityExecutionStatus.Completed;
@@ -28,7 +28,7 @@ namespace Alma.Workflows.Runners.Queue
                 item.Id, item.ActivityId);
         }
 
-        public void Pending(FlowExecutionContext context, QueueItem queueItem)
+        public void Pending(WorkflowExecutionContext context, QueueItem queueItem)
         {
             var item = FindQueueItem(context, queueItem);
             item.ExecutionStatus = ActivityExecutionStatus.Pending;
@@ -37,7 +37,7 @@ namespace Alma.Workflows.Runners.Queue
                 item.Id, item.ActivityId);
         }
 
-        public void Wait(FlowExecutionContext context, QueueItem queueItem, string? reason = null)
+        public void Wait(WorkflowExecutionContext context, QueueItem queueItem, string? reason = null)
         {
             var item = FindQueueItem(context, queueItem);
             item.ExecutionStatus = ActivityExecutionStatus.Waiting;
@@ -47,7 +47,7 @@ namespace Alma.Workflows.Runners.Queue
                 item.Id, item.ActivityId, reason ?? "No reason provided");
         }
 
-        public void Ready(FlowExecutionContext context, QueueItem queueItem)
+        public void Ready(WorkflowExecutionContext context, QueueItem queueItem)
         {
             var item = FindQueueItem(context, queueItem);
             item.ExecutionStatus = ActivityExecutionStatus.Ready;
@@ -57,7 +57,7 @@ namespace Alma.Workflows.Runners.Queue
                 item.Id, item.ActivityId);
         }
 
-        public void Fail(FlowExecutionContext context, QueueItem queueItem)
+        public void Fail(WorkflowExecutionContext context, QueueItem queueItem)
         {
             var item = FindQueueItem(context, queueItem);
             item.ExecutionStatus = ActivityExecutionStatus.Failed;
@@ -66,7 +66,7 @@ namespace Alma.Workflows.Runners.Queue
                 item.Id, item.ActivityId);
         }
 
-        public void Reject(FlowExecutionContext context, QueueItem queueItem)
+        public void Reject(WorkflowExecutionContext context, QueueItem queueItem)
         {
             var item = FindQueueItem(context, queueItem);
             item.ApprovalAndCheckStatus = ApprovalAndCheckStatus.Rejected;
@@ -76,7 +76,7 @@ namespace Alma.Workflows.Runners.Queue
                 item.Id, item.ActivityId);
         }
 
-        public void Approve(FlowExecutionContext context, QueueItem queueItem)
+        public void Approve(WorkflowExecutionContext context, QueueItem queueItem)
         {
             var item = FindQueueItem(context, queueItem);
             item.ApprovalAndCheckStatus = ApprovalAndCheckStatus.Approved;
@@ -88,9 +88,9 @@ namespace Alma.Workflows.Runners.Queue
         /// <summary>
         /// Finds a queue item in the state queue by its sequential number.
         /// </summary>
-        private QueueItem FindQueueItem(FlowExecutionContext context, QueueItem queueItem)
+        private QueueItem FindQueueItem(WorkflowExecutionContext context, QueueItem queueItem)
         {
-            var item = context.State.Queue.FirstOrDefault(x => x.Sequential == queueItem.Sequential);
+            var item = context.State.Queue.AsCollection().FirstOrDefault(x => x.Sequential == queueItem.Sequential);
 
             if (item == null)
             {

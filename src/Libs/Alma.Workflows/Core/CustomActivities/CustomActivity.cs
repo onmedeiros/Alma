@@ -141,18 +141,13 @@ namespace Alma.Workflows.Core.CustomActivities
             {
                 foreach (var log in result.Logs)
                 {
-                    context.State.Logs.Add(new Workflows.Models.Activities.LogModel
-                    {
-                        DateTime = log.Timestamp,
-                        Message = log.Message,
-                        Severity = Enums.LogSeverity.Information
-                    });
+                    context.State.Logs.Add(log.Message, Enums.LogSeverity.Information, log.Timestamp);
                 }
             }
 
             if (result.Status == ScriptResultStatus.Failure)
             {
-                context.State.Log(result.StatusDetails, Enums.LogSeverity.Error);
+                context.State.Logs.Add(result.StatusDetails ?? "Error", Enums.LogSeverity.Error);
                 return;
             }
 

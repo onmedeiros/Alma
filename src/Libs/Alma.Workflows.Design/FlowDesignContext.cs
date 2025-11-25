@@ -55,7 +55,7 @@ namespace Alma.Workflows.Design
 
         public bool AutoSaveEnabled { get; private set; }
         public ActivityNodeModel? SelectedNode { get; private set; }
-        public FlowExecutionContext? ExecutionContext => Runner?.Context;
+        public WorkflowExecutionContext? ExecutionContext => Runner?.Context;
         public WorkflowRunner? Runner { get; private set; }
 
         // Mouse states
@@ -421,7 +421,7 @@ namespace Alma.Workflows.Design
                 await Runner.ExecuteNextAsync();
             }
 
-            DesignExecutionStatus = Runner.Context.State.Status switch
+            DesignExecutionStatus = Runner.Context.State.ExecutionStatus switch
             {
                 ExecutionStatus.Executing => FlowDesignContextExecutionStatus.Executing,
                 ExecutionStatus.Waiting => FlowDesignContextExecutionStatus.Waiting,
@@ -449,7 +449,7 @@ namespace Alma.Workflows.Design
             {
                 if (link is LinkModel model)
                 {
-                    var isExecuted = ExecutionContext!.State.ExecutedConnections.Any(x => x.ConnectionId == model.Id);
+                    var isExecuted = ExecutionContext!.State.Connections.AsCollection().Any(x => x.ConnectionId == model.Id);
 
                     if (isExecuted)
                     {
@@ -485,7 +485,7 @@ namespace Alma.Workflows.Design
                         continue;
                     }
 
-                    var isExecuted = ExecutionContext.State.ExecutedConnections.Any(x => x.ConnectionId == model.Id);
+                    var isExecuted = ExecutionContext.State.Connections.AsCollection().Any(x => x.ConnectionId == model.Id);
 
                     if (isExecuted)
                     {

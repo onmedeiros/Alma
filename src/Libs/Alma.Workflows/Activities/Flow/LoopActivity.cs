@@ -5,6 +5,7 @@ using Alma.Workflows.Core.Contexts;
 using Alma.Workflows.Customizations;
 using Alma.Workflows.Models.Activities;
 using NCalc;
+using Org.BouncyCastle.Asn1.X509;
 using System.Collections;
 
 namespace Alma.Workflows.Activities.Flow
@@ -67,44 +68,12 @@ namespace Alma.Workflows.Activities.Flow
 
         #endregion
 
-        #region Data
-
-        /// <summary>
-        /// Índice atual da iteração do loop
-        /// </summary>
-        public Data<int>? CurrentIndex { get; set; }
-
-        /// <summary>
-        /// Número total de iterações esperadas
-        /// </summary>
-        public Data<int>? TotalIterations { get; set; }
-
-        /// <summary>
-        /// Indica se o loop foi inicializado
-        /// </summary>
-        public Data<bool>? IsLoopInitialized { get; set; }
-
-        /// <summary>
-        /// Indica se o loop foi completado
-        /// </summary>
-        public Data<bool>? IsLoopComplete { get; set; }
-
-        /// <summary>
-        /// Armazena a coleção para iteração (tipo Collection)
-        /// </summary>
-        public Data<List<object>>? CollectionData { get; set; }
-
-        /// <summary>
-        /// Indica qual fase do loop estamos (Start, WaitingBody, BodyCompleted, Completed)
-        /// </summary>
-        public Data<string>? LoopPhase { get; set; }
-
-        #endregion
-
         public override IsReadyResult IsReadyToExecute(ActivityExecutionContext context)
         {
             // Se o loop já foi completado, não executar novamente
-            if (IsLoopComplete?.Value == true)
+            var isLoopComplete = context.State.Memory.Get<bool?>(Id, "isLoopComplete") ?? false;
+
+            if (isLoopComplete)
             {
                 return IsReadyResult.NotReady("Loop already done.");
             }
@@ -117,10 +86,11 @@ namespace Alma.Workflows.Activities.Flow
             try
             {
                 var loopType = Type?.GetValue(context) ?? LoopType.Count;
-                var phase = LoopPhase?.Value ?? LoopConstants.PhaseStart;
-                var isLoopInitialized = IsLoopInitialized?.Value ?? false;
+                var phase = context.State.Memory.Get<string>(Id, "phase");
+                var isLoopInitialized = context.State.Memory.Get<bool>(Id, "isLoopInitialized");
+                var currentIndex = context.State.Memory.Get<int>(Id, "currentIndex");
 
-                context.State.Log($"Loop executando na fase: {phase}, Iteração: {CurrentIndex?.Value ?? 0}", Enums.LogSeverity.Debug);
+                context.State.Logs.Add($"Loop executando na fase: {phase}, Iteração: {currentIndex}", Enums.LogSeverity.Debug);
 
                 // Phase 1: Initialization
                 if (phase == LoopConstants.PhaseStart || !isLoopInitialized)
@@ -129,7 +99,7 @@ namespace Alma.Workflows.Activities.Flow
                     if (!isLoopInitialized)
                     {
                         InitializeLoop(context, loopType);
-                        IsLoopInitialized = new Data<bool> { Value = true };
+                        context.State.Memory.Set(Id, "isLoopInitialized", true);
                     }
 
                     // Verify if should continue
@@ -138,7 +108,7 @@ namespace Alma.Workflows.Activities.Flow
                         SetLoopVariables(context, loopType);
 
                         // Change to waiting body phase
-                        LoopPhase = new Data<string> { Value = LoopConstants.PhaseWaitingBody };
+                        context.State.Memory.Set(Id, "phase", LoopConstants.PhaseWaitingBody);
 
                         // Execute loop body
                         Body.Execute();
@@ -154,10 +124,10 @@ namespace Alma.Workflows.Activities.Flow
                 else if (phase == LoopConstants.PhaseBodyCompleted)
                 {
                     // Incrementa o índice
-                    IncrementLoop();
+                    IncrementLoop(context);
 
                     // Reseta a fase para início
-                    LoopPhase = new Core.Activities.Base.Data<string> { Value = LoopConstants.PhaseStart };
+                    context.State.Memory.Set(Id, "phase", LoopConstants.PhaseStart);
 
                     // Verifica se deve continuar
                     if (ShouldContinueLoop(context, loopType))
@@ -165,7 +135,7 @@ namespace Alma.Workflows.Activities.Flow
                         SetLoopVariables(context, loopType);
 
                         // Muda para a fase de aguardar corpo completo
-                        LoopPhase = new Core.Activities.Base.Data<string> { Value = LoopConstants.PhaseWaitingBody };
+                        context.State.Memory.Set(Id, "phase", LoopConstants.PhaseWaitingBody);
 
                         // Executa o corpo do loop novamente
                         Body.Execute();
@@ -186,7 +156,7 @@ namespace Alma.Workflows.Activities.Flow
             }
             catch (Exception ex)
             {
-                context.State.Log($"Erro no loop: {ex.Message}", Enums.LogSeverity.Error);
+                context.State.Logs.Add($"Erro no loop: {ex.Message}", Enums.LogSeverity.Error);
                 FinalizeLoop(context);
                 Error.Execute(ex.Message);
             }
@@ -194,94 +164,48 @@ namespace Alma.Workflows.Activities.Flow
 
         private void InitializeLoop(ActivityExecutionContext context, LoopType loopType)
         {
-            CurrentIndex = new Data<int> { Value = 0 };
-            IsLoopComplete = new Data<bool> { Value = false };
-            LoopPhase = new Data<string> { Value = LoopConstants.PhaseStart };
+            context.State.Memory.Set(Id, "currentIndex", 0);
+            context.State.Memory.Set(Id, "isLoopComplete", false);
+            context.State.Memory.Set(Id, "phase", LoopConstants.PhaseStart);
 
             switch (loopType)
             {
                 case LoopType.Count:
                     var start = StartCount?.GetValue(context) ?? 0;
                     var end = EndCount?.GetValue(context) ?? 0;
-                    TotalIterations = new Core.Activities.Base.Data<int> { Value = Math.Max(0, end - start + 1) };
-                    CurrentIndex.Value = start;
-                    context.State.Log($"Loop de contagem inicializado: {start} até {end}", Enums.LogSeverity.Information);
+
+                    context.State.Memory.Set(Id, "totalInteractions", Math.Max(0, end - start + 1));
+                    context.State.Memory.Set(Id, "currentIndex", start);
+                    context.State.Logs.Add($"Loop de contagem inicializado: {start} até {end}", Enums.LogSeverity.Information);
+
                     break;
 
                 case LoopType.Collection:
-                    var collectionValue = Collection?.GetValue(context);
-                    if (!string.IsNullOrEmpty(collectionValue))
-                    {
-                        // Tenta deserializar como coleção JSON
-                        try
-                        {
-                            var collection = System.Text.Json.JsonSerializer.Deserialize<List<object>>(collectionValue);
-                            CollectionData = new Core.Activities.Base.Data<List<object>> { Value = collection };
-                            TotalIterations = new Core.Activities.Base.Data<int> { Value = collection?.Count ?? 0 };
-                            context.State.Log($"Loop de coleção inicializado com {collection?.Count ?? 0} itens (JSON)", Enums.LogSeverity.Information);
-                        }
-                        catch
-                        {
-                            // Se falhar, trata como nome de variável
-                            var variableName = collectionValue.Trim();
-                            if (context.State.Variables.TryGetValue(variableName, out var variable))
-                            {
-                                if (variable.Value is IList list)
-                                {
-                                    var collection = new List<object>();
-                                    foreach (var item in list)
-                                    {
-                                        collection.Add(item);
-                                    }
-                                    CollectionData = new Core.Activities.Base.Data<List<object>> { Value = collection };
-                                    TotalIterations = new Core.Activities.Base.Data<int> { Value = collection.Count };
-                                    context.State.Log($"Loop de coleção inicializado com {collection.Count} itens (variável '{variableName}')", Enums.LogSeverity.Information);
-                                }
-                                else if (variable.Value is IEnumerable<object> enumerable)
-                                {
-                                    var collection = enumerable.ToList();
-                                    CollectionData = new Core.Activities.Base.Data<List<object>> { Value = collection };
-                                    TotalIterations = new Core.Activities.Base.Data<int> { Value = collection.Count };
-                                    context.State.Log($"Loop de coleção inicializado com {collection.Count} itens (variável '{variableName}')", Enums.LogSeverity.Information);
-                                }
-                                else
-                                {
-                                    throw new InvalidOperationException($"A variável '{variableName}' não é uma coleção válida.");
-                                }
-                            }
-                            else
-                            {
-                                throw new InvalidOperationException($"A variável '{variableName}' não foi encontrada.");
-                            }
-                        }
-                    }
-                    else
-                    {
-                        CollectionData = new Core.Activities.Base.Data<List<object>> { Value = new List<object>() };
-                        TotalIterations = new Core.Activities.Base.Data<int> { Value = 0 };
-                        context.State.Log("Loop de coleção inicializado vazio", Enums.LogSeverity.Warning);
-                    }
+                    var collection = GetCollection(context);
+                    context.State.Memory.Set(Id, "totalIterations", collection.Count);
+                    context.State.Logs.Add($"Loop de coleção inicializado com {collection.Count} itens.", Enums.LogSeverity.Information);
                     break;
 
                 case LoopType.While:
-                    TotalIterations = new Core.Activities.Base.Data<int> { Value = int.MaxValue }; // Indefinido para while
-                    context.State.Log("Loop while inicializado", Enums.LogSeverity.Information);
+                    context.State.Memory.Set(Id, "totalIterations", int.MaxValue); // Indefinido para while
+                    context.State.Logs.Add("Loop while inicializado", Enums.LogSeverity.Information);
                     break;
             }
         }
 
         private bool ShouldContinueLoop(ActivityExecutionContext context, LoopType loopType)
         {
-            if (IsLoopComplete?.Value == true)
+            var isLoopComplete = context.State.Memory.Get<bool>(Id, "isLoopComplete");
+            if (isLoopComplete)
                 return false;
 
-            var currentIndex = CurrentIndex?.Value ?? 0;
+            var currentIndex = context.State.Memory.Get<int>(Id, "currentIndex");
             var maxIterations = MaxIterations?.GetValue(context) ?? LoopConstants.DefaultMaxIterations;
 
             // Proteção contra loops infinitos
             if (currentIndex >= maxIterations)
             {
-                context.State.Log($"Loop interrompido: atingiu o máximo de {maxIterations} iterações", Enums.LogSeverity.Warning);
+                context.State.Logs.Add($"Loop interrompido: atingiu o máximo de {maxIterations} iterações", Enums.LogSeverity.Warning);
                 return false;
             }
 
@@ -292,13 +216,14 @@ namespace Alma.Workflows.Activities.Flow
                     return currentIndex <= endCount;
 
                 case LoopType.Collection:
-                    return currentIndex < (CollectionData?.Value?.Count ?? 0);
+                    var collection = GetCollection(context);
+                    return currentIndex < collection.Count;
 
                 case LoopType.While:
                     var condition = WhileCondition?.GetValue(context);
                     if (string.IsNullOrEmpty(condition))
                     {
-                        context.State.Log("Condição while vazia, loop não continuará", Enums.LogSeverity.Warning);
+                        context.State.Logs.Add("Condição while vazia, loop não continuará", Enums.LogSeverity.Warning);
                         return false;
                     }
 
@@ -307,7 +232,7 @@ namespace Alma.Workflows.Activities.Flow
                         var expression = new Expression(condition);
                         if (expression.HasErrors())
                         {
-                            context.State.Log($"Erro na condição while: {expression.Error.Message}", Enums.LogSeverity.Error);
+                            context.State.Logs.Add($"Erro na condição while: {expression.Error.Message}", Enums.LogSeverity.Error);
                             return false;
                         }
 
@@ -318,13 +243,13 @@ namespace Alma.Workflows.Activities.Flow
                         }
                         else
                         {
-                            context.State.Log($"A condição while '{condition}' não retornou um valor booleano", Enums.LogSeverity.Error);
+                            context.State.Logs.Add($"A condição while '{condition}' não retornou um valor booleano", Enums.LogSeverity.Error);
                             return false;
                         }
                     }
                     catch (Exception ex)
                     {
-                        context.State.Log($"Erro ao avaliar condição while: {ex.Message}", Enums.LogSeverity.Error);
+                        context.State.Logs.Add($"Erro ao avaliar condição while: {ex.Message}", Enums.LogSeverity.Error);
                         return false;
                     }
 
@@ -336,48 +261,84 @@ namespace Alma.Workflows.Activities.Flow
         private void SetLoopVariables(ActivityExecutionContext context, LoopType loopType)
         {
             var indexVarName = IndexVariableName?.GetValue(context) ?? LoopConstants.DefaultIndexVariableName;
-            var currentIndex = CurrentIndex?.Value ?? 0;
-            context.State.SetVariable(indexVarName, currentIndex);
+            var currentIndex = context.State.Memory.Get<int>(Id, "currentIndex");
+
+            context.State.Variables.Set(indexVarName, currentIndex);
 
             var currentItemVarName = CurrentItemVariableName?.GetValue(context) ?? LoopConstants.DefaultCurrentItemVariableName;
 
             switch (loopType)
             {
                 case LoopType.Count:
-                    context.State.SetVariable(currentItemVarName, currentIndex);
+                    context.State.Variables.Set(currentItemVarName, currentIndex);
                     break;
 
                 case LoopType.Collection:
-                    if (CollectionData?.Value != null && currentIndex < CollectionData.Value.Count)
+                    var collection = GetCollection(context);
+                    if (collection.Count > 0)
                     {
-                        var currentItem = CollectionData.Value[currentIndex];
-                        context.State.SetVariable(currentItemVarName, currentItem);
+                        var currentItem = collection.ElementAt(currentIndex);
+                        context.State.Variables.Set(currentItemVarName, currentItem);
                     }
                     break;
 
                 case LoopType.While:
-                    context.State.SetVariable(currentItemVarName, currentIndex);
+                    context.State.Variables.Set(currentItemVarName, currentIndex);
                     break;
             }
         }
 
-        private void IncrementLoop()
+        private void IncrementLoop(ActivityExecutionContext context)
         {
-            if (CurrentIndex?.Value != null)
-            {
-                CurrentIndex.Value = CurrentIndex.Value + 1;
-            }
+            var currentIndex = context.State.Memory.Get<int>(Id, "currentIndex");
+            currentIndex++;
+
+            context.State.Memory.Set(Id, "currentIndex", currentIndex);
         }
 
         private void FinalizeLoop(ActivityExecutionContext context)
         {
-            IsLoopComplete = new Core.Activities.Base.Data<bool> { Value = true };
-            LoopPhase = new Core.Activities.Base.Data<string> { Value = LoopConstants.PhaseCompleted };
+            context.State.Memory.Set(Id, "isLoopComplete", true);
+            context.State.Memory.Set(Id, "phase", LoopConstants.PhaseCompleted);
 
-            var iterations = CurrentIndex?.Value ?? 0;
+            var currentIndex = context.State.Memory.Get<int>(Id, "currentIndex");
+
             var loopType = Type?.GetValue(context) ?? LoopType.Count;
 
-            context.State.Log($"Loop {loopType} concluído após {iterations} iterações", Enums.LogSeverity.Information);
+            context.State.Logs.Add($"Loop {loopType} concluído após {currentIndex} iterações", Enums.LogSeverity.Information);
+        }
+
+        private ICollection<object> GetCollection(ActivityExecutionContext context)
+        {
+            var collectionName = Collection?.GetValue(context);
+
+            if (!string.IsNullOrEmpty(collectionName))
+            {
+                var variableName = collectionName.Trim();
+                if (context.State.Variables.TryGet(variableName, out var variable) && variable is not null)
+                {
+                    if (variable.GetValue() is ICollection<object> list)
+                    {
+                        return list;
+                    }
+                    else if (variable.GetValue() is IEnumerable<object> enumerable)
+                    {
+                        return enumerable.ToList();
+                    }
+                    else
+                    {
+                        throw new InvalidOperationException($"A variável '{variableName}' não é uma coleção válida.");
+                    }
+                }
+                else
+                {
+                    throw new InvalidOperationException($"A variável '{variableName}' não foi encontrada.");
+                }
+            }
+            else
+            {
+                return new List<object>();
+            }
         }
     }
 }

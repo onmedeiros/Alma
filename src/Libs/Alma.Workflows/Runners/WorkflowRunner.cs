@@ -1,10 +1,12 @@
 ﻿using Alma.Workflows.Core.Activities.Enums;
 using Alma.Workflows.Core.Contexts;
+using Alma.Workflows.Core.States.Abstractions;
 using Alma.Workflows.Enums;
 using Alma.Workflows.Options;
 using Alma.Workflows.Runners.Connections;
 using Alma.Workflows.Runners.Coordination;
 using Alma.Workflows.Runners.ExecutionModes;
+using Alma.Workflows.Runners.Scopes;
 using Alma.Workflows.States;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Logging;
@@ -19,50 +21,37 @@ namespace Alma.Workflows.Runners
     public class WorkflowRunner
     {
         private readonly ILogger<WorkflowRunner> _logger;
-        private readonly IServiceProvider _serviceProvider;
+        private readonly IExecutionScope _executionScope;
         private readonly IActivityRunnerFactory _activityRunnerFactory;
         private readonly IQueueManager _queueManager;
-        private readonly IDataSetter _dataSetter;
         private readonly IExecutionCoordinator _executionCoordinator;
         private readonly IConnectionManager _connectionManager;
 
-        public FlowExecutionContext Context { get; private set; }
+        public WorkflowExecutionContext Context { get; private set; }
         public ICollection<FlowExecution> PendingExecutions { get; set; } = [];
 
         public WorkflowRunner(
-            IServiceProvider serviceProvider, 
-            Flow flow, 
-            ExecutionState state, 
+            IExecutionScope executionScope,
+            Flow flow,
             ExecutionOptions options)
         {
-            _serviceProvider = serviceProvider;
+            _executionScope = executionScope;
 
-            _logger = serviceProvider.GetRequiredService<ILogger<WorkflowRunner>>();
-            _activityRunnerFactory = serviceProvider.GetRequiredService<IActivityRunnerFactory>();
-            _queueManager = serviceProvider.GetRequiredService<IQueueManager>();
-            _dataSetter = serviceProvider.GetRequiredService<IDataSetter>();
-            _executionCoordinator = serviceProvider.GetRequiredService<IExecutionCoordinator>();
-            _connectionManager = serviceProvider.GetRequiredService<IConnectionManager>();
+            _logger = executionScope.Current.ServiceProvider.GetRequiredService<ILogger<WorkflowRunner>>();
+            _activityRunnerFactory = executionScope.Current.ServiceProvider.GetRequiredService<IActivityRunnerFactory>();
+            _queueManager = executionScope.Current.ServiceProvider.GetRequiredService<IQueueManager>();
+            _executionCoordinator = executionScope.Current.ServiceProvider.GetRequiredService<IExecutionCoordinator>();
+            _connectionManager = executionScope.Current.ServiceProvider.GetRequiredService<IConnectionManager>();
 
-            Context = new FlowExecutionContext(flow, _serviceProvider, state, options);
-
-            LoadStateData();
+            Context = new WorkflowExecutionContext(flow, _executionScope.Current.ServiceProvider, options);
 
             _queueManager.LoadNavigations(Context);
             _queueManager.EnqueueStart(Context);
-            
+
             // Inicializa o cache de conexões para performance
             if (_connectionManager is ConnectionManager concreteManager)
             {
                 concreteManager.InitializeConnectionCache(flow);
-            }
-        }
-
-        public void LoadStateData()
-        {
-            foreach (var activity in Context.Flow.Activities)
-            {
-                _dataSetter.LoadData(Context.State, activity);
             }
         }
 
@@ -93,9 +82,9 @@ namespace Alma.Workflows.Runners
                 // Verifica se deve continuar executando no mesmo ExecuteNextAsync
                 // Modo Automático: continua até o fim ou até uma pausa
                 // Modo Step-by-Step/Manual: executa apenas um lote e retorna
-                var strategy = _serviceProvider.GetRequiredService<IExecutionModeStrategyFactory>()
+                var strategy = _executionScope.Current.ServiceProvider.GetRequiredService<IExecutionModeStrategyFactory>()
                     .GetStrategy(Context.Options.ExecutionMode);
-                
+
                 continueExecuting = strategy.ShouldContinueAfterBatch(Context, PendingExecutions);
             }
 
@@ -115,7 +104,7 @@ namespace Alma.Workflows.Runners
 
                 if (execution is null)
                 {
-                    var activityRunner = _activityRunnerFactory.Create(queueItem.Activity, Context.State, Context.Options);
+                    var activityRunner = _activityRunnerFactory.Create(queueItem.Activity, Context.State.StateData, Context.Options);
                     execution = new FlowExecution(queueItem, activityRunner);
                 }
 
@@ -137,7 +126,7 @@ namespace Alma.Workflows.Runners
         /// </summary>
         public async Task CheckActivityStepStatus(FlowExecution execution)
         {
-            if (execution.QueueItem.ExecutionStatus == ActivityExecutionStatus.Waiting || 
+            if (execution.QueueItem.ExecutionStatus == ActivityExecutionStatus.Waiting ||
                 execution.QueueItem.ExecutionStatus == ActivityExecutionStatus.Pending)
             {
                 var activityStepStatus = await execution.Runner.RunBeforeExecutionSteps();

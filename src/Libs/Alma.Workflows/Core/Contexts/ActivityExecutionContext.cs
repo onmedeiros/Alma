@@ -1,5 +1,7 @@
-﻿using Alma.Workflows.Options;
+﻿using Alma.Workflows.Core.States.Abstractions;
+using Alma.Workflows.Options;
 using Alma.Workflows.States;
+using Microsoft.Extensions.DependencyInjection;
 
 namespace Alma.Workflows.Core.Contexts
 {
@@ -7,13 +9,13 @@ namespace Alma.Workflows.Core.Contexts
     {
         public string Id { get; set; } = Guid.NewGuid().ToString();
         public IServiceProvider ServiceProvider { get; set; }
-        public ExecutionState State { get; set; }
+        public IExecutionState State { get; set; }
         public ExecutionOptions Options { get; set; }
 
-        public ActivityExecutionContext(IServiceProvider serviceProvider, ExecutionState state, ExecutionOptions options)
+        public ActivityExecutionContext(IServiceProvider serviceProvider, ExecutionOptions options)
         {
             ServiceProvider = serviceProvider;
-            State = state;
+            State = ServiceProvider.GetRequiredService<IExecutionState>();
             Options = options;
         }
     }

@@ -22,11 +22,11 @@ namespace Alma.Workflows.Runners.Queue
             _enqueuer = enqueuer;
         }
 
-        public void LoadNavigations(FlowExecutionContext context)
+        public void LoadNavigations(WorkflowExecutionContext context)
         {
-            _logger.LogDebug("Loading navigations for {Count} queue items", context.State.Queue.Count);
+            _logger.LogDebug("Loading navigations for {Count} queue items", context.State.Queue.AsCollection().Count);
 
-            foreach (var item in context.State.Queue)
+            foreach (var item in context.State.Queue.AsCollection())
             {
                 // Load activity reference
                 item.Activity = context.Flow.Activities.First(x => x.Id == item.ActivityId);
@@ -37,20 +37,20 @@ namespace Alma.Workflows.Runners.Queue
 
                 foreach (var executedConnectionId in item.ExecutedConnectionIds)
                 {
-                    var executedConnection = context.State.ExecutedConnections.First(x => x.Id == executedConnectionId);
+                    var executedConnection = context.State.Connections.AsCollection().First(x => x.Id == executedConnectionId);
                     item.ExecutedConnections.Add(executedConnection);
                 }
             }
         }
 
-        public bool HasNext(FlowExecutionContext context)
+        public bool HasNext(WorkflowExecutionContext context)
         {
-            return context.State.Queue.Any(x => x.CanExecute);
+            return context.State.Queue.AsCollection().Any(x => x.CanExecute);
         }
 
-        public IEnumerable<QueueItem> PeekNextReady(FlowExecutionContext context)
+        public IEnumerable<QueueItem> PeekNextReady(WorkflowExecutionContext context)
         {
-            if (context.State.Queue.Count == 0)
+            if (context.State.Queue.AsCollection().Count == 0)
             {
                 _logger.LogDebug("Queue is empty, enqueueing start activity");
                 _enqueuer.EnqueueStart(context);
@@ -60,6 +60,7 @@ namespace Alma.Workflows.Runners.Queue
             count = count > 0 ? count : 1;
 
             var items = context.State.Queue
+                .AsCollection()
                 .Where(x => x.ExecutionStatus == ActivityExecutionStatus.Ready)
                 .OrderBy(x => x.Sequential)
                 .Take(count)
@@ -75,31 +76,32 @@ namespace Alma.Workflows.Runners.Queue
             return items;
         }
 
-        public IEnumerable<QueueItem> PeekPending(FlowExecutionContext context)
+        public IEnumerable<QueueItem> PeekPending(WorkflowExecutionContext context)
         {
-            return context.State.Queue.Where(x => x.ExecutionStatus == ActivityExecutionStatus.Pending);
+            return context.State.Queue.AsCollection().Where(x => x.ExecutionStatus == ActivityExecutionStatus.Pending);
         }
 
-        public IEnumerable<QueueItem> PeekWaiting(FlowExecutionContext context)
+        public IEnumerable<QueueItem> PeekWaiting(WorkflowExecutionContext context)
         {
-            return context.State.Queue.Where(x => x.ExecutionStatus == ActivityExecutionStatus.Waiting);
+            return context.State.Queue.AsCollection().Where(x => x.ExecutionStatus == ActivityExecutionStatus.Waiting);
         }
 
-        public IEnumerable<QueueItem> PeekWaitingAndReady(FlowExecutionContext context)
+        public IEnumerable<QueueItem> PeekWaitingAndReady(WorkflowExecutionContext context)
         {
-            return context.State.Queue.Where(x =>
+            return context.State.Queue.AsCollection().Where(x =>
                 x.ExecutionStatus == ActivityExecutionStatus.Waiting ||
                 x.ExecutionStatus == ActivityExecutionStatus.Ready);
         }
 
-        public IEnumerable<QueueItem> PeekCompleted(FlowExecutionContext context)
+        public IEnumerable<QueueItem> PeekCompleted(WorkflowExecutionContext context)
         {
-            return context.State.Queue.Where(x => x.ExecutionStatus == ActivityExecutionStatus.Completed);
+            return context.State.Queue.AsCollection().Where(x => x.ExecutionStatus == ActivityExecutionStatus.Completed);
         }
 
-        public IEnumerable<QueueItem> PeekNext(FlowExecutionContext context, int count)
+        public IEnumerable<QueueItem> PeekNext(WorkflowExecutionContext context, int count)
         {
             return context.State.Queue
+                .AsCollection()
                 .OrderBy(x => x.Sequential)
                 .Where(x =>
                     x.ExecutionStatus == ActivityExecutionStatus.Pending ||
@@ -109,9 +111,9 @@ namespace Alma.Workflows.Runners.Queue
                 .Take(count);
         }
 
-        public QueueItem PeekById(FlowExecutionContext context, string id)
+        public QueueItem PeekById(WorkflowExecutionContext context, string id)
         {
-            var item = context.State.Queue.FirstOrDefault(x => x.Id == id);
+            var item = context.State.Queue.AsCollection().FirstOrDefault(x => x.Id == id);
 
             if (item == null)
             {

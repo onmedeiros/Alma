@@ -61,21 +61,21 @@ namespace Alma.Workflows.Monitoring.Activities
 
             if (string.IsNullOrWhiteSpace(schemeId))
             {
-                context.State.Log("Esquema do objeto não informado.", Enums.LogSeverity.Error);
+                context.State.Logs.Add("Esquema do objeto não informado.", Enums.LogSeverity.Error);
                 Fail.Execute();
                 return;
             }
 
             if (string.IsNullOrWhiteSpace(name))
             {
-                context.State.Log("Nome do objeto não informado.", Enums.LogSeverity.Error);
+                context.State.Logs.Add("Nome do objeto não informado.", Enums.LogSeverity.Error);
                 Fail.Execute();
                 return;
             }
 
-            if (!context.State.Variables.TryGetValue(name, out var monitoringValueObject))
+            if (!context.State.Variables.TryGet(name, out var monitoringValueObject))
             {
-                context.State.Log($"Variável {name} não encontrada no contexto de execução.", Enums.LogSeverity.Error);
+                context.State.Logs.Add($"Variável {name} não encontrada no contexto de execução.", Enums.LogSeverity.Error);
                 Fail.Execute();
                 return;
             }
@@ -92,14 +92,14 @@ namespace Alma.Workflows.Monitoring.Activities
 
                 if (monitoringObjectData is null)
                 {
-                    context.State.Log("Dados do objeto de monitoramento inválidos.", Enums.LogSeverity.Error);
+                    context.State.Logs.Add("Dados do objeto de monitoramento inválidos.", Enums.LogSeverity.Error);
                     Fail.Execute();
                     return;
                 }
 
                 if (monitoringObjectSchema is null)
                 {
-                    context.State.Log("Esquema do objeto não encontrado.", Enums.LogSeverity.Error);
+                    context.State.Logs.Add("Esquema do objeto não encontrado.", Enums.LogSeverity.Error);
                     Fail.Execute();
                     return;
                 }
@@ -115,7 +115,7 @@ namespace Alma.Workflows.Monitoring.Activities
 
                     if (!hasPrimaryKey || primaryKeyValue is null || string.IsNullOrWhiteSpace(tempPrimaryKeyValue?.ToString()))
                     {
-                        context.State.Log($"Chave primária '{primaryKeyName}' não informada nos dados do objeto de monitoramento.", Enums.LogSeverity.Error);
+                        context.State.Logs.Add($"Chave primária '{primaryKeyName}' não informada nos dados do objeto de monitoramento.", Enums.LogSeverity.Error);
                         Fail.Execute();
                         return;
                     }
@@ -139,7 +139,7 @@ namespace Alma.Workflows.Monitoring.Activities
 
                     if (!hasTimestamp || tempTimestampValue is null)
                     {
-                        context.State.Log($"Timestamp não informado.", Enums.LogSeverity.Error);
+                        context.State.Logs.Add($"Timestamp não informado.", Enums.LogSeverity.Error);
                         Fail.Execute();
                         return;
                     }
@@ -150,7 +150,7 @@ namespace Alma.Workflows.Monitoring.Activities
                     }
                     else
                     {
-                        context.State.Log($"Timestamp inválido.", Enums.LogSeverity.Error);
+                        context.State.Logs.Add($"Timestamp inválido.", Enums.LogSeverity.Error);
                         Fail.Execute();
                         return;
                     }
@@ -186,17 +186,17 @@ namespace Alma.Workflows.Monitoring.Activities
                 if (!result.Succeeded)
                 {
                     var errors = string.Join("; ", result.Errors?.Select(e => e.Message) ?? [""]);
-                    context.State.Log($"Erro ao criar o objeto de monitoramento: {errors}", Enums.LogSeverity.Error);
+                    context.State.Logs.Add($"Erro ao criar o objeto de monitoramento: {errors}", Enums.LogSeverity.Error);
                     Fail.Execute();
                     return;
                 }
 
-                context.State.Log($"Objeto de monitoramento '{name}' criado com sucesso.", Enums.LogSeverity.Information);
+                context.State.Logs.Add($"Objeto de monitoramento '{name}' criado com sucesso.", Enums.LogSeverity.Information);
                 Done.Execute();
             }
             catch (Exception ex)
             {
-                context.State.Log($"Erro ao criar o objeto de monitoramento: {ex.Message}", Enums.LogSeverity.Error);
+                context.State.Logs.Add($"Erro ao criar o objeto de monitoramento: {ex.Message}", Enums.LogSeverity.Error);
                 Fail.Execute();
             }
         }

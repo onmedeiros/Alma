@@ -28,7 +28,7 @@ namespace Alma.Workflows.Activities
 
         public override void Execute(ActivityExecutionContext context)
         {
-            context.State.Log(Message?.GetValue(context), Severity?.GetValue(context));
+            context.State.Logs.Add(Message?.GetValue(context) ?? string.Empty, Severity?.GetValue(context) ?? LogSeverity.Information);
 
             Done.Execute();
         }

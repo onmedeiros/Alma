@@ -7,7 +7,7 @@ using Alma.Workflows.Core.Description.Descriptors;
 
 namespace Alma.Workflows.Core.Abstractions
 {
-    public interface IActivity : IParameterizable, IConnectable, IDataContaining
+    public interface IActivity : IParameterizable, IConnectable
     {
         string Id { get; set; }
         string DisplayName { get; set; }

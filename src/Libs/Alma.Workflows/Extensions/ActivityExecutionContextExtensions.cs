@@ -5,7 +5,7 @@ namespace Alma.Workflows.Extensions
 {
     public static class ActivityExecutionContextExtensions
     {
-        public static string? Evaluate(this FlowExecutionContext context, Parameter<string>? parameter)
+        public static string? Evaluate(this WorkflowExecutionContext context, Parameter<string>? parameter)
         {
             if (parameter == null)
                 return null;

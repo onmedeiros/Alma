@@ -21,8 +21,6 @@ namespace Alma.Workflows.Tests.Core.Descriptions.Describers
 
             [Port(DisplayName = "Out Port", Type = PortType.Output, DataType = typeof(int))]
             public Port Out { get; set; }
-
-            public Data<double> Output { get; set; } = new();
         }
 
         [Test]

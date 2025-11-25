@@ -28,7 +28,7 @@ namespace Alma.Workflows.Runners.Strategies
         /// <returns>The result of the activity execution.</returns>
         Task<ActivityExecutionResult> ExecuteAsync(
             IActivity activity,
-            FlowExecutionContext context,
+            WorkflowExecutionContext context,
             ActivityRunner runner);
 
         /// <summary>
@@ -41,7 +41,7 @@ namespace Alma.Workflows.Runners.Strategies
         /// <returns>A task representing the asynchronous operation.</returns>
         Task HandlePostExecutionAsync(
             IActivity activity,
-            FlowExecutionContext context,
+            WorkflowExecutionContext context,
             ActivityExecutionResult result,
             QueueItem queueItem);
     }

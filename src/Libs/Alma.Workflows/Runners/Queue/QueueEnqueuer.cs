@@ -24,12 +24,12 @@ namespace Alma.Workflows.Runners.Queue
             _stateManager = stateManager;
         }
 
-        public void EnqueueStart(FlowExecutionContext context)
+        public void EnqueueStart(WorkflowExecutionContext context)
         {
             var startActivity = context.Flow.GetStart();
 
             // To avoid duplicate execution, if the start activity is already in the queue, do not add it again.
-            if (context.State.Queue.Any(x => x.ActivityId == startActivity.Id))
+            if (context.State.Queue.AsCollection().Any(x => x.ActivityId == startActivity.Id))
             {
                 _logger.LogDebug("Start activity {ActivityId} already in queue, skipping enqueue", startActivity.Id);
                 return;
@@ -45,7 +45,7 @@ namespace Alma.Workflows.Runners.Queue
             _stateManager.Approve(context, item);
         }
 
-        public void Enqueue(FlowExecutionContext context, IActivity activity)
+        public void Enqueue(WorkflowExecutionContext context, IActivity activity)
         {
             if (!CanEnqueue(context, activity))
             {
@@ -64,7 +64,7 @@ namespace Alma.Workflows.Runners.Queue
             context.State.Queue.Add(item);
         }
 
-        public void Enqueue(FlowExecutionContext context, ExecutedConnection executedConnection)
+        public void Enqueue(WorkflowExecutionContext context, ExecutedConnection executedConnection)
         {
             if (!CanEnqueue(context, executedConnection.Target))
             {
@@ -81,16 +81,16 @@ namespace Alma.Workflows.Runners.Queue
             context.State.Queue.Add(item);
         }
 
-        public int GetNextSequential(FlowExecutionContext context)
+        public int GetNextSequential(WorkflowExecutionContext context)
         {
-            return context.State.Queue.Count + 1;
+            return context.State.Queue.AsCollection().Count + 1;
         }
 
-        public bool CanEnqueue(FlowExecutionContext context, IActivity activity)
+        public bool CanEnqueue(WorkflowExecutionContext context, IActivity activity)
         {
             // To avoid duplicate execution, if the same activity is already in the queue
             // and its status is not completed or failed, do not add it again.
-            var existingItem = context.State.Queue.FirstOrDefault(x => x.ActivityId == activity.Id);
+            var existingItem = context.State.Queue.AsCollection().FirstOrDefault(x => x.ActivityId == activity.Id);
 
             if (existingItem == null)
                 return true;

@@ -24,7 +24,7 @@ namespace Alma.Workflows.Runners.Connections
         /// <param name="context">Contexto de execução do flow</param>
         /// <param name="executedPorts">Portas que foram executadas</param>
         void EnqueueConnectedActivities(
-            FlowExecutionContext context,
+            WorkflowExecutionContext context,
             IEnumerable<Port> executedPorts);
 
         /// <summary>

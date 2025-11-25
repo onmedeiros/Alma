@@ -197,7 +197,7 @@
     private async Task ExecuteCurrent()
     {
         await _runner.ExecuteNextAsync();
-        await _executionManager.Update(Execution, _runner.Context.State);
+        await _executionManager.Update(Execution);
         await SetCurrentQueryItem();
         StateHasChanged();
     }

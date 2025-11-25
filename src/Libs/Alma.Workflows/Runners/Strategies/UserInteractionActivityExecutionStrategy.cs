@@ -35,7 +35,7 @@ namespace Alma.Workflows.Runners.Strategies
 
         public async Task<ActivityExecutionResult> ExecuteAsync(
             IActivity activity,
-            FlowExecutionContext context,
+            WorkflowExecutionContext context,
             ActivityRunner runner)
         {
             _logger.LogDebug(
@@ -59,7 +59,7 @@ namespace Alma.Workflows.Runners.Strategies
 
         public Task HandlePostExecutionAsync(
             IActivity activity,
-            FlowExecutionContext context,
+            WorkflowExecutionContext context,
             ActivityExecutionResult result,
             QueueItem queueItem)
         {

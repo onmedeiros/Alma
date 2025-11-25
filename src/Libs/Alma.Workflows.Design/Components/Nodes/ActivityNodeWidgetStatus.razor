@@ -41,7 +41,7 @@
 		if (Context.ExecutionContext is null)
 			return false;
 
-		return Context.ExecutionContext.State.Queue.Any(x => x.ActivityId == Node.Activity.Id && x.ExecutionStatus == ActivityExecutionStatus.Completed);
+		return Context.ExecutionContext.State.Queue.AsCollection().Any(x => x.ActivityId == Node.Activity.Id && x.ExecutionStatus == ActivityExecutionStatus.Completed);
 	}
 
 	private bool IsPending()
@@ -49,7 +49,7 @@
 		if (Context.ExecutionContext is null)
 			return false;
 
-		return Context.ExecutionContext.State.Queue.Any(x => x.ActivityId == Node.Activity.Id && x.ExecutionStatus == ActivityExecutionStatus.Pending);
+		return Context.ExecutionContext.State.Queue.AsCollection().Any(x => x.ActivityId == Node.Activity.Id && x.ExecutionStatus == ActivityExecutionStatus.Pending);
 	}
 
 	private bool IsWaiting()
@@ -57,7 +57,7 @@
 		if (Context.ExecutionContext is null)
 			return false;
 
-		return Context.ExecutionContext.State.Queue.Any(x => x.ActivityId == Node.Activity.Id && x.ExecutionStatus == ActivityExecutionStatus.Waiting);
+		return Context.ExecutionContext.State.Queue.AsCollection().Any(x => x.ActivityId == Node.Activity.Id && x.ExecutionStatus == ActivityExecutionStatus.Waiting);
 	}
 
 	private bool IsReady()
@@ -65,6 +65,6 @@
 		if (Context.ExecutionContext is null)
 			return false;
 
-		return Context.ExecutionContext.State.Queue.Any(x => x.ActivityId == Node.Activity.Id && x.ExecutionStatus == ActivityExecutionStatus.Ready);
+		return Context.ExecutionContext.State.Queue.AsCollection().Any(x => x.ActivityId == Node.Activity.Id && x.ExecutionStatus == ActivityExecutionStatus.Ready);
 	}
 }

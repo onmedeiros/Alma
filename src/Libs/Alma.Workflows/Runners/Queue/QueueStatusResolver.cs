@@ -30,7 +30,7 @@ namespace Alma.Workflows.Runners.Queue
             _approvalAndCheckResolverFactory = approvalAndCheckResolverFactory;
         }
 
-        public async Task UpdateExecutionStatusAsync(FlowExecutionContext context)
+        public async Task UpdateExecutionStatusAsync(WorkflowExecutionContext context)
         {
             _logger.LogDebug("Updating execution status for all queue items");
 
@@ -41,7 +41,7 @@ namespace Alma.Workflows.Runners.Queue
             await UpdateWaitingAndReadyStatusAsync(context);
         }
 
-        public async Task UpdateExecutionStatusAsync(FlowExecutionContext context, QueueItem queueItem)
+        public async Task UpdateExecutionStatusAsync(WorkflowExecutionContext context, QueueItem queueItem)
         {
             _logger.LogDebug("Updating execution status for queue item {ItemId} (Activity: {ActivityId})",
                 queueItem.Id, queueItem.ActivityId);
@@ -50,7 +50,7 @@ namespace Alma.Workflows.Runners.Queue
             await ResolveApprovalAndChecksAsync(context, queueItem);
         }
 
-        public void UpdateExecutionStatus(FlowExecutionContext context, QueueItem item, ActivityValidationResult validationResult)
+        public void UpdateExecutionStatus(WorkflowExecutionContext context, QueueItem item, ActivityValidationResult validationResult)
         {
             item.ExecutionStatus = validationResult.ReadinessStatus;
             item.ExecutionStatusReason = validationResult.ReadinessDetails;
@@ -63,7 +63,7 @@ namespace Alma.Workflows.Runners.Queue
                 validationResult.ApprovalStatus);
         }
 
-        public async Task ResolveReadyStatusAsync(FlowExecutionContext context, QueueItem item)
+        public async Task ResolveReadyStatusAsync(WorkflowExecutionContext context, QueueItem item)
         {
             var activity = context.Flow.Activities.First(x => x.Id == item.ActivityId);
             var isReadyResult = await activity.IsReadyToExecuteAsync(context);
@@ -78,14 +78,14 @@ namespace Alma.Workflows.Runners.Queue
             }
         }
 
-        public async Task ResolveApprovalAndChecksAsync(FlowExecutionContext context, QueueItem item)
+        public async Task ResolveApprovalAndChecksAsync(WorkflowExecutionContext context, QueueItem item)
         {
             var activity = context.Flow.Activities.First(x => x.Id == item.ActivityId);
             var approvalAndCheckResults = new List<ApprovalAndCheckResult>();
 
             foreach (var approvalAndCheck in activity.ApprovalAndChecks)
             {
-                var resolver = _approvalAndCheckResolverFactory.Create(approvalAndCheck, context.State, context.Options);
+                var resolver = _approvalAndCheckResolverFactory.Create(approvalAndCheck, context.Options);
                 approvalAndCheckResults.Add(await resolver.Resolve());
             }
 
@@ -103,7 +103,7 @@ namespace Alma.Workflows.Runners.Queue
             }
         }
 
-        private void UpdatePendingItems(FlowExecutionContext context)
+        private void UpdatePendingItems(WorkflowExecutionContext context)
         {
             // Check if there are any pending activities that can be executed.
             // Pending activities are those that are waiting for the execution of
@@ -114,7 +114,7 @@ namespace Alma.Workflows.Runners.Queue
             }
         }
 
-        private async Task UpdateWaitingAndReadyStatusAsync(FlowExecutionContext context)
+        private async Task UpdateWaitingAndReadyStatusAsync(WorkflowExecutionContext context)
         {
             // Check if there are any waiting activities that can be executed.
             foreach (var item in _navigator.PeekWaitingAndReady(context))

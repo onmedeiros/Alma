@@ -10,7 +10,7 @@ namespace Alma.Workflows
         public ICollection<IActivity> Activities { get; set; } = [];
         public ICollection<Connection> Connections { get; set; } = [];
 
-        public async ValueTask ExecuteAsync(FlowExecutionContext context)
+        public async ValueTask ExecuteAsync(WorkflowExecutionContext context)
         {
         }
 

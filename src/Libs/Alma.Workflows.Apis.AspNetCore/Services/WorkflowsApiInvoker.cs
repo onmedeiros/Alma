@@ -10,6 +10,7 @@ using System.Net;
 using Alma.Workflows.Core.InstanceExecutions.Services;
 using System.Net.Mime;
 using Alma.Core.Utils;
+using Alma.Workflows.Core.ApprovalsAndChecks.Models;
 
 namespace Alma.Workflows.Apis.AspNetCore.Services
 {
@@ -43,7 +44,7 @@ namespace Alma.Workflows.Apis.AspNetCore.Services
             }
 
             // Build parameters from query string
-            var parameters = new Dictionary<string, object?>(StringComparer.OrdinalIgnoreCase);
+            var parameters = new Dictionary<string, ValueObject?>(StringComparer.OrdinalIgnoreCase);
 
             // TODO: remove this dependency on HttpContext, transfer to Controller
             var httpContext = _httpContextAccessor.HttpContext;
@@ -61,7 +62,7 @@ namespace Alma.Workflows.Apis.AspNetCore.Services
                         _ => values.ToArray()
                     };
 
-                    parameters[pair.Key] = value;
+                    parameters[pair.Key] = new ValueObject(value);
                 }
             }
 
@@ -73,14 +74,14 @@ namespace Alma.Workflows.Apis.AspNetCore.Services
 
             var executionContext = await _flowRunManager.RunAsync(instanceEndpoint.InstanceId, instanceEndpoint.Discriminator, options);
 
-            var hasResponse = executionContext.State.Variables.TryGetValue("HttpResponse", out var httpResponse);
+            var hasResponse = executionContext.State.Variables.TryGet("HttpResponse", out var httpResponse);
 
             if (!hasResponse)
                 return new ApiInvokeResult { StatusCode = (int)HttpStatusCode.OK };
 
-            if (httpResponse is not null && httpResponse.Value is Models.Activities.HttpResponse)
+            if (httpResponse is not null && httpResponse.GetValue() is Models.Activities.HttpResponse)
             {
-                var response = (Models.Activities.HttpResponse)httpResponse.Value;
+                var response = (Models.Activities.HttpResponse)httpResponse.GetValue();
 
                 return new ApiInvokeResult
                 {
@@ -107,13 +108,13 @@ namespace Alma.Workflows.Apis.AspNetCore.Services
             }
 
             // Build parameters
-            var parameters = new Dictionary<string, object?>(StringComparer.OrdinalIgnoreCase);
+            var parameters = new Dictionary<string, ValueObject?>(StringComparer.OrdinalIgnoreCase);
 
             if (!string.IsNullOrEmpty(queryString))
             {
                 foreach (var pair in ParseQueryString(queryString))
                 {
-                    parameters[pair.Key] = pair.Value;
+                    parameters[pair.Key] = new ValueObject(pair.Value);
                 }
             }
 
@@ -125,7 +126,7 @@ namespace Alma.Workflows.Apis.AspNetCore.Services
 
                     foreach (var pair in contentObject ?? [])
                     {
-                        parameters[pair.Key] = pair.Value;
+                        parameters[pair.Key] = new ValueObject(pair.Value);
                     }
                 }
                 else
@@ -143,14 +144,14 @@ namespace Alma.Workflows.Apis.AspNetCore.Services
 
             var executionContext = await _instanceExecutionRunner.ExecuteAsync(instanceEndpoint.InstanceId, instanceEndpoint.Discriminator, options);
 
-            var hasResponse = executionContext.State.Variables.TryGetValue("HttpResponse", out var httpResponse);
+            var hasResponse = executionContext.State.Variables.TryGet("HttpResponse", out var httpResponse);
 
             if (!hasResponse)
                 return new ApiInvokeResult { StatusCode = (int)HttpStatusCode.OK };
 
-            if (httpResponse is not null && httpResponse.Value is Models.Activities.HttpResponse)
+            if (httpResponse is not null && httpResponse.GetValue() is Models.Activities.HttpResponse)
             {
-                var response = (Models.Activities.HttpResponse)httpResponse.Value;
+                var response = (Models.Activities.HttpResponse)httpResponse.GetValue();
 
                 return new ApiInvokeResult
                 {

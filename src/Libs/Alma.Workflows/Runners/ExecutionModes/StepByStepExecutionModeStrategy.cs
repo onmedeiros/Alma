@@ -18,7 +18,7 @@ namespace Alma.Workflows.Runners.ExecutionModes
         }
 
         public bool ShouldContinueAfterBatch(
-            FlowExecutionContext context,
+            WorkflowExecutionContext context,
             IEnumerable<FlowExecution> pendingExecutions)
         {
             // No modo step-by-step, sempre para após cada lote
@@ -27,7 +27,7 @@ namespace Alma.Workflows.Runners.ExecutionModes
         }
 
         public int GetBatchSize(
-            FlowExecutionContext context,
+            WorkflowExecutionContext context,
             IEnumerable<FlowExecution> readyExecutions)
         {
             // Executa apenas uma atividade por vez

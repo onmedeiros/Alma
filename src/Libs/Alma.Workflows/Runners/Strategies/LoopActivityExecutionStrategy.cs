@@ -34,7 +34,7 @@ namespace Alma.Workflows.Runners.Strategies
 
         public async Task<ActivityExecutionResult> ExecuteAsync(
             IActivity activity,
-            FlowExecutionContext context,
+            WorkflowExecutionContext context,
             ActivityRunner runner)
         {
             _logger.LogDebug("Executing loop activity {ActivityId} using LoopExecutionStrategy", activity.Id);
@@ -46,7 +46,7 @@ namespace Alma.Workflows.Runners.Strategies
 
         public Task HandlePostExecutionAsync(
             IActivity activity,
-            FlowExecutionContext context,
+            WorkflowExecutionContext context,
             ActivityExecutionResult result,
             QueueItem queueItem)
         {
@@ -92,7 +92,7 @@ namespace Alma.Workflows.Runners.Strategies
         /// </summary>
         private void HandleLoopBodyExecution(
             IActivity activity,
-            FlowExecutionContext context,
+            WorkflowExecutionContext context,
             QueueItem queueItem)
         {
             _logger.LogInformation(
@@ -108,7 +108,7 @@ namespace Alma.Workflows.Runners.Strategies
         /// </summary>
         private void HandleNonCompletedExecution(
             IActivity activity,
-            FlowExecutionContext context,
+            WorkflowExecutionContext context,
             ActivityExecutionResult result,
             QueueItem queueItem)
         {

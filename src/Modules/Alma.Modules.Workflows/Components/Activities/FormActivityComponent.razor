@@ -54,16 +54,15 @@ else
 
         _activity = activity;
 
-        if (_activity.FormState is not null && _activity.FormState.Value is not null)
+        var state = ActivityExecutionContext.State.Memory.Get<Dictionary<string, object?>>(_activity.Id, "FormState");
+
+        if (state is not null)
         {
-            _formState.SetState(_activity.FormState.Value);
+            _formState.SetState(state);
         }
         else
         {
-            _activity.FormState = new Data<Dictionary<string, object?>>
-            {
-                Value = _formState.GetState()
-            };
+            ActivityExecutionContext.State.Memory.Set(_activity.Id, "FormState", _formState.GetState());
         }
     }
 

@@ -15,7 +15,7 @@ namespace Alma.Workflows.Runners.ExecutionModes
         /// <param name="pendingExecutions">Execuções pendentes</param>
         /// <returns>True se deve continuar executando, false para pausar</returns>
         bool ShouldContinueAfterBatch(
-            FlowExecutionContext context,
+            WorkflowExecutionContext context,
             IEnumerable<FlowExecution> pendingExecutions);
 
         /// <summary>
@@ -25,7 +25,7 @@ namespace Alma.Workflows.Runners.ExecutionModes
         /// <param name="readyExecutions">Execuções prontas para executar</param>
         /// <returns>Número de atividades a executar</returns>
         int GetBatchSize(
-            FlowExecutionContext context,
+            WorkflowExecutionContext context,
             IEnumerable<FlowExecution> readyExecutions);
 
         /// <summary>

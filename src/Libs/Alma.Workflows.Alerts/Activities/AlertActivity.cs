@@ -55,7 +55,7 @@ namespace Alma.Workflows.Alerts.Activities
 
             if (!result.Succeeded)
             {
-                context.State.Log($"Failed to create alert: {string.Join(',', result.Errors?.Select(e => e.Message) ?? [])}");
+                context.State.Logs.Add($"Failed to create alert: {string.Join(',', result.Errors?.Select(e => e.Message) ?? [])}");
                 throw new InvalidOperationException("Failed to create alert.");
             }
 

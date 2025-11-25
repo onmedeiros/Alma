@@ -11,9 +11,9 @@ namespace Alma.Workflows.Core.InstanceExecutions.Services
 {
     public interface IInstanceExecutionRunner
     {
-        ValueTask<FlowExecutionContext> ExecuteAsync(string instanceId, string? discriminator = null, ExecutionOptions? options = null);
+        ValueTask<WorkflowExecutionContext> ExecuteAsync(string instanceId, string? discriminator = null, ExecutionOptions? options = null);
 
-        ValueTask<FlowExecutionContext> ExecuteAsync(FlowInstance instance, Flow flow, ExecutionOptions? options = null);
+        ValueTask<WorkflowExecutionContext> ExecuteAsync(FlowInstance instance, Flow flow, ExecutionOptions? options = null);
     }
 
     public class InstanceExecutionRunner : IInstanceExecutionRunner
@@ -35,7 +35,7 @@ namespace Alma.Workflows.Core.InstanceExecutions.Services
             _flowRunnerFactory = flowRunnerFactory;
         }
 
-        public async ValueTask<FlowExecutionContext> ExecuteAsync(string instanceId, string? discriminator = null, ExecutionOptions? options = null)
+        public async ValueTask<WorkflowExecutionContext> ExecuteAsync(string instanceId, string? discriminator = null, ExecutionOptions? options = null)
         {
             // Load and validate instance
             var instance = await _flowInstanceManager.FindById(instanceId, discriminator);
@@ -79,7 +79,7 @@ namespace Alma.Workflows.Core.InstanceExecutions.Services
             return await ExecuteAsync(instance, flow, options);
         }
 
-        public async ValueTask<FlowExecutionContext> ExecuteAsync(FlowInstance instance, Flow flow, ExecutionOptions? options = null)
+        public async ValueTask<WorkflowExecutionContext> ExecuteAsync(FlowInstance instance, Flow flow, ExecutionOptions? options = null)
         {
             // Inicia a execução
             var instanceExecution = await _instanceExecutionManager.Begin(instance, options);
@@ -116,7 +116,7 @@ namespace Alma.Workflows.Core.InstanceExecutions.Services
             }
 
             // Ao terminar, atualiza a entidade da execução da instância
-            await _instanceExecutionManager.Update(instanceExecution, runner.Context.State);
+            await _instanceExecutionManager.Update(instanceExecution);
 
             return runner.Context;
         }

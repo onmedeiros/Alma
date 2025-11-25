@@ -80,21 +80,21 @@ namespace Alma.Workflows.Monitoring.Activities
 
             if (string.IsNullOrWhiteSpace(organzationId))
             {
-                context.State.Log("Organização não informada.", Enums.LogSeverity.Error);
+                context.State.Logs.Add("Organização não informada.", Enums.LogSeverity.Error);
                 Fail.Execute();
                 return;
             }
 
             if (string.IsNullOrWhiteSpace(schema))
             {
-                context.State.Log("Esquema do objeto não informado.", Enums.LogSeverity.Error);
+                context.State.Logs.Add("Esquema do objeto não informado.", Enums.LogSeverity.Error);
                 Fail.Execute();
                 return;
             }
 
             if (string.IsNullOrWhiteSpace(field))
             {
-                context.State.Log("Campo do objeto não informado.", Enums.LogSeverity.Error);
+                context.State.Logs.Add("Campo do objeto não informado.", Enums.LogSeverity.Error);
                 Fail.Execute();
                 return;
             }
@@ -103,7 +103,7 @@ namespace Alma.Workflows.Monitoring.Activities
 
             if (!Decimal.TryParse(value, CultureInfo.InvariantCulture, out var decimalValue))
             {
-                context.State.Log("Valor inválido.", Enums.LogSeverity.Error);
+                context.State.Logs.Add("Valor inválido.", Enums.LogSeverity.Error);
                 Fail.Execute();
                 return;
             }
@@ -144,12 +144,12 @@ namespace Alma.Workflows.Monitoring.Activities
 
             if ((lowerLimit is not null && decimalValue < lowerLimit) || (upperLimit is not null && decimalValue > upperLimit))
             {
-                context.State.Log($"Valor {decimalValue} fora do limite esperado.", Enums.LogSeverity.Warning);
+                context.State.Logs.Add($"Valor {decimalValue} fora do limite esperado.", Enums.LogSeverity.Warning);
                 Alert.Execute();
             }
             else
             {
-                context.State.Log($"Valor {decimalValue} dentro do limite esperado.", Enums.LogSeverity.Information);
+                context.State.Logs.Add($"Valor {decimalValue} dentro do limite esperado.", Enums.LogSeverity.Information);
                 Done.Execute();
             }
         }

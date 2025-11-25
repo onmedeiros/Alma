@@ -1,4 +1,5 @@
 ﻿using Alma.Workflows.Core.ApprovalsAndChecks.Interfaces;
+using Alma.Workflows.Core.States.Abstractions;
 using Alma.Workflows.Options;
 using Alma.Workflows.States;
 using Microsoft.Extensions.Logging;
@@ -17,7 +18,7 @@ namespace Alma.Workflows.Runners
         /// <param name="state">The current execution state.</param>
         /// <param name="options">The execution options.</param>
         /// <returns>A new instance of <see cref="ApprovalAndCheckResolver"/>.</returns>
-        ApprovalAndCheckResolver Create(IApprovalAndCheck approvalAndCheck, ExecutionState state, ExecutionOptions options);
+        ApprovalAndCheckResolver Create(IApprovalAndCheck approvalAndCheck, ExecutionOptions options);
     }
 
     /// <summary>
@@ -40,9 +41,9 @@ namespace Alma.Workflows.Runners
         }
 
         /// <inheritdoc />
-        public ApprovalAndCheckResolver Create(IApprovalAndCheck approvalAndCheck, ExecutionState state, ExecutionOptions options)
+        public ApprovalAndCheckResolver Create(IApprovalAndCheck approvalAndCheck, ExecutionOptions options)
         {
-            return new ApprovalAndCheckResolver(_serviceProvider, approvalAndCheck, state, options);
+            return new ApprovalAndCheckResolver(_serviceProvider, approvalAndCheck, options);
         }
     }
 }

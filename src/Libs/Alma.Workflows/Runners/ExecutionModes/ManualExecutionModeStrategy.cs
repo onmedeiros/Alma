@@ -19,7 +19,7 @@ namespace Alma.Workflows.Runners.ExecutionModes
         }
 
         public bool ShouldContinueAfterBatch(
-            FlowExecutionContext context,
+            WorkflowExecutionContext context,
             IEnumerable<FlowExecution> pendingExecutions)
         {
             // Continua se não há atividades com interação pendentes
@@ -38,7 +38,7 @@ namespace Alma.Workflows.Runners.ExecutionModes
         }
 
         public int GetBatchSize(
-            FlowExecutionContext context,
+            WorkflowExecutionContext context,
             IEnumerable<FlowExecution> readyExecutions)
         {
             // No modo manual, executa uma atividade com interação por vez

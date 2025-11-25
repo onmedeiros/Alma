@@ -18,7 +18,7 @@ namespace Alma.Workflows.Runners.ExecutionModes
         }
 
         public bool ShouldContinueAfterBatch(
-            FlowExecutionContext context,
+            WorkflowExecutionContext context,
             IEnumerable<FlowExecution> pendingExecutions)
         {
             // Continua executando enquanto houver atividades prontas
@@ -33,7 +33,7 @@ namespace Alma.Workflows.Runners.ExecutionModes
         }
 
         public int GetBatchSize(
-            FlowExecutionContext context,
+            WorkflowExecutionContext context,
             IEnumerable<FlowExecution> readyExecutions)
         {
             // Respeita o grau máximo de paralelismo configurado

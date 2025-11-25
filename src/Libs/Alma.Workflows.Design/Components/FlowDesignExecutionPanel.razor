@@ -1,6 +1,7 @@
 ﻿@using System.Diagnostics.CodeAnalysis
 @using System.Text.Json
 @using Alma.Workflows.Core.ApprovalsAndChecks.Enums
+@using Alma.Workflows.Core.ApprovalsAndChecks.Models
 @using Alma.Workflows.States
 @using EnumsNET
 @using MudBlazor
@@ -27,20 +28,20 @@
             PanelClass="flex-grow-1 overflow-auto">
 
             <MudTabPanel Text="Variáveis">
-                @if (Context.ExecutionContext.State.Variables.Count == 0)
+                @if (Context.ExecutionContext.State.Variables.AsDictionary().Count == 0)
                 {
                     <MudText Typo="Typo.body2" Class="mud-text-secondary mt-4">Nenhuma variável declarada neste fluxo de trabalho.</MudText>
                 }
                 else
                 {
-                    <MudTable Items="Context.ExecutionContext.State.Variables" Hover="true" Dense Elevation="0" Class="mt-4">
+                    <MudTable T="KeyValuePair<string, ValueObject>" Items="Context.ExecutionContext.State.Variables.AsDictionary()" Hover="true" Dense Elevation="0" Class="mt-4">
                         <HeaderContent>
                             <MudTh>Nome</MudTh>
                             <MudTh>Valor</MudTh>
                         </HeaderContent>
                         <RowTemplate>
                             <MudTd>@context.Key</MudTd>
-                            @if (IsPrimitiveType(context.Value.Value))
+                            @if (IsPrimitiveType(context.Value.GetValue()))
                             {
                                 <MudTd>@context.Value?.ValueString</MudTd>
                             }
@@ -56,7 +57,7 @@
 
                                     <MudCollapse Expanded="_expandedStates[context.Key]">
                                         <MudDivider Class="my-2" />
-                                        <pre style="max-height: 400px; overflow: auto;">@GetJson(context.Value.Value)</pre>
+                                        <pre style="max-height: 400px; overflow: auto;">@GetJson(context.Value.GetValue())</pre>
                                     </MudCollapse>
 
                                 </MudTd>
@@ -67,13 +68,13 @@
             </MudTabPanel>
 
             <MudTabPanel Text="Aprovações e Checagens">
-                @if (Context.ExecutionContext.State.ApprovalAndChecks.Count == 0)
+                @if (Context.ExecutionContext.State.Approvals.AsCollection().Count == 0)
                 {
                     <MudText Typo="Typo.body2" Class="mud-text-secondary mt-4">Nenhuma aprovação ou checagem para a execução atual.</MudText>
                 }
                 else
                 {
-                    <MudTable Items="Context.ExecutionContext.State.ApprovalAndChecks" Hover="true" Dense Elevation="0" Class="mt-4">
+                    <MudTable Items="Context.ExecutionContext.State.Approvals.AsCollection()" Hover="true" Dense Elevation="0" Class="mt-4">
                         <HeaderContent>
                             <MudTh Style="width: 185px; ">Nome</MudTh>
                             <MudTh Style="width: 90px">Status</MudTh>
@@ -102,13 +103,13 @@
             </MudTabPanel>
 
             <MudTabPanel Text="Logs">
-                @if (Context.ExecutionContext.State.Logs.Count == 0)
+                @if (Context.ExecutionContext.State.Logs.AsCollection().Count == 0)
                 {
                     <MudText Typo="Typo.body2" Class="mud-text-secondary mt-4">Nenhuma log para a execução atual.</MudText>
                 }
                 else
                 {
-                    <MudTable Items="Context.ExecutionContext.State.Logs" Hover="true" Dense Elevation="0" Class="mt-4">
+                    <MudTable Items="Context.ExecutionContext.State.Logs.AsCollection()" Hover="true" Dense Elevation="0" Class="mt-4">
                         <HeaderContent>
                             <MudTh Style="width: 185px; ">Timestamp</MudTh>
                             <MudTh Style="width: 100px;">Severidade</MudTh>
@@ -148,13 +149,13 @@
         }
     }
 
-    private async Task HandleApprove(ApprovalAndCheckState state)
+    private async Task HandleApprove(ApprovalStateData state)
     {
         state.Status = ApprovalAndCheckStatus.Approved;
         await OnResume.InvokeAsync();
     }
 
-    private async Task HandleReject(ApprovalAndCheckState state)
+    private async Task HandleReject(ApprovalStateData state)
     {
         state.Status = ApprovalAndCheckStatus.Rejected;
         await OnResume.InvokeAsync();
@@ -175,7 +176,7 @@
         return JsonSerializer.Serialize(value, _jsonOptions);
     }
 
-    private string GetApprovalAndCheckName(ApprovalAndCheckState state)
+    private string GetApprovalAndCheckName(ApprovalStateData state)
     {
         var activity = Context.ExecutionContext?.Flow.Activities.FirstOrDefault(x => x.Id == state.ParentActivityId);
 

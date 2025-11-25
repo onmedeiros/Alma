@@ -1,4 +1,5 @@
-﻿using Alma.Workflows.Core.InstanceExecutions.Enums;
+﻿using Alma.Workflows.Core.ApprovalsAndChecks.Models;
+using Alma.Workflows.Core.InstanceExecutions.Enums;
 
 namespace Alma.Workflows.Options
 {
@@ -10,6 +11,6 @@ namespace Alma.Workflows.Options
         public bool MultiTask { get; set; }
         public int MaxDegreeOfParallelism { get; set; } = 1;
         public int Delay { get; set; }
-        public Dictionary<string, object?> Parameters { get; set; } = [];
+        public Dictionary<string, ValueObject> Parameters { get; set; } = [];
     }
 }

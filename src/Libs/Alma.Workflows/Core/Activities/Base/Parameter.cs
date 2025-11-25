@@ -45,7 +45,7 @@ namespace Alma.Workflows.Core.Activities.Base
                 });
 
                 var template = Template.Parse(processedValueStringTemplate);
-                var templateVariables = context.State.GetTemplateVariables();
+                var templateVariables = context.State.AsTemplateData();
                 var hash = Hash.FromDictionary(templateVariables);
 
                 valueString = template.Render(hash, CultureInfo.InvariantCulture);

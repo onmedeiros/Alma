@@ -16,7 +16,7 @@ namespace Alma.Workflows.Runners.Coordination
         /// <param name="pendingExecutions">Execuções pendentes a serem coordenadas</param>
         /// <returns>True se ainda há execuções pendentes, false se concluído</returns>
         Task<bool> ExecuteNextBatchAsync(
-            FlowExecutionContext context,
+            WorkflowExecutionContext context,
             ICollection<FlowExecution> pendingExecutions);
 
         /// <summary>

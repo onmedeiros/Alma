@@ -2,7 +2,7 @@
 
 namespace Alma.Workflows.States
 {
-    public class ApprovalAndCheckState
+    public class ApprovalStateData
     {
         public required string Id { get; set; }
         public required string FullName { get; set; }

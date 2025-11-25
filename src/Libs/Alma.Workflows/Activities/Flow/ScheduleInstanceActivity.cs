@@ -44,7 +44,7 @@ namespace Alma.Workflows.Activities.Flow
 
             if (string.IsNullOrWhiteSpace(instanceId))
             {
-                context.State.Log("Instância não informada.", Enums.LogSeverity.Error);
+                context.State.Logs.Add("Instância não informada.", Enums.LogSeverity.Error);
                 Done.Execute();
                 return;
             }

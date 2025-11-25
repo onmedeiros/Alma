@@ -15,7 +15,7 @@ namespace Alma.Workflows.Runners.Queue
         /// </summary>
         /// <param name="context">The flow execution context.</param>
         /// <returns>A task representing the asynchronous operation.</returns>
-        Task UpdateExecutionStatusAsync(FlowExecutionContext context);
+        Task UpdateExecutionStatusAsync(WorkflowExecutionContext context);
 
         /// <summary>
         /// Updates the execution status of a specific queue item.
@@ -23,7 +23,7 @@ namespace Alma.Workflows.Runners.Queue
         /// <param name="context">The flow execution context.</param>
         /// <param name="queueItem">The queue item to update.</param>
         /// <returns>A task representing the asynchronous operation.</returns>
-        Task UpdateExecutionStatusAsync(FlowExecutionContext context, QueueItem queueItem);
+        Task UpdateExecutionStatusAsync(WorkflowExecutionContext context, QueueItem queueItem);
 
         /// <summary>
         /// Updates the execution status based on a validation result.
@@ -31,7 +31,7 @@ namespace Alma.Workflows.Runners.Queue
         /// <param name="context">The flow execution context.</param>
         /// <param name="item">The queue item to update.</param>
         /// <param name="validationResult">The validation result.</param>
-        void UpdateExecutionStatus(FlowExecutionContext context, QueueItem item, ActivityValidationResult validationResult);
+        void UpdateExecutionStatus(WorkflowExecutionContext context, QueueItem item, ActivityValidationResult validationResult);
 
         /// <summary>
         /// Resolves if an activity is ready to execute.
@@ -39,7 +39,7 @@ namespace Alma.Workflows.Runners.Queue
         /// <param name="context">The flow execution context.</param>
         /// <param name="item">The queue item to check.</param>
         /// <returns>A task representing the asynchronous operation.</returns>
-        Task ResolveReadyStatusAsync(FlowExecutionContext context, QueueItem item);
+        Task ResolveReadyStatusAsync(WorkflowExecutionContext context, QueueItem item);
 
         /// <summary>
         /// Resolves approval and check status for an activity.
@@ -47,6 +47,6 @@ namespace Alma.Workflows.Runners.Queue
         /// <param name="context">The flow execution context.</param>
         /// <param name="item">The queue item to check.</param>
         /// <returns>A task representing the asynchronous operation.</returns>
-        Task ResolveApprovalAndChecksAsync(FlowExecutionContext context, QueueItem item);
+        Task ResolveApprovalAndChecksAsync(WorkflowExecutionContext context, QueueItem item);
     }
 }

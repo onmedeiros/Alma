@@ -41,7 +41,7 @@ namespace Alma.Workflows.Core.Activities.Steps
                     var activityId = group.Key;
 
                     var isAnyPortExecuted = group.Any(connectedPort =>
-                        context.State.ExecutedConnections.Any(x =>
+                        context.State.Connections.AsCollection().Any(x =>
                             x.SourceId == activityId && x.SourcePortName == connectedPort.Descriptor.Name));
 
                     if (!isAnyPortExecuted)
