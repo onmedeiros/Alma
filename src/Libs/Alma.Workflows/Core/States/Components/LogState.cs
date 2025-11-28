@@ -35,16 +35,7 @@ namespace Alma.Workflows.Core.States.Components
         private List<LogModel> GetState()
         {
             EnsureInitialized();
-
-            if (StateData!.TryGetValue("Logs", out var stateObj) && stateObj is List<LogModel> state)
-            {
-                return state;
-            }
-
-            var newState = new List<LogModel>();
-            StateData["Logs"] = newState;
-
-            return newState;
+            return StateData!.Logs;
         }
     }
 }

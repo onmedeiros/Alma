@@ -39,19 +39,10 @@ namespace Alma.Workflows.Core.States.Components
             steps.Add(stepData);
         }
 
-        private Dictionary<string, ICollection<ActivityStepData>> GetState()
+        private Dictionary<string, List<ActivityStepData>> GetState()
         {
             EnsureInitialized();
-
-            if (StateData!.TryGetValue(STATE_KEY, out var stateObj) && stateObj is Dictionary<string, ICollection<ActivityStepData>> state)
-            {
-                return state;
-            }
-
-            var newState = new Dictionary<string, ICollection<ActivityStepData>>();
-
-            StateData[STATE_KEY] = newState;
-            return newState;
+            return StateData!.Steps;
         }
     }
 }

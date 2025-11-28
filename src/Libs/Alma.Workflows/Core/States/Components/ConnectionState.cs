@@ -5,8 +5,6 @@ namespace Alma.Workflows.Core.States.Components
 {
     public class ConnectionState : StateComponent, IConnectionState
     {
-        private const string STATE_KEY = "Connections";
-
         public ICollection<ExecutedConnection> AsCollection()
         {
             return GetState();
@@ -18,20 +16,10 @@ namespace Alma.Workflows.Core.States.Components
             state.Add(executedConnection);
         }
 
-        private ICollection<ExecutedConnection> GetState()
+        private List<ExecutedConnection> GetState()
         {
             EnsureInitialized();
-
-            if (StateData!.TryGetValue(STATE_KEY, out var stateObj) && stateObj is ICollection<ExecutedConnection> state)
-            {
-                return state;
-            }
-
-            var newState = new List<ExecutedConnection>();
-
-            StateData[STATE_KEY] = newState;
-
-            return newState;
+            return StateData!.Connections;
         }
     }
 }

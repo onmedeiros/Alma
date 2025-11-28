@@ -59,7 +59,7 @@ namespace Alma.Workflows.States
 
         public void Initialize(StateData? data)
         {
-            data ??= [];
+            data ??= new();
 
             StateData = data;
 

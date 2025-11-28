@@ -3,6 +3,7 @@
 @using Alma.Workflows
 @using Alma.Workflows.Core.Abstractions
 @using Alma.Workflows.Core.InstanceExecutions.Entities
+@using Alma.Workflows.Core.InstanceExecutions.Enums
 @using Alma.Workflows.Core.InstanceExecutions.Services
 @using Alma.Workflows.Core.Instances.Services
 @using Alma.Workflows.Definitions
@@ -197,8 +198,19 @@
     private async Task ExecuteCurrent()
     {
         await _runner.ExecuteNextAsync();
+
+        Execution.State = _runner.Context.State.StateData;
+        Execution.Status = _runner.Context.State.ExecutionStatus switch
+        {
+            ExecutionStatus.Executing => InstanceExecutionStatus.Running,
+            ExecutionStatus.Waiting => InstanceExecutionStatus.Waiting,
+            ExecutionStatus.Completed => InstanceExecutionStatus.Completed,
+            ExecutionStatus.Failed => InstanceExecutionStatus.Failed,
+            _ => InstanceExecutionStatus.Pending,
+        };
         await _executionManager.Update(Execution);
         await SetCurrentQueryItem();
+
         StateHasChanged();
     }
 

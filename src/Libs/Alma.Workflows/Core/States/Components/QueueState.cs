@@ -29,17 +29,7 @@ namespace Alma.Workflows.Core.States.Components
         private List<QueueItem> GetState()
         {
             EnsureInitialized();
-
-            if (StateData!.TryGetValue(STATE_KEY, out var stateObj) && stateObj is List<QueueItem> state)
-            {
-                return state;
-            }
-
-            var newState = new List<QueueItem>();
-
-            StateData[STATE_KEY] = newState;
-
-            return newState;
+            return StateData!.Queue;
         }
     }
 }

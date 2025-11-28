@@ -25,17 +25,7 @@ namespace Alma.Workflows.Core.States.Components
         private List<ApprovalStateData> GetState()
         {
             EnsureInitialized();
-
-            if (StateData!.TryGetValue("Approvals", out var stateObj) && stateObj is List<ApprovalStateData> state)
-            {
-                return state;
-            }
-
-            var newState = new List<ApprovalStateData>();
-
-            StateData["Approvals"] = newState;
-
-            return newState;
+            return StateData!.Approvals;
         }
     }
 }

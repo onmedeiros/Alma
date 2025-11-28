@@ -53,13 +53,8 @@ namespace Alma.Workflows.Core.InstanceExecutions.Services
                 Status = InstanceExecutionStatus.Pending
             };
 
-            if (options.Parameters.Count > 0)
-            {
-                execution.State = new StateData
-                {
-                    {"Parameters", options.Parameters}
-                };
-            }
+            execution.State ??= new();
+            execution.State.Parameters = options.Parameters;
 
             return _instanceExecutionStore.InsertAsync(execution);
         }

@@ -9,7 +9,7 @@
 @inject IDialogService DialogService
 @inject ISnackbar Snackbar
 
-<Page Title="Detalhes da execu��o">
+<Page Title="Detalhes da execução">
     <PageContent>
         @if (_isLoading)
         {
@@ -18,14 +18,14 @@
         else if (_execution is not null)
         {
             <MudTabs Position="Position.Left" ApplyEffectsToContainer="true" PanelClass="pa-4">
-                <MudTabPanel Class="flex-1" Text="Painel de execu��o" Icon="@Icons.Material.Outlined.PlayArrow">
+                <MudTabPanel Class="flex-1" Text="Painel de execução" Icon="@Icons.Material.Outlined.PlayArrow">
                     <ExecutionPanel Execution="_execution"/>
                 </MudTabPanel>
             </MudTabs>
         }
         else
         {
-            <MudAlert Severity="Severity.Error">N�o foi poss�vel carregar a execu��o.</MudAlert>
+            <MudAlert Severity="Severity.Error">Não foi possível carregar a execução.</MudAlert>
         }
     </PageContent>
 </Page>

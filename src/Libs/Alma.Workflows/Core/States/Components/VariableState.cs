@@ -67,17 +67,7 @@ namespace Alma.Workflows.Core.States.Components
         private Dictionary<string, ValueObject> GetState()
         {
             EnsureInitialized();
-
-            if (StateData!.TryGetValue("Variables", out var stateObj) && stateObj is Dictionary<string, ValueObject> state)
-            {
-                return state;
-            }
-
-            var newState = new Dictionary<string, ValueObject>();
-
-            StateData["Variables"] = newState;
-
-            return newState;
+            return StateData!.Variables;
         }
     }
 }

@@ -1,7 +1,9 @@
 ﻿using Alma.Workflows.Core.Contexts;
+using Alma.Workflows.Core.InstanceExecutions.Entities;
 using Alma.Workflows.Core.InstanceExecutions.Enums;
 using Alma.Workflows.Core.Instances.Entities;
 using Alma.Workflows.Core.Instances.Services;
+using Alma.Workflows.Enums;
 using Alma.Workflows.Options;
 using Alma.Workflows.Parsers;
 using Alma.Workflows.Runners;
@@ -116,9 +118,24 @@ namespace Alma.Workflows.Core.InstanceExecutions.Services
             }
 
             // Ao terminar, atualiza a entidade da execução da instância
+            instanceExecution.State = runner.Context.State.StateData;
+            instanceExecution.Status = GetInstanceExecutionStatus(runner.Context);
+
             await _instanceExecutionManager.Update(instanceExecution);
 
             return runner.Context;
+        }
+
+        private InstanceExecutionStatus GetInstanceExecutionStatus(WorkflowExecutionContext context)
+        {
+            return context.State.ExecutionStatus switch
+            {
+                ExecutionStatus.Executing => InstanceExecutionStatus.Running,
+                ExecutionStatus.Waiting => InstanceExecutionStatus.Waiting,
+                ExecutionStatus.Completed => InstanceExecutionStatus.Completed,
+                ExecutionStatus.Failed => InstanceExecutionStatus.Failed,
+                _ => InstanceExecutionStatus.Pending,
+            };
         }
     }
 }

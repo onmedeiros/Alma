@@ -41,19 +41,7 @@ namespace Alma.Workflows.Core.States.Components
         private List<MemoryData> GetState()
         {
             EnsureInitialized();
-
-            const string STATE_KEY = "Memory";
-
-            if (StateData!.TryGetValue(STATE_KEY, out var stateObj) && stateObj is List<MemoryData> state)
-            {
-                return state;
-            }
-
-            var newState = new List<MemoryData>();
-
-            StateData[STATE_KEY] = newState;
-
-            return newState;
+            return StateData!.Memory;
         }
 
         private MemoryData EnsureActivityMemoryData(string activityId)
