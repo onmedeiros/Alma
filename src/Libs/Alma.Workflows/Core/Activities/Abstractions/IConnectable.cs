@@ -1,7 +1,7 @@
 ﻿using Alma.Workflows.Core.Activities.Base;
 using System.Reflection;
 
-namespace Alma.Workflows.Core.Abstractions
+namespace Alma.Workflows.Core.Activities.Abstractions
 {
     public interface IConnectable
     {

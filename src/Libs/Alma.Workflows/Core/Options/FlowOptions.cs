@@ -1,4 +1,4 @@
-﻿using Alma.Workflows.Core.Abstractions;
+﻿using Alma.Workflows.Core.Activities.Abstractions;
 
 namespace Alma.Workflows.Options
 {

@@ -1,5 +1,5 @@
 ﻿using Alma.Core.Attributes;
-using Alma.Workflows.Core.Abstractions;
+using Alma.Workflows.Core.Activities.Abstractions;
 using Alma.Workflows.Core.Activities.Base;
 using Alma.Workflows.Core.ApprovalsAndChecks.Models;
 

@@ -1,5 +1,5 @@
 using Alma.Workflows.Activities.Flow;
-using Alma.Workflows.Core.Abstractions;
+using Alma.Workflows.Core.Activities.Abstractions;
 using Alma.Workflows.Core.Activities.Base;
 using Alma.Workflows.Core.Activities.Enums;
 using Alma.Workflows.Core.Activities.Models;

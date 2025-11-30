@@ -1,4 +1,4 @@
-﻿using Alma.Workflows.Core.Abstractions;
+﻿using Alma.Workflows.Core.Activities.Abstractions;
 using Alma.Workflows.Core.Activities.Enums;
 using Alma.Workflows.Core.Activities.Models;
 using Alma.Workflows.Core.ApprovalsAndChecks.Enums;

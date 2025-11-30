@@ -1,4 +1,4 @@
-using Alma.Workflows.Core.Abstractions;
+using Alma.Workflows.Core.Activities.Abstractions;
 using Microsoft.Extensions.Logging;
 
 namespace Alma.Workflows.Runners.Strategies

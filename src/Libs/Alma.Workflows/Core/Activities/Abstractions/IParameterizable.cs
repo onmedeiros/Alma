@@ -2,7 +2,7 @@
 using Alma.Workflows.Core.Description.Descriptors;
 using System.Reflection;
 
-namespace Alma.Workflows.Core.Abstractions
+namespace Alma.Workflows.Core.Activities.Abstractions
 {
     public interface IParameterizable
     {

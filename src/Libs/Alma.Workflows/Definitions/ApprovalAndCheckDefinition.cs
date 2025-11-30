@@ -1,4 +1,5 @@
 ﻿using Alma.Workflows.Core.Abstractions;
+using Alma.Workflows.Core.Activities.Abstractions;
 using Alma.Workflows.Core.Description.Descriptors;
 
 namespace Alma.Workflows.Definitions

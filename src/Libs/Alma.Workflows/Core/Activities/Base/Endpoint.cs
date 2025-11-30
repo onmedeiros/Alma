@@ -1,5 +1,5 @@
 ﻿using Alma.Core.Attributes;
-using Alma.Workflows.Core.Abstractions;
+using Alma.Workflows.Core.Activities.Abstractions;
 
 namespace Alma.Workflows.Core.Activities.Base
 {

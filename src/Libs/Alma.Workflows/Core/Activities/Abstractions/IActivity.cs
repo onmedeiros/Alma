@@ -1,11 +1,10 @@
-﻿using Alma.Workflows.Core.Activities.Abstractions;
-using Alma.Workflows.Core.ApprovalsAndChecks.Enums;
+﻿using Alma.Workflows.Core.ApprovalsAndChecks.Enums;
 using Alma.Workflows.Core.ApprovalsAndChecks.Interfaces;
 using Alma.Workflows.Core.ApprovalsAndChecks.Models;
 using Alma.Workflows.Core.Contexts;
 using Alma.Workflows.Core.Description.Descriptors;
 
-namespace Alma.Workflows.Core.Abstractions
+namespace Alma.Workflows.Core.Activities.Abstractions
 {
     public interface IActivity : IParameterizable, IConnectable
     {

@@ -1,4 +1,4 @@
-﻿namespace Alma.Workflows.Core.Abstractions
+﻿namespace Alma.Workflows.Core.Activities.Abstractions
 {
     public interface IRenamable
     {

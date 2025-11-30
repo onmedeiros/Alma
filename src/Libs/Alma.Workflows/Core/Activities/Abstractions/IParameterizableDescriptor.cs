@@ -1,6 +1,6 @@
 ﻿using Alma.Workflows.Core.Description.Descriptors;
 
-namespace Alma.Workflows.Core.Abstractions
+namespace Alma.Workflows.Core.Activities.Abstractions
 {
     public interface IParameterizableDescriptor
     {

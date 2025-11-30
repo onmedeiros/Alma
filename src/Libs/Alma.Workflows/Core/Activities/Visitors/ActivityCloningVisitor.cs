@@ -1,4 +1,4 @@
-using Alma.Workflows.Core.Abstractions;
+using Alma.Workflows.Core.Activities.Abstractions;
 using System.Text.Json;
 
 namespace Alma.Workflows.Core.Activities.Visitors

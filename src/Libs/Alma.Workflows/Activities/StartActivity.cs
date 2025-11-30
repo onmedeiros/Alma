@@ -1,8 +1,8 @@
 ﻿using Alma.Workflows.Core.Activities.Attributes;
-using Alma.Workflows.Core.Abstractions;
 using Alma.Workflows.Core.Activities.Base;
 using Alma.Workflows.Core.Contexts;
 using Alma.Workflows.Customizations;
+using Alma.Workflows.Core.Activities.Abstractions;
 
 namespace Alma.Workflows.Activities
 {

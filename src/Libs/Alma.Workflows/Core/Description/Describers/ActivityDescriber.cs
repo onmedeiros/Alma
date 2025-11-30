@@ -1,10 +1,10 @@
-﻿using Alma.Workflows.Core.Abstractions;
-using Alma.Workflows.Core.Activities.Attributes;
+﻿using Alma.Workflows.Core.Activities.Attributes;
 using Alma.Workflows.Core.Activities.Base;
 using Alma.Workflows.Core.CustomActivities;
 using Alma.Workflows.Core.CustomActivities.Entities;
 using Alma.Workflows.Core.Description.Descriptors;
 using Alma.Core.Extensions;
+using Alma.Workflows.Core.Activities.Abstractions;
 
 namespace Alma.Workflows.Core.Description.Describers
 {

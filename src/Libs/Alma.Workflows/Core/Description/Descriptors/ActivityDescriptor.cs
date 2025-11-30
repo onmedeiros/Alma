@@ -1,4 +1,4 @@
-﻿using Alma.Workflows.Core.Abstractions;
+﻿using Alma.Workflows.Core.Activities.Abstractions;
 using System.ComponentModel.DataAnnotations.Schema;
 
 namespace Alma.Workflows.Core.Description.Descriptors

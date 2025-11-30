@@ -1,4 +1,4 @@
-﻿using Alma.Workflows.Core.Abstractions;
+﻿using Alma.Workflows.Core.Activities.Abstractions;
 using Alma.Workflows.Registries;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Logging;

@@ -1,3 +1,4 @@
+using Alma.Workflows.Core.Activities.Abstractions;
 using Alma.Workflows.Core.Activities.Base;
 using Alma.Workflows.Core.Activities.Enums;
 using Alma.Workflows.Core.Contexts;
@@ -14,7 +15,7 @@ namespace Alma.Workflows.Activities.Flow
     {
         private readonly ILogger<LoopWaitConnectionsStep> _logger;
         private string _id = string.Empty;
-        private Core.Abstractions.IActivity? _activity;
+        private IActivity? _activity;
 
         public LoopWaitConnectionsStep(ILogger<LoopWaitConnectionsStep> logger)
         {
@@ -23,14 +24,14 @@ namespace Alma.Workflows.Activities.Flow
 
         public string Id => _id;
 
-        public Core.Abstractions.IActivity Activity => _activity ?? throw new InvalidOperationException("Activity not set");
+        public IActivity Activity => _activity ?? throw new InvalidOperationException("Activity not set");
 
         public void SetId(string id)
         {
             _id = id;
         }
 
-        public void SetActivity(Core.Abstractions.IActivity activity)
+        public void SetActivity(IActivity activity)
         {
             _activity = activity;
         }

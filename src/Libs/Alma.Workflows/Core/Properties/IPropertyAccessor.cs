@@ -1,4 +1,4 @@
-using Alma.Workflows.Core.Abstractions;
+using Alma.Workflows.Core.Activities.Abstractions;
 using System.Reflection;
 
 namespace Alma.Workflows.Core.Properties

@@ -1,4 +1,4 @@
-﻿using Alma.Workflows.Core.Abstractions;
+﻿using Alma.Workflows.Core.Activities.Abstractions;
 using Alma.Workflows.Core.Description.Describers;
 using Alma.Workflows.Core.Description.Descriptors;
 using Alma.Workflows.Options;
