@@ -38,7 +38,7 @@ namespace Alma.Workflows.Activities.Flow
 
         public override async ValueTask ExecuteAsync(ActivityExecutionContext context)
         {
-            var instanceExecutionRunner = context.ServiceProvider.GetRequiredService<IInstanceExecutionRunner>();
+            var instanceExecutionRunner = context.ServiceProvider.GetRequiredService<IInstanceRunner>();
 
             var instanceId = Instance?.GetValue(context)?.Value;
 

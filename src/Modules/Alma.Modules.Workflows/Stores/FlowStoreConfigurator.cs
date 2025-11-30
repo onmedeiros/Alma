@@ -61,9 +61,9 @@ namespace Alma.Modules.Workflows.Stores
 
         private void MapFlowInstance()
         {
-            if (!BsonClassMap.IsClassMapRegistered(typeof(FlowInstance)))
+            if (!BsonClassMap.IsClassMapRegistered(typeof(Instance)))
             {
-                BsonClassMap.RegisterClassMap<FlowInstance>(map =>
+                BsonClassMap.RegisterClassMap<Instance>(map =>
                 {
                     map.AutoMap();
                     map.MapIdProperty(x => x.Id);

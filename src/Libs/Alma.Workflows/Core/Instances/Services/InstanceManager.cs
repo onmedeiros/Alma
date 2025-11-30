@@ -8,15 +8,15 @@ namespace Alma.Workflows.Core.Instances.Services
 {
     public interface IInstanceManager
     {
-        ValueTask<FlowInstance> Create(string name, string? id = null, string? discriminator = null);
+        ValueTask<Instance> Create(string name, string? id = null, string? discriminator = null);
 
-        ValueTask<FlowInstance> Update(InstanceEditModel model);
+        ValueTask<Instance> Update(InstanceEditModel model);
 
-        ValueTask<FlowInstance?> FindById(string id, string? discriminator = null);
+        ValueTask<Instance?> FindById(string id, string? discriminator = null);
 
-        ValueTask<FlowInstance?> Delete(string id);
+        ValueTask<Instance?> Delete(string id);
 
-        ValueTask<PagedList<FlowInstance>> List(int page, int pageSize, FlowInstanceFilters? filters = null);
+        ValueTask<PagedList<Instance>> List(int page, int pageSize, FlowInstanceFilters? filters = null);
 
         ValueTask<string> GetName(string id, string? discriminator = null);
 
@@ -34,7 +34,7 @@ namespace Alma.Workflows.Core.Instances.Services
             _flowInstanceStore = flowInstanceStore;
         }
 
-        public ValueTask<FlowInstance> Create(string name, string? id = null, string? discriminator = null)
+        public ValueTask<Instance> Create(string name, string? id = null, string? discriminator = null)
         {
             _logger.LogDebug("Creating flow instance with name {Name}.", name);
 
@@ -42,7 +42,7 @@ namespace Alma.Workflows.Core.Instances.Services
 
             var now = DateTime.Now;
 
-            var instance = new FlowInstance
+            var instance = new Instance
             {
                 Id = id,
                 Discriminator = discriminator,
@@ -55,7 +55,7 @@ namespace Alma.Workflows.Core.Instances.Services
             return _flowInstanceStore.InsertAsync(instance);
         }
 
-        public async ValueTask<FlowInstance> Update(InstanceEditModel model)
+        public async ValueTask<Instance> Update(InstanceEditModel model)
         {
             _logger.LogDebug("Updating flow instance with id {Id}.", model.Id);
 
@@ -78,25 +78,25 @@ namespace Alma.Workflows.Core.Instances.Services
             if (model.ExecutionMode != entity.ExecutionMode)
                 entity.ExecutionMode = model.ExecutionMode;
 
-            if (!string.IsNullOrEmpty(model.FlowDefinitionVersionId) && model.FlowDefinitionVersionId != entity.FlowDefinitionVersionId)
-                entity.FlowDefinitionVersionId = model.FlowDefinitionVersionId;
+            if (!string.IsNullOrEmpty(model.FlowDefinitionVersionId) && model.FlowDefinitionVersionId != entity.WorkflowDefinitionVersionId)
+                entity.WorkflowDefinitionVersionId = model.FlowDefinitionVersionId;
 
             return await _flowInstanceStore.UpdateAsync(entity);
         }
 
-        public ValueTask<FlowInstance?> FindById(string id, string? discriminator = null)
+        public ValueTask<Instance?> FindById(string id, string? discriminator = null)
         {
             _logger.LogDebug("Finding flow instance with id {Id}.", id);
             return _flowInstanceStore.FindByIdAsync(id, discriminator);
         }
 
-        public ValueTask<FlowInstance?> Delete(string id)
+        public ValueTask<Instance?> Delete(string id)
         {
             _logger.LogDebug("Deleting flow instance with id {Id}.", id);
             return _flowInstanceStore.DeleteAsync(id);
         }
 
-        public ValueTask<PagedList<FlowInstance>> List(int page, int pageSize, FlowInstanceFilters? filters = null)
+        public ValueTask<PagedList<Instance>> List(int page, int pageSize, FlowInstanceFilters? filters = null)
         {
             _logger.LogDebug("Listing flow instances.");
             return _flowInstanceStore.ListAsync(page, pageSize, filters);

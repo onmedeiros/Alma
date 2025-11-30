@@ -22,7 +22,7 @@
 
     <ChildContent>
         <MudDataGrid @ref="_dataGrid"
-        T="FlowInstance"
+        T="Instance"
         ServerData="LoadData"
         CurrentPage="(PageIndex ?? 1) - 1"
         RowsPerPage="PageSize ?? 10"
@@ -53,7 +53,7 @@
             <NoRecordsContent>Nenhuma instância criada.</NoRecordsContent>
 
             <PagerContent>
-                <MudDataGridPager T="FlowInstance" />
+                <MudDataGridPager T="Instance" />
             </PagerContent>
         </MudDataGrid>
     </ChildContent>
@@ -79,11 +79,11 @@
 
     #region private fields
 
-    private MudDataGrid<FlowInstance> _dataGrid = new MudDataGrid<FlowInstance>();
+    private MudDataGrid<Instance> _dataGrid = new MudDataGrid<Instance>();
 
     #endregion
 
-    private async Task<GridData<FlowInstance>> LoadData(GridState<FlowInstance> state)
+    private async Task<GridData<Instance>> LoadData(GridState<Instance> state)
     {
         UpdateQueryParameters();
 
@@ -98,7 +98,7 @@
 
         var result = await service.List(PageIndex ?? 1, PageSize ?? 10, filters);
 
-        return new GridData<FlowInstance>
+        return new GridData<Instance>
             {
                 Items = result.Items,
                 TotalItems = result.TotalCount
@@ -136,7 +136,7 @@
         if (result == null || result.Canceled)
             return;
 
-        if (result.Data is not null && result.Data is FlowInstance instance)
+        if (result.Data is not null && result.Data is Instance instance)
             NavigationManager.NavigateTo("/Workflows/instances/edit/" + instance.Id);
 
     }

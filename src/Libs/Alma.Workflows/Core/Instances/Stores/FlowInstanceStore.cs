@@ -5,15 +5,15 @@ namespace Alma.Workflows.Core.Instances.Stores
 {
     public interface IFlowInstanceStore
     {
-        ValueTask<FlowInstance> InsertAsync(FlowInstance instance, CancellationToken cancellationToken = default);
+        ValueTask<Instance> InsertAsync(Instance instance, CancellationToken cancellationToken = default);
 
-        ValueTask<FlowInstance> UpdateAsync(FlowInstance instance, CancellationToken cancellationToken = default);
+        ValueTask<Instance> UpdateAsync(Instance instance, CancellationToken cancellationToken = default);
 
-        ValueTask<FlowInstance?> DeleteAsync(string id, string? discriminator = null, CancellationToken cancellationToken = default);
+        ValueTask<Instance?> DeleteAsync(string id, string? discriminator = null, CancellationToken cancellationToken = default);
 
-        ValueTask<FlowInstance?> FindByIdAsync(string id, string? discriminator = null, CancellationToken cancellationToken = default);
+        ValueTask<Instance?> FindByIdAsync(string id, string? discriminator = null, CancellationToken cancellationToken = default);
 
-        ValueTask<PagedList<FlowInstance>> ListAsync(int page, int pageSize, FlowInstanceFilters? filters = null, CancellationToken cancellationToken = default);
+        ValueTask<PagedList<Instance>> ListAsync(int page, int pageSize, FlowInstanceFilters? filters = null, CancellationToken cancellationToken = default);
 
         ValueTask<string> GetName(string id, string? discriminator = null, CancellationToken cancellationToken = default);
 
@@ -22,27 +22,27 @@ namespace Alma.Workflows.Core.Instances.Stores
 
     public class FlowInstanceStore : IFlowInstanceStore
     {
-        public ValueTask<FlowInstance> InsertAsync(FlowInstance instance, CancellationToken cancellationToken = default)
+        public ValueTask<Instance> InsertAsync(Instance instance, CancellationToken cancellationToken = default)
         {
             throw new NotImplementedException();
         }
 
-        public ValueTask<FlowInstance?> DeleteAsync(string id, string? discriminator = null, CancellationToken cancellationToken = default)
+        public ValueTask<Instance?> DeleteAsync(string id, string? discriminator = null, CancellationToken cancellationToken = default)
         {
             throw new NotImplementedException();
         }
 
-        public ValueTask<FlowInstance?> FindByIdAsync(string id, string? discriminator = null, CancellationToken cancellationToken = default)
+        public ValueTask<Instance?> FindByIdAsync(string id, string? discriminator = null, CancellationToken cancellationToken = default)
         {
             throw new NotImplementedException();
         }
 
-        public ValueTask<FlowInstance> UpdateAsync(FlowInstance instance, CancellationToken cancellationToken = default)
+        public ValueTask<Instance> UpdateAsync(Instance instance, CancellationToken cancellationToken = default)
         {
             throw new NotImplementedException();
         }
 
-        public ValueTask<PagedList<FlowInstance>> ListAsync(int page, int pageSize, FlowInstanceFilters? filters = null, CancellationToken cancellationToken = default)
+        public ValueTask<PagedList<Instance>> ListAsync(int page, int pageSize, FlowInstanceFilters? filters = null, CancellationToken cancellationToken = default)
         {
             throw new NotImplementedException();
         }

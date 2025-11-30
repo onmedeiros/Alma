@@ -28,7 +28,7 @@ namespace Alma.Workflows.Runners.Coordination
 
         public async Task<bool> ExecuteNextBatchAsync(
             WorkflowExecutionContext context,
-            ICollection<FlowExecution> pendingExecutions)
+            ICollection<ExecutionBatchItem> pendingExecutions)
         {
             if (!HasPendingExecutions(pendingExecutions))
                 return false;
@@ -74,7 +74,7 @@ namespace Alma.Workflows.Runners.Coordination
             return HasPendingExecutions(pendingExecutions);
         }
 
-        public bool HasPendingExecutions(ICollection<FlowExecution> pendingExecutions)
+        public bool HasPendingExecutions(ICollection<ExecutionBatchItem> pendingExecutions)
         {
             return pendingExecutions.Any(x => x.QueueItem.CanExecute);
         }

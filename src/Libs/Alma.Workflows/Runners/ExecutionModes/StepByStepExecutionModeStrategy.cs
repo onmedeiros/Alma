@@ -19,7 +19,7 @@ namespace Alma.Workflows.Runners.ExecutionModes
 
         public bool ShouldContinueAfterBatch(
             WorkflowExecutionContext context,
-            IEnumerable<FlowExecution> pendingExecutions)
+            IEnumerable<ExecutionBatchItem> pendingExecutions)
         {
             // No modo step-by-step, sempre para após cada lote
             _logger.LogDebug("StepByStep mode: Pausing after batch execution");
@@ -28,13 +28,13 @@ namespace Alma.Workflows.Runners.ExecutionModes
 
         public int GetBatchSize(
             WorkflowExecutionContext context,
-            IEnumerable<FlowExecution> readyExecutions)
+            IEnumerable<ExecutionBatchItem> readyExecutions)
         {
             // Executa apenas uma atividade por vez
             return 1;
         }
 
-        public bool RequiresUserInteraction(FlowExecution execution)
+        public bool RequiresUserInteraction(ExecutionBatchItem execution)
         {
             // No modo step-by-step, todas as atividades "requerem interação"
             // para pausar a execução

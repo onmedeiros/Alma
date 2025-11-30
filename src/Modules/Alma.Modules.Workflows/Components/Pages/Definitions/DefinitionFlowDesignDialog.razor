@@ -38,7 +38,7 @@
     private async Task Save(FlowDefinition definition)
     {
         using var scope = ScopeFactory.CreateScope();
-        var manager = scope.ServiceProvider.GetRequiredService<IFlowManager>();
+        var manager = scope.ServiceProvider.GetRequiredService<IWorkflowManager>();
 
         await manager.UpdateDefinition(definition);
     }

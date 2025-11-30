@@ -13,6 +13,6 @@ namespace Alma.Workflows.Runners.Coordination
         /// </summary>
         /// <param name="execution">Execução da atividade a ser processada</param>
         /// <param name="context">Contexto de execução do flow</param>
-        Task ExecuteAsync(FlowExecution execution, WorkflowExecutionContext context);
+        Task ExecuteAsync(ExecutionBatchItem execution, WorkflowExecutionContext context);
     }
 }

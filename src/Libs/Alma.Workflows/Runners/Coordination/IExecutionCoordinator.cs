@@ -17,13 +17,13 @@ namespace Alma.Workflows.Runners.Coordination
         /// <returns>True se ainda há execuções pendentes, false se concluído</returns>
         Task<bool> ExecuteNextBatchAsync(
             WorkflowExecutionContext context,
-            ICollection<FlowExecution> pendingExecutions);
+            ICollection<ExecutionBatchItem> pendingExecutions);
 
         /// <summary>
         /// Verifica se há execuções pendentes que podem ser executadas.
         /// </summary>
         /// <param name="pendingExecutions">Lista de execuções pendentes</param>
         /// <returns>True se há execuções pendentes</returns>
-        bool HasPendingExecutions(ICollection<FlowExecution> pendingExecutions);
+        bool HasPendingExecutions(ICollection<ExecutionBatchItem> pendingExecutions);
     }
 }

@@ -44,7 +44,7 @@
 		StateHasChanged();
 
 		using var scope = ScopeFactory.CreateScope();
-		var instanceManager = scope.ServiceProvider.GetRequiredService<IFlowManager>();
+		var instanceManager = scope.ServiceProvider.GetRequiredService<IWorkflowManager>();
 
 		var filters = new Filters<FlowDefinition>()
 			.Where(x => x.Discriminator == Organization.Id)

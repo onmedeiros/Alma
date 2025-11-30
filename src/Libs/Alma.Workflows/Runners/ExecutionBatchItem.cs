@@ -3,7 +3,7 @@ using Alma.Workflows.States;
 
 namespace Alma.Workflows.Runners
 {
-    public class FlowExecution
+    public class ExecutionBatchItem
     {
         public QueueItem QueueItem { get; set; }
         public ActivityRunner Runner { get; set; }
@@ -11,7 +11,7 @@ namespace Alma.Workflows.Runners
         public bool RequireInteraction => Runner.RequireInteraction;
         public IActivity Activity => QueueItem.Activity;
 
-        public FlowExecution(QueueItem queueItem, ActivityRunner runner, bool selected = false)
+        public ExecutionBatchItem(QueueItem queueItem, ActivityRunner runner, bool selected = false)
         {
             QueueItem = queueItem;
             Runner = runner;

@@ -7,7 +7,7 @@ using Alma.Core.Data;
 
 namespace Alma.Workflows
 {
-    public interface IFlowManager
+    public interface IWorkflowManager
     {
         ValueTask<FlowDefinition> CreateDefinition(string name, string? identifier = null, string? discriminator = null);
 
@@ -32,7 +32,7 @@ namespace Alma.Workflows
         ValueTask<string> GetDefinitionVersionName(string id, string? discriminator = null);
     }
 
-    public class FlowManager : IFlowManager
+    public class FlowManager : IWorkflowManager
     {
         private readonly ILogger<FlowManager> _logger;
         private readonly IFlowDefinitionStore _flowDefinitionStore;

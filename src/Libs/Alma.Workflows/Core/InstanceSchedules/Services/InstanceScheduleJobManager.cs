@@ -10,7 +10,7 @@ namespace Alma.Workflows.Core.InstanceSchedules.Services
 
         ValueTask RemoveIfExistsRecurring(InstanceSchedule schedule);
 
-        ValueTask Schedule(FlowInstance instance, TimeSpan delay);
+        ValueTask Schedule(Instance instance, TimeSpan delay);
     }
 
     public class InstanceScheduleJobManager : IInstanceScheduleJobManager
@@ -32,7 +32,7 @@ namespace Alma.Workflows.Core.InstanceSchedules.Services
             throw new NotImplementedException();
         }
 
-        public ValueTask Schedule(FlowInstance instance, TimeSpan delay)
+        public ValueTask Schedule(Instance instance, TimeSpan delay)
         {
             throw new NotImplementedException();
         }

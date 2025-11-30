@@ -13,10 +13,10 @@
     <MudCardContent>
         <MudStack>
             <MudText Typo="Typo.body2"><b>Pendentes</b></MudText>
-            @if (Runner.PendingExecutions.Any())
+            @if (Runner.CurrentExecutionBatch.Any())
             {
 
-                foreach (var execution in Runner.PendingExecutions)
+                foreach (var execution in Runner.CurrentExecutionBatch)
                 {
                     var isActive = execution.QueueItem.Sequential == CurrentQueueItemSequential;
 

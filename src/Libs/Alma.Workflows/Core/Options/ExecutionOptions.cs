@@ -11,6 +11,7 @@ namespace Alma.Workflows.Options
         public bool MultiTask { get; set; }
         public int MaxDegreeOfParallelism { get; set; } = 1;
         public int Delay { get; set; }
+        public bool Persist { get; set; }
         public Dictionary<string, ValueObject> Parameters { get; set; } = [];
     }
 }

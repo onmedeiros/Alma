@@ -19,7 +19,7 @@ namespace Alma.Workflows.Runners.ExecutionModes
 
         public bool ShouldContinueAfterBatch(
             WorkflowExecutionContext context,
-            IEnumerable<FlowExecution> pendingExecutions)
+            IEnumerable<ExecutionBatchItem> pendingExecutions)
         {
             // Continua executando enquanto houver atividades prontas
             var hasReady = pendingExecutions.Any(x => x.QueueItem.CanExecute);
@@ -34,13 +34,13 @@ namespace Alma.Workflows.Runners.ExecutionModes
 
         public int GetBatchSize(
             WorkflowExecutionContext context,
-            IEnumerable<FlowExecution> readyExecutions)
+            IEnumerable<ExecutionBatchItem> readyExecutions)
         {
             // Respeita o grau máximo de paralelismo configurado
             return context.Options.MaxDegreeOfParallelism;
         }
 
-        public bool RequiresUserInteraction(FlowExecution execution)
+        public bool RequiresUserInteraction(ExecutionBatchItem execution)
         {
             // Apenas atividades que realmente requerem interação
             return execution.Activity.Descriptor.RequireInteraction;

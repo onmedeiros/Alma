@@ -84,7 +84,7 @@ namespace Alma.Workflows
             services.AddSingleton<IActivityRegistry, ActivityRegistry>(); // TODO: Avaliar possibilidade de deixar como Singleton.
             services.AddSingleton<IApprovalAndCheckRegistry, ApprovalAndCheckRegistry>();
             services.AddScoped<ICustomActivityRegistry, CustomActivityRegistry>();
-            services.AddScoped<IFlowManager, FlowManager>();
+            services.AddScoped<IWorkflowManager, FlowManager>();
             services.AddScoped<IInstanceManager, InstanceManager>();
             services.AddScoped<IFlowRunManager, FlowRunManager>();
             services.AddScoped<IFlowDefinitionParser, FlowDefinitionParser>();
@@ -93,7 +93,7 @@ namespace Alma.Workflows
             services.AddScoped<IInstanceScheduleRunner, InstanceScheduleRunner>();
             services.AddScoped<IInstanceEndpointManager, InstanceEndpointManager>();
             services.AddScoped<IInstanceExecutionManager, InstanceExecutionManager>();
-            services.AddScoped<IInstanceExecutionRunner, InstanceExecutionRunner>();
+            services.AddScoped<IInstanceRunner, InstanceRunner>();
             services.AddScoped<ICategoryManager, CategoryManager>();
             services.AddScoped<ICustomActivityManager, CustomActivityManager>();
 

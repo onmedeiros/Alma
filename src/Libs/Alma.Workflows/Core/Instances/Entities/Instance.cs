@@ -1,10 +1,11 @@
 ﻿using Alma.Workflows.Core.InstanceExecutions.Enums;
+using Org.BouncyCastle.Asn1;
 using System.ComponentModel.DataAnnotations.Schema;
 
 namespace Alma.Workflows.Core.Instances.Entities
 {
     [Table("Workflows.Instance")]
-    public class FlowInstance
+    public class Instance
     {
         /// <summary>
         /// Identifier.
@@ -47,8 +48,14 @@ namespace Alma.Workflows.Core.Instances.Entities
         public InstanceExecutionMode ExecutionMode { get; set; }
 
         /// <summary>
-        /// ID of flow definition version that will be run on this instance.
+        /// ID of workflow definition that this instance is based on.
         /// </summary>
-        public string? FlowDefinitionVersionId { get; set; }
+        public string? WorkflowDefinitionId { get; set; }
+
+        /// <summary>
+        /// ID of workflow definition version that will be run on this instance.
+        /// If null, run the latest workflow definition.
+        /// </summary>
+        public string? WorkflowDefinitionVersionId { get; set; }
     }
 }

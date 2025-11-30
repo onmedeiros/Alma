@@ -121,7 +121,7 @@
     bool _isLoadingDefinitionVersion = false;
 
     FluentValidationValidator? _validator;
-    FlowInstance _instance = null!;
+    Instance _instance = null!;
     InstanceEditModel? _model = null!;
     FlowDefinition? _definition = null!;
     FlowDefinitionVersion? _definitionVersion = null!;
@@ -168,7 +168,7 @@
                 Id = instance.Id,
                 Name = instance.Name,
                 IsActive = instance.IsActive,
-                FlowDefinitionVersionId = instance.FlowDefinitionVersionId,
+                FlowDefinitionVersionId = instance.WorkflowDefinitionVersionId,
                 ExecutionMode = instance.ExecutionMode
             };
 
@@ -229,7 +229,7 @@
         StateHasChanged();
 
         var scope = ScopeFactory.CreateScope();
-        var service = scope.ServiceProvider.GetRequiredService<IFlowManager>();
+        var service = scope.ServiceProvider.GetRequiredService<IWorkflowManager>();
 
         try
         {

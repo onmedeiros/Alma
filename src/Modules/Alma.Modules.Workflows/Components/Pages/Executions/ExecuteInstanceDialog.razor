@@ -76,9 +76,9 @@
 
     private bool _isLoading = false;
     private string _term = string.Empty;
-    private FlowInstance? _selectedInstance;
+    private Instance? _selectedInstance;
 
-    private ICollection<FlowInstance> _result = [];
+    private ICollection<Instance> _result = [];
 
     protected override async Task OnInitializedAsync()
     {
@@ -128,7 +128,7 @@
         }
     }
 
-    private async Task OnSelect(FlowInstance instance)
+    private async Task OnSelect(Instance instance)
     {
         _selectedInstance = instance;
     }
@@ -141,7 +141,7 @@
         using var scope = ScopeFactory.CreateScope();
         var executionManager = scope.ServiceProvider.GetRequiredService<IInstanceExecutionManager>();
 
-        var execution = await executionManager.Begin(_selectedInstance);
+        var execution = await executionManager.Create(_selectedInstance);
 
         NavigationManager.NavigateTo($"/Workflows/executions/details/{execution.Id}");
     }

@@ -390,7 +390,7 @@ namespace Alma.Workflows.Design
             DesignExecutionStatus = FlowDesignContextExecutionStatus.Executing;
             OnStateHasChanged?.Invoke();
 
-            await Runner.PreparePendingExecutionsAsync();
+            await Runner.PrepareExecutionBatch();
             UpdateLinkColorsExperimental();
 
             await ExecuteNext();
@@ -401,7 +401,7 @@ namespace Alma.Workflows.Design
             if (Runner is null)
                 throw new Exception("Runner not initialized.");
 
-            var hasReadyActivities = Runner.PendingExecutions.Any();
+            var hasReadyActivities = Runner.CurrentExecutionBatch.Any();
 
             if (!hasReadyActivities)
             {

@@ -21,9 +21,9 @@ namespace Alma.Workflows.Apis.AspNetCore.Services
 
         private readonly IInstanceEndpointManager _instanceEndpointManager;
         private readonly IFlowRunManager _flowRunManager;
-        private readonly IInstanceExecutionRunner _instanceExecutionRunner;
+        private readonly IInstanceRunner _instanceExecutionRunner;
 
-        public WorkflowsApiInvoker(ILogger<WorkflowsApiInvoker> logger, IHttpContextAccessor httpContextAccessor, IInstanceEndpointManager instanceEndpointManager, IFlowRunManager flowRunManager, IInstanceExecutionRunner instanceExecutionRunner)
+        public WorkflowsApiInvoker(ILogger<WorkflowsApiInvoker> logger, IHttpContextAccessor httpContextAccessor, IInstanceEndpointManager instanceEndpointManager, IFlowRunManager flowRunManager, IInstanceRunner instanceExecutionRunner)
         {
             _logger = logger;
             _httpContextAccessor = httpContextAccessor;

@@ -37,11 +37,11 @@ namespace Alma.Workflows.Hangfire
             return ValueTask.CompletedTask;
         }
 
-        public ValueTask Schedule(FlowInstance instance, TimeSpan delay = default)
+        public ValueTask Schedule(Instance instance, TimeSpan delay = default)
         {
             _logger.LogDebug("Scheduling instance {InstanceId} to run in {Delay}.", instance.Id, delay);
 
-            _backgroundJobClient.Schedule<IInstanceExecutionRunner>(x => x.ExecuteAsync(instance.Id, instance.Discriminator, null), delay);
+            _backgroundJobClient.Schedule<IInstanceRunner>(x => x.ExecuteAsync(instance.Id, instance.Discriminator, null), delay);
             return ValueTask.CompletedTask;
         }
     }

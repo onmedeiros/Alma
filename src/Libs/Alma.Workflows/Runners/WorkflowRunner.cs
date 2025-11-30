@@ -28,7 +28,7 @@ namespace Alma.Workflows.Runners
         private readonly IConnectionManager _connectionManager;
 
         public WorkflowExecutionContext Context { get; private set; }
-        public ICollection<FlowExecution> PendingExecutions { get; set; } = [];
+        public ICollection<ExecutionBatchItem> CurrentExecutionBatch { get; set; } = [];
 
         public WorkflowRunner(
             IExecutionScope executionScope,
@@ -70,14 +70,14 @@ namespace Alma.Workflows.Runners
             while (continueExecuting)
             {
                 // Prepara as execuções pendentes
-                if (!await PreparePendingExecutionsAsync())
+                if (!await PrepareExecutionBatch())
                     return false;
 
-                if (!PendingExecutions.Any(x => x.QueueItem.CanExecute))
+                if (!CurrentExecutionBatch.Any(x => x.QueueItem.CanExecute))
                     return false;
 
                 // Executa o próximo lote de atividades
-                await _executionCoordinator.ExecuteNextBatchAsync(Context, PendingExecutions);
+                await _executionCoordinator.ExecuteNextBatchAsync(Context, CurrentExecutionBatch);
 
                 // Verifica se deve continuar executando no mesmo ExecuteNextAsync
                 // Modo Automático: continua até o fim ou até uma pausa
@@ -85,46 +85,46 @@ namespace Alma.Workflows.Runners
                 var strategy = _executionScope.Current.ServiceProvider.GetRequiredService<IExecutionModeStrategyFactory>()
                     .GetStrategy(Context.Options.ExecutionMode);
 
-                continueExecuting = strategy.ShouldContinueAfterBatch(Context, PendingExecutions);
+                continueExecuting = strategy.ShouldContinueAfterBatch(Context, CurrentExecutionBatch);
             }
 
-            // Atualiza as execuções pendentes uma última vez
-            await PreparePendingExecutionsAsync();
+            await PrepareExecutionBatch();
 
-            return PendingExecutions.Any(x => x.QueueItem.CanExecute);
+            return CurrentExecutionBatch.Any(x => x.QueueItem.CanExecute);
         }
 
-        public async Task<bool> PreparePendingExecutionsAsync(string? selectedQueueItemId = null)
+        public async Task<bool> PrepareExecutionBatch(string? selectedQueueItemId = null)
         {
-            var pendingExecutions = new List<FlowExecution>();
+            var executionBatch = new List<ExecutionBatchItem>();
 
             foreach (var queueItem in _queueManager.PeekNext(Context, int.MaxValue))
             {
-                var execution = PendingExecutions.FirstOrDefault(x => x.QueueItem.Id == queueItem.Id);
+                var execution = CurrentExecutionBatch.FirstOrDefault(x => x.QueueItem.Id == queueItem.Id);
 
                 if (execution is null)
                 {
                     var activityRunner = _activityRunnerFactory.Create(queueItem.Activity, Context.State.StateData, Context.Options);
-                    execution = new FlowExecution(queueItem, activityRunner);
+                    execution = new ExecutionBatchItem(queueItem, activityRunner);
                 }
 
                 await CheckActivityStepStatus(execution);
 
-                pendingExecutions.Add(execution);
+                executionBatch.Add(execution);
 
                 if (selectedQueueItemId is not null && queueItem.Id == selectedQueueItemId)
                     execution.Selected = true;
             }
 
-            PendingExecutions = pendingExecutions;
+            CurrentExecutionBatch.Clear();
+            CurrentExecutionBatch = executionBatch;
 
-            return PendingExecutions.Any();
+            return CurrentExecutionBatch.Any();
         }
 
         /// <summary>
         /// Checks and updates the status of activity execution steps.
         /// </summary>
-        public async Task CheckActivityStepStatus(FlowExecution execution)
+        public async Task CheckActivityStepStatus(ExecutionBatchItem execution)
         {
             if (execution.QueueItem.ExecutionStatus == ActivityExecutionStatus.Waiting ||
                 execution.QueueItem.ExecutionStatus == ActivityExecutionStatus.Pending)

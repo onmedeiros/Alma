@@ -74,7 +74,7 @@
         }
 
         using var scope = ScopeFactory.CreateScope();
-        var service = scope.ServiceProvider.GetRequiredService<IFlowManager>();
+        var service = scope.ServiceProvider.GetRequiredService<IWorkflowManager>();
 
         try
         {

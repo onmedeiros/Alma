@@ -16,32 +16,32 @@ namespace Alma.Modules.Workflows.Stores
     {
         private readonly ILogger<MongoFlowInstanceStore> _logger;
         private readonly IMongoDatabase _context;
-        private readonly IMongoCollection<FlowInstance> _collection;
+        private readonly IMongoCollection<Instance> _collection;
         private readonly IDistributedCache _cache;
 
         public MongoFlowInstanceStore(ILogger<MongoFlowInstanceStore> logger, IMongoDatabase context, IDistributedCache cache)
         {
             _logger = logger;
             _context = context;
-            _collection = _context.GetCollection<FlowInstance>("Workflows.FlowInstance");
+            _collection = _context.GetCollection<Instance>("Workflows.FlowInstance");
             _cache = cache;
         }
 
-        public async ValueTask<FlowInstance> InsertAsync(FlowInstance instance, CancellationToken cancellationToken = default)
+        public async ValueTask<Instance> InsertAsync(Instance instance, CancellationToken cancellationToken = default)
         {
             await _collection.InsertOneAsync(instance, cancellationToken: cancellationToken);
             return instance;
         }
 
-        public async ValueTask<FlowInstance> UpdateAsync(FlowInstance instance, CancellationToken cancellationToken = default)
+        public async ValueTask<Instance> UpdateAsync(Instance instance, CancellationToken cancellationToken = default)
         {
             var lastUpdate = instance.UpdatedAt;
 
             instance.UpdatedAt = DateTime.Now;
 
-            var filter = Builders<FlowInstance>.Filter.And(
-                Builders<FlowInstance>.Filter.Eq(e => e.Id, instance.Id),
-                Builders<FlowInstance>.Filter.Eq(e => e.Discriminator, instance.Discriminator)
+            var filter = Builders<Instance>.Filter.And(
+                Builders<Instance>.Filter.Eq(e => e.Id, instance.Id),
+                Builders<Instance>.Filter.Eq(e => e.Discriminator, instance.Discriminator)
             );
 
             ReplaceOneResult result = null!;
@@ -81,12 +81,12 @@ namespace Alma.Modules.Workflows.Stores
             return instance;
         }
 
-        public ValueTask<FlowInstance?> DeleteAsync(string id, string? discriminator = null, CancellationToken cancellationToken = default)
+        public ValueTask<Instance?> DeleteAsync(string id, string? discriminator = null, CancellationToken cancellationToken = default)
         {
             throw new NotImplementedException();
         }
 
-        public async ValueTask<FlowInstance?> FindByIdAsync(string id, string? discriminator = null, CancellationToken cancellationToken = default)
+        public async ValueTask<Instance?> FindByIdAsync(string id, string? discriminator = null, CancellationToken cancellationToken = default)
         {
             var query = _collection.AsQueryable();
 
@@ -96,7 +96,7 @@ namespace Alma.Modules.Workflows.Stores
             return await query.FirstOrDefaultAsync(x => x.Id == id, cancellationToken);
         }
 
-        public ValueTask<PagedList<FlowInstance>> ListAsync(int page, int pageSize, FlowInstanceFilters? filters = null, CancellationToken cancellationToken = default)
+        public ValueTask<PagedList<Instance>> ListAsync(int page, int pageSize, FlowInstanceFilters? filters = null, CancellationToken cancellationToken = default)
         {
             var query = _collection.AsQueryable();
 
@@ -113,7 +113,7 @@ namespace Alma.Modules.Workflows.Stores
                 }
             }
 
-            return new ValueTask<PagedList<FlowInstance>>(query.ToPagedListAsync(page, pageSize));
+            return new ValueTask<PagedList<Instance>>(query.ToPagedListAsync(page, pageSize));
         }
 
         public async ValueTask<string> GetName(string id, string? discriminator = null, CancellationToken cancellationToken = default)

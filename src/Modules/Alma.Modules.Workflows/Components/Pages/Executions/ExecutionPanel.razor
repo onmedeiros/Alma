@@ -20,7 +20,7 @@
 @inject IDialogService DialogService
 @inject ISnackbar Snackbar
 
-@inject IFlowManager _flowManager;
+@inject IWorkflowManager _workflowManager;
 @inject IInstanceManager _instanceManager;
 @inject IInstanceExecutionManager _executionManager;
 @inject IFlowDefinitionParser _definitionParser;
@@ -157,7 +157,7 @@
     {
         try
         {
-            var definitionVersion = await _flowManager.FindDefinitionVersionById(Execution.DefinitionVersionId ?? string.Empty)
+            var definitionVersion = await _workflowManager.FindDefinitionVersionById(Execution.DefinitionVersionId ?? string.Empty)
                 ?? throw new Exception("Versão da definição não encontrada.");
 
             _definition = definitionVersion.FlowDefinition;
@@ -167,7 +167,7 @@
                 throw new Exception("Erro ao tentar analisar a definição do fluxo de trabalho.");
 
             _runner = _runnerFactory.Create(flow, Execution.State, Execution.Options);
-            await _runner.PreparePendingExecutionsAsync();
+            await _runner.PrepareExecutionBatch();
         }
         catch (Exception ex)
         {
@@ -179,19 +179,19 @@
     {
         if (item is null)
         {
-            if (_runner.PendingExecutions.Count == 0)
+            if (_runner.CurrentExecutionBatch.Count == 0)
             {
                 _currentQueueItem = null;
                 return;
             }
 
-            var nextExecution = _runner.PendingExecutions.First();
+            var nextExecution = _runner.CurrentExecutionBatch.First();
 
             _currentQueueItem = nextExecution.QueueItem;
         }
         else
         {
-            await _runner.PreparePendingExecutionsAsync(item.Id);
+            await _runner.PrepareExecutionBatch(item.Id);
             _currentQueueItem = item;
         }
     }
@@ -233,7 +233,7 @@
         if (activity is null)
             return;
 
-        var execution = _runner.PendingExecutions.FirstOrDefault(x => x.QueueItem.Activity.Id == activity.Id);
+        var execution = _runner.CurrentExecutionBatch.FirstOrDefault(x => x.QueueItem.Activity.Id == activity.Id);
         if (execution is null)
             return;
 

@@ -132,7 +132,7 @@
         StateHasChanged();
 
         var scope = ScopeFactory.CreateScope();
-        var flowManager = scope.ServiceProvider.GetRequiredService<IFlowManager>();
+        var flowManager = scope.ServiceProvider.GetRequiredService<IWorkflowManager>();
         var organizationContext = scope.ServiceProvider.GetRequiredService<IOrganizationContext>();
 
         try
@@ -162,7 +162,7 @@
         StateHasChanged();
 
         var scope = ScopeFactory.CreateScope();
-        var flowManager = scope.ServiceProvider.GetRequiredService<IFlowManager>();
+        var flowManager = scope.ServiceProvider.GetRequiredService<IWorkflowManager>();
         var organizationContext = scope.ServiceProvider.GetRequiredService<IOrganizationContext>();
 
         try

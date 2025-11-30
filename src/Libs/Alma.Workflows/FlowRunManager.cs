@@ -25,7 +25,7 @@ namespace Alma.Workflows
 
         ValueTask<WorkflowExecutionContext> RunAsync(string instanceId, string? discriminator = null, ExecutionOptions? options = null);
 
-        ValueTask<WorkflowExecutionContext> RunAsync(FlowInstance instance, Workflow flow, ExecutionOptions? options = null);
+        ValueTask<WorkflowExecutionContext> RunAsync(Instance instance, Workflow flow, ExecutionOptions? options = null);
     }
 
     [Obsolete("Use InstanceExecutor instead.")]
@@ -33,13 +33,13 @@ namespace Alma.Workflows
     {
         private readonly ILogger<FlowRunManager> _logger;
         private readonly IServiceProvider _serviceProvider;
-        private readonly IFlowManager _flowManager;
+        private readonly IWorkflowManager _flowManager;
         private readonly IFlowDefinitionParser _flowDefinitionParser;
         private readonly IInstanceManager _flowInstanceManager;
         private readonly IInstanceExecutionManager _instanceExecutionManager;
         private readonly IWorkflowRunnerFactory _flowRunnerFactory;
 
-        public FlowRunManager(ILogger<FlowRunManager> logger, IServiceProvider serviceProvider, IFlowManager flowManager, IFlowDefinitionParser flowDefinitionParser, IInstanceManager flowInstanceManager, IInstanceExecutionManager instanceExecutionManager, IWorkflowRunnerFactory flowRunnerFactory)
+        public FlowRunManager(ILogger<FlowRunManager> logger, IServiceProvider serviceProvider, IWorkflowManager flowManager, IFlowDefinitionParser flowDefinitionParser, IInstanceManager flowInstanceManager, IInstanceExecutionManager instanceExecutionManager, IWorkflowRunnerFactory flowRunnerFactory)
         {
             _logger = logger;
             _serviceProvider = serviceProvider;
@@ -114,7 +114,7 @@ namespace Alma.Workflows
                 throw new Exception($"Flow instance with id {instanceId} not found.");
             }
 
-            if (string.IsNullOrEmpty(instance.FlowDefinitionVersionId))
+            if (string.IsNullOrEmpty(instance.WorkflowDefinitionVersionId))
             {
                 _logger.LogError("Flow instance with id {Id} has no flow definition version selected.", instanceId);
                 throw new Exception($"Flow instance with id {instanceId} has no flow definition version selected.");
@@ -127,30 +127,30 @@ namespace Alma.Workflows
             }
 
             // Load and validate flow
-            var definitionVersion = await _flowManager.FindDefinitionVersionById(instance.FlowDefinitionVersionId);
+            var definitionVersion = await _flowManager.FindDefinitionVersionById(instance.WorkflowDefinitionVersionId);
 
             if (definitionVersion is null)
             {
-                _logger.LogError("Flow definition version with id {Id} not found.", instance.FlowDefinitionVersionId);
-                throw new Exception($"Flow definition version with id {instance.FlowDefinitionVersionId} not found.");
+                _logger.LogError("Flow definition version with id {Id} not found.", instance.WorkflowDefinitionVersionId);
+                throw new Exception($"Flow definition version with id {instance.WorkflowDefinitionVersionId} not found.");
             }
 
             var parsed = _flowDefinitionParser.TryParse(definitionVersion.FlowDefinition, out var flow);
 
             if (!parsed)
             {
-                _logger.LogError("Flow definition version with id {Id} could not be parsed.", instance.FlowDefinitionVersionId);
-                throw new Exception($"Flow definition version with id {instance.FlowDefinitionVersionId} could not be parsed.");
+                _logger.LogError("Flow definition version with id {Id} could not be parsed.", instance.WorkflowDefinitionVersionId);
+                throw new Exception($"Flow definition version with id {instance.WorkflowDefinitionVersionId} could not be parsed.");
             }
 
             // Begin run
             return await RunAsync(instance, flow, options);
         }
 
-        public async ValueTask<WorkflowExecutionContext> RunAsync(FlowInstance instance, Workflow flow, ExecutionOptions? options = null)
+        public async ValueTask<WorkflowExecutionContext> RunAsync(Instance instance, Workflow flow, ExecutionOptions? options = null)
         {
             // Inicia a execução
-            var instanceExecution = await _instanceExecutionManager.Begin(instance, options);
+            var instanceExecution = await _instanceExecutionManager.Create(instance, options);
 
             // Cria uma instância do runner
             var runner = _flowRunnerFactory.Create(flow, instanceExecution.State, instanceExecution.Options);

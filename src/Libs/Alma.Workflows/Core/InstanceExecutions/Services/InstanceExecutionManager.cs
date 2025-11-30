@@ -13,7 +13,7 @@ namespace Alma.Workflows.Core.InstanceExecutions.Services
 {
     public interface IInstanceExecutionManager
     {
-        ValueTask<InstanceExecution> Begin(FlowInstance instance, ExecutionOptions? options = null);
+        ValueTask<InstanceExecution> Create(Instance instance, ExecutionOptions? options = null);
 
         ValueTask<InstanceExecution> Update(InstanceExecution instance);
 
@@ -33,7 +33,7 @@ namespace Alma.Workflows.Core.InstanceExecutions.Services
             _instanceExecutionStore = instanceExecutionStore;
         }
 
-        public ValueTask<InstanceExecution> Begin(FlowInstance instance, ExecutionOptions? options = null)
+        public async ValueTask<InstanceExecution> Create(Instance instance, ExecutionOptions? options = null)
         {
             if (options is null)
             {
@@ -48,7 +48,7 @@ namespace Alma.Workflows.Core.InstanceExecutions.Services
                 Id = Guid.NewGuid().ToString(),
                 Discriminator = instance.Discriminator,
                 InstanceId = instance.Id,
-                DefinitionVersionId = instance.FlowDefinitionVersionId,
+                DefinitionVersionId = instance.WorkflowDefinitionVersionId,
                 Options = options,
                 Status = InstanceExecutionStatus.Pending
             };
@@ -56,7 +56,10 @@ namespace Alma.Workflows.Core.InstanceExecutions.Services
             execution.State ??= new();
             execution.State.Parameters = options.Parameters;
 
-            return _instanceExecutionStore.InsertAsync(execution);
+            if (options.Persist)
+                await _instanceExecutionStore.InsertAsync(execution);
+
+            return execution;
         }
 
         public ValueTask<InstanceExecution> Update(InstanceExecution instance)

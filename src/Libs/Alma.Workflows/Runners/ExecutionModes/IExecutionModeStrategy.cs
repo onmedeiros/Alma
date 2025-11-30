@@ -16,7 +16,7 @@ namespace Alma.Workflows.Runners.ExecutionModes
         /// <returns>True se deve continuar executando, false para pausar</returns>
         bool ShouldContinueAfterBatch(
             WorkflowExecutionContext context,
-            IEnumerable<FlowExecution> pendingExecutions);
+            IEnumerable<ExecutionBatchItem> pendingExecutions);
 
         /// <summary>
         /// Determina quantas atividades executar no próximo lote.
@@ -26,13 +26,13 @@ namespace Alma.Workflows.Runners.ExecutionModes
         /// <returns>Número de atividades a executar</returns>
         int GetBatchSize(
             WorkflowExecutionContext context,
-            IEnumerable<FlowExecution> readyExecutions);
+            IEnumerable<ExecutionBatchItem> readyExecutions);
 
         /// <summary>
         /// Determina se uma execução requer interação do usuário neste modo.
         /// </summary>
         /// <param name="execution">Execução a verificar</param>
         /// <returns>True se requer interação</returns>
-        bool RequiresUserInteraction(FlowExecution execution);
+        bool RequiresUserInteraction(ExecutionBatchItem execution);
     }
 }
