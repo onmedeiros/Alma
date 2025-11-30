@@ -15,7 +15,7 @@ namespace Alma.Workflows.Core.InstanceExecutions.Services
     {
         ValueTask<WorkflowExecutionContext> ExecuteAsync(string instanceId, string? discriminator = null, ExecutionOptions? options = null);
 
-        ValueTask<WorkflowExecutionContext> ExecuteAsync(FlowInstance instance, Flow flow, ExecutionOptions? options = null);
+        ValueTask<WorkflowExecutionContext> ExecuteAsync(FlowInstance instance, Workflow flow, ExecutionOptions? options = null);
     }
 
     public class InstanceExecutionRunner : IInstanceExecutionRunner
@@ -81,7 +81,7 @@ namespace Alma.Workflows.Core.InstanceExecutions.Services
             return await ExecuteAsync(instance, flow, options);
         }
 
-        public async ValueTask<WorkflowExecutionContext> ExecuteAsync(FlowInstance instance, Flow flow, ExecutionOptions? options = null)
+        public async ValueTask<WorkflowExecutionContext> ExecuteAsync(FlowInstance instance, Workflow flow, ExecutionOptions? options = null)
         {
             // Inicia a execução
             var instanceExecution = await _instanceExecutionManager.Begin(instance, options);

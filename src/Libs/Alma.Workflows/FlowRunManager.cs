@@ -15,17 +15,17 @@ namespace Alma.Workflows
     public interface IFlowRunManager
     {
         [Obsolete]
-        ValueTask<WorkflowExecutionContext> RunAsync(Flow flow, ExecutionState? state);
+        ValueTask<WorkflowExecutionContext> RunAsync(Workflow flow, ExecutionState? state);
 
         [Obsolete]
-        ValueTask<WorkflowExecutionContext> RunAsync(Flow flow, params KeyValuePair<string, object?>[] parameters);
+        ValueTask<WorkflowExecutionContext> RunAsync(Workflow flow, params KeyValuePair<string, object?>[] parameters);
 
         [Obsolete]
-        ValueTask<WorkflowExecutionContext> RunAsync(Flow flow, ExecutionOptions? options = null, Dictionary<string, object?>? parameters = null);
+        ValueTask<WorkflowExecutionContext> RunAsync(Workflow flow, ExecutionOptions? options = null, Dictionary<string, object?>? parameters = null);
 
         ValueTask<WorkflowExecutionContext> RunAsync(string instanceId, string? discriminator = null, ExecutionOptions? options = null);
 
-        ValueTask<WorkflowExecutionContext> RunAsync(FlowInstance instance, Flow flow, ExecutionOptions? options = null);
+        ValueTask<WorkflowExecutionContext> RunAsync(FlowInstance instance, Workflow flow, ExecutionOptions? options = null);
     }
 
     [Obsolete("Use InstanceExecutor instead.")]
@@ -51,7 +51,7 @@ namespace Alma.Workflows
         }
 
         [Obsolete]
-        public async ValueTask<WorkflowExecutionContext> RunAsync(Flow flow, ExecutionState? state)
+        public async ValueTask<WorkflowExecutionContext> RunAsync(Workflow flow, ExecutionState? state)
         {
             var context = new WorkflowExecutionContext(flow, _serviceProvider)
             {
@@ -64,7 +64,7 @@ namespace Alma.Workflows
         }
 
         [Obsolete]
-        public async ValueTask<WorkflowExecutionContext> RunAsync(Flow flow, params KeyValuePair<string, object?>[] parameters)
+        public async ValueTask<WorkflowExecutionContext> RunAsync(Workflow flow, params KeyValuePair<string, object?>[] parameters)
         {
             var context = new WorkflowExecutionContext(flow, _serviceProvider)
             {
@@ -82,7 +82,7 @@ namespace Alma.Workflows
         }
 
         [Obsolete]
-        public async ValueTask<WorkflowExecutionContext> RunAsync(Flow flow, ExecutionOptions? options = null, Dictionary<string, object?>? parameters = null)
+        public async ValueTask<WorkflowExecutionContext> RunAsync(Workflow flow, ExecutionOptions? options = null, Dictionary<string, object?>? parameters = null)
         {
             var context = new WorkflowExecutionContext(flow, _serviceProvider)
             {
@@ -147,7 +147,7 @@ namespace Alma.Workflows
             return await RunAsync(instance, flow, options);
         }
 
-        public async ValueTask<WorkflowExecutionContext> RunAsync(FlowInstance instance, Flow flow, ExecutionOptions? options = null)
+        public async ValueTask<WorkflowExecutionContext> RunAsync(FlowInstance instance, Workflow flow, ExecutionOptions? options = null)
         {
             // Inicia a execução
             var instanceExecution = await _instanceExecutionManager.Begin(instance, options);

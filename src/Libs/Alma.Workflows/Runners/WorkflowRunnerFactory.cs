@@ -19,7 +19,7 @@ namespace Alma.Workflows.Runners
         /// <param name="state">The current execution state. If null, a new state will be created.</param>
         /// <param name="options">The execution options. If null, default options will be used.</param>
         /// <returns>A new instance of <see cref="WorkflowRunner"/>.</returns>
-        WorkflowRunner Create(Flow flow, StateData? state = null, ExecutionOptions? options = null);
+        WorkflowRunner Create(Workflow flow, StateData? state = null, ExecutionOptions? options = null);
     }
 
     /// <summary>
@@ -37,7 +37,7 @@ namespace Alma.Workflows.Runners
         }
 
         /// <inheritdoc />
-        public WorkflowRunner Create(Flow flow, StateData? state = null, ExecutionOptions? options = null)
+        public WorkflowRunner Create(Workflow flow, StateData? state = null, ExecutionOptions? options = null)
         {
             // Create isolated scope for workflow execution.
             _executionScope.Initialize();

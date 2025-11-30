@@ -23,12 +23,12 @@ namespace Alma.Workflows.Builders
 
         FlowBuilder AddConnection(Action<ConnectionBuilder> configure);
 
-        Flow Build();
+        Workflow Build();
     }
 
     public class FlowBuilder : IFlowBuilder
     {
-        private readonly Flow _flow;
+        private readonly Workflow _flow;
         private readonly ILogger<FlowBuilder> _logger;
         private readonly IServiceProvider _serviceProvider;
         private readonly IActivityRegistry _activityRegistry;
@@ -40,7 +40,7 @@ namespace Alma.Workflows.Builders
             _activityRegistry = activityRegistry;
 
             // Construção básica do flow
-            _flow = new Flow();
+            _flow = new Workflow();
         }
 
         public IActivityBuilder<T> AddStart<T>() where T : class, IActivity
@@ -112,7 +112,7 @@ namespace Alma.Workflows.Builders
             return this;
         }
 
-        public Flow Build()
+        public Workflow Build()
         {
             return _flow;
         }

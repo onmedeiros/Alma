@@ -18,7 +18,7 @@ namespace Tests.Benchmarks
     {
         private IServiceProvider _serviceProvider = default!;
         private IWorkflowRunnerFactory _runnerFactory = default!;
-        private Flow _flow = default!;
+        private Workflow _flow = default!;
 
         [GlobalSetup]
         public void Setup()

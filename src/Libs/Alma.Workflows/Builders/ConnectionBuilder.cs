@@ -6,12 +6,12 @@ namespace Alma.Workflows.Builders
 {
     public class ConnectionBuilder
     {
-        private readonly Flow _flow;
+        private readonly Workflow _flow;
 
         public bool IsValid { get; private set; } = false;
         public Connection Connection { get; private set; }
 
-        public ConnectionBuilder(Flow flow)
+        public ConnectionBuilder(Workflow flow)
         {
             Connection = new Connection();
             _flow = flow;

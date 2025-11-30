@@ -4,7 +4,7 @@ namespace Alma.Workflows.Extensions
 {
     public static class FlowExtensions
     {
-        public static ICollection<IActivity> GetAllActivities(this Flow flow)
+        public static ICollection<IActivity> GetAllActivities(this Workflow flow)
         {
             var activities = new List<IActivity>();
 
@@ -13,13 +13,13 @@ namespace Alma.Workflows.Extensions
             return activities;
         }
 
-        private static void AddActivitiesRecursively(Flow flow, ICollection<IActivity> activities)
+        private static void AddActivitiesRecursively(Workflow flow, ICollection<IActivity> activities)
         {
             foreach (var activity in flow.Activities)
             {
                 activities.Add(activity);
 
-                if (activity is Flow nestedFlow)
+                if (activity is Workflow nestedFlow)
                 {
                     AddActivitiesRecursively(nestedFlow, activities);
                 }

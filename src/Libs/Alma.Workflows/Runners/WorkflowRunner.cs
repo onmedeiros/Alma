@@ -32,7 +32,7 @@ namespace Alma.Workflows.Runners
 
         public WorkflowRunner(
             IExecutionScope executionScope,
-            Flow flow,
+            Workflow flow,
             ExecutionOptions options)
         {
             _executionScope = executionScope;

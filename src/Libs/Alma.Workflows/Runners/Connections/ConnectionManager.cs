@@ -145,7 +145,7 @@ namespace Alma.Workflows.Runners.Connections
         /// Inicializa o cache de conexões para um flow.
         /// Deve ser chamado após carregar o flow.
         /// </summary>
-        public void InitializeConnectionCache(Flow flow)
+        public void InitializeConnectionCache(Workflow flow)
         {
             lock (_cacheLock)
             {

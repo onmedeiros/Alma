@@ -11,7 +11,7 @@ namespace Alma.Workflows.Parsers
 {
     public interface IFlowDefinitionParser
     {
-        bool TryParse(FlowDefinition definition, out Flow flow);
+        bool TryParse(FlowDefinition definition, out Workflow flow);
     }
 
     public class FlowDefinitionParser : IFlowDefinitionParser
@@ -31,7 +31,7 @@ namespace Alma.Workflows.Parsers
             _customActivityRegistry = customActivityRegistry;
         }
 
-        public bool TryParse(FlowDefinition definition, out Flow flow)
+        public bool TryParse(FlowDefinition definition, out Workflow flow)
         {
             var flowBuilder = _serviceProvider.GetRequiredService<IFlowBuilder>();
 

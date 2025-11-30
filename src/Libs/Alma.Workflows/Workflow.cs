@@ -4,7 +4,7 @@ using Alma.Workflows.Core.Contexts;
 
 namespace Alma.Workflows
 {
-    public class Flow : Activity
+    public class Workflow : Activity
     {
         public IActivity? Start { get; set; }
         public ICollection<IActivity> Activities { get; set; } = [];
