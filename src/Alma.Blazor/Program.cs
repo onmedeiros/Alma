@@ -32,6 +32,8 @@ using System.Text.Json.Serialization;
 using Alma.Workflows.Databases;
 
 // Logging is configured via builder.Host.UseSerilog below to avoid duplicate registrations.
+Logging.ConfigureLogger();
+Log.Information("Starting Alma...");
 
 var builder = WebApplication.CreateBuilder(args);
 
@@ -232,7 +234,8 @@ builder.Services.AddModules(options =>
     .Register<Alma.Modules.Workflows.Module>()
     .Register<Alma.Modules.Alerts.Module>()
     .Register<Alma.Modules.Monitoring.Module>()
-    .Register<Alma.Modules.Dashboards.Module>();
+    .Register<Alma.Modules.Dashboards.Module>()
+    .Register<Alma.Modules.Auctions.Module>();
 
 // Registro de bibliotecas
 builder.Services.AddAlmaWorkflowsApis();

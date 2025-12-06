@@ -1,0 +1,192 @@
+﻿@page "/Auctions/AwardedLots"
+
+@using Alma.Modules.Auctions.AwardedLots.Entities
+@using Alma.Modules.Auctions.AwardedLots.Models
+@using Alma.Modules.Auctions.AwardedLots.Services
+@using Microsoft.Extensions.DependencyInjection
+
+@inject NavigationManager NavigationManager
+@inject IDialogService DialogService
+@inject IServiceScopeFactory ScopeFactory
+@inject ISnackbar Snackbar
+
+<Page Title="Lotes Arrematados">
+
+    <Tools>
+        <MudButton OnClick="CreateAwardedLot" Variant="Variant.Filled" StartIcon="@Icons.Material.Outlined.Add" Color="Color.Primary" Class="me-2">Criar</MudButton>
+    </Tools>
+
+    <ChildContent>
+        <MudDataGrid @ref="_dataGrid"
+        T="AwardedLot"
+        ServerData="LoadData"
+        CurrentPage="(PageIndex ?? 1) - 1"
+        RowsPerPage="PageSize ?? 10"
+        Elevation="8"
+        Hover="true"
+        SortMode="SortMode.None">
+
+            <ToolBarContent>
+                <MudText Typo="Typo.h6">Lista de lotes arrematados</MudText>
+                <MudSpacer></MudSpacer>
+                <MudTextField @bind-Value="Name" Placeholder="Buscar pelo nome" Adornment="Adornment.End" AdornmentIcon="@Icons.Material.Outlined.Search" OnAdornmentClick="_dataGrid.ReloadServerData" Class="mt-0 me-2"></MudTextField>
+            </ToolBarContent>
+
+            <Columns>
+                <TemplateColumn Title="Nome">
+                    <CellTemplate>
+                        @context.Item.Name
+                    </CellTemplate>
+                </TemplateColumn>
+
+                <TemplateColumn Title="Casa de leilão">
+                    <CellTemplate>
+                        @context.Item.AuctionHouse
+                    </CellTemplate>
+                </TemplateColumn>
+
+                <TemplateColumn Title="Data do leilão">
+                    <CellTemplate>
+                        @context.Item.AuctionDate.ToShortDateString()
+                    </CellTemplate>
+                </TemplateColumn>
+
+                <TemplateColumn Title="Lance vencedor">
+                    <CellTemplate>
+                        @context.Item.WinningBid.ToString("C2")
+                    </CellTemplate>
+                </TemplateColumn>
+
+                <TemplateColumn Title="Taxas">
+                    <CellTemplate>
+                        @context.Item.WinningFees.ToString("C2")
+                    </CellTemplate>
+                </TemplateColumn>
+
+                <TemplateColumn HeaderStyle="width: 100px;">
+                    <CellTemplate>
+                        <MudIconButton Href="@($"/Auctions/AwardedLots/edit/{context.Item.Id}")" Icon="@Icons.Material.Outlined.Edit" Size="MudBlazor.Size.Small" />
+                        <MudIconButton OnClick="@(() => DeleteAwardedLot(context.Item.Id))" Icon="@Icons.Material.Outlined.Delete" Size="MudBlazor.Size.Small" Color="Color.Error" />
+                    </CellTemplate>
+                </TemplateColumn>
+            </Columns>
+
+            <NoRecordsContent>Nenhum lote arrematado cadastrado.</NoRecordsContent>
+
+            <PagerContent>
+                <MudDataGridPager T="AwardedLot" />
+            </PagerContent>
+        </MudDataGrid>
+    </ChildContent>
+</Page>
+
+@code {
+    #region Query Parameters
+
+    [SupplyParameterFromQuery]
+    public int? PageIndex { get; set; }
+
+    [SupplyParameterFromQuery]
+    public int? PageSize { get; set; }
+
+    [SupplyParameterFromQuery]
+    public string? Name { get; set; }
+
+    #endregion
+
+    #region private fields
+
+    private MudDataGrid<AwardedLot> _dataGrid = new MudDataGrid<AwardedLot>();
+
+    #endregion
+
+    protected override void OnAfterRender(bool firstRender)
+    {
+        base.OnAfterRender(firstRender);
+    }
+
+    private async Task<GridData<AwardedLot>> LoadData(GridState<AwardedLot> state)
+    {
+        UpdateQueryParameters();
+
+        using var scope = ScopeFactory.CreateScope();
+        var service = scope.ServiceProvider.GetRequiredService<IAwardedLotService>();
+
+        var filters = new AwardedLotFilters
+        {
+            Name = Name
+        };
+
+        var result = await service.ListAsync(PageIndex ?? 1, PageSize ?? 10, filters);
+
+        return new GridData<AwardedLot>
+        {
+            Items = result.Items,
+            TotalItems = result.TotalCount
+        };
+    }
+
+    private void UpdateQueryParameters()
+    {
+        var parameters = new Dictionary<string, object?>
+        {
+            ["name"] = Name,
+            ["pageIndex"] = PageIndex ?? 1,
+            ["pageSize"] = PageSize ?? 10,
+        };
+
+        NavigationManager.NavigateTo(NavigationManager.GetUriWithQueryParameters(parameters));
+    }
+
+    private async Task CreateAwardedLot()
+    {
+        var options = new DialogOptions
+        {
+            MaxWidth = MaxWidth.Medium,
+            FullWidth = true
+        };
+
+        var dialog = await DialogService.ShowAsync<AwardedLotCreateDialog>("Criar novo lote arrematado", options);
+        var result = await dialog.Result;
+
+        if (result == null || result.Canceled)
+            return;
+
+        if (result.Data is not null && result.Data is AwardedLot awardedLot)
+            NavigationManager.NavigateTo("/Auctions/AwardedLots/edit/" + awardedLot.Id);
+    }
+
+    private async Task DeleteAwardedLot(string id)
+    {
+        var parameters = new DialogParameters<DeleteConfirmationDialog>
+        {
+            { x => x.Message, "Tem certeza que deseja excluir este lote arrematado?" }
+        };
+
+        var options = new DialogOptions
+        {
+            MaxWidth = MaxWidth.ExtraSmall,
+            FullWidth = true
+        };
+
+        var dialog = await DialogService.ShowAsync<DeleteConfirmationDialog>("Confirmar exclusão", parameters, options);
+        var result = await dialog.Result;
+
+        if (result == null || result.Canceled)
+            return;
+
+        using var scope = ScopeFactory.CreateScope();
+        var service = scope.ServiceProvider.GetRequiredService<IAwardedLotService>();
+
+        try
+        {
+            await service.DeleteAsync(id);
+            Snackbar.AddSuccess("Lote arrematado excluído com sucesso.");
+            await _dataGrid.ReloadServerData();
+        }
+        catch (Exception ex)
+        {
+            await DialogService.ShowErrorDialog("Erro ao excluir lote arrematado", ex.Message);
+        }
+    }
+}

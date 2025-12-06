@@ -58,6 +58,8 @@ Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Tests.Benchmarks", "Tests\T
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Alma.Workflows.Databases", "Libs\Alma.Workflows.Databases\Alma.Workflows.Databases.csproj", "{4E04E2AB-F946-4C70-845C-82D5D38D32FC}"
 EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Alma.Modules.Auctions", "Modules\Alma.Auctions\Alma.Modules.Auctions.csproj", "{C4EAB623-C855-4BE6-84DE-8A9E0FB92337}"
+EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|Any CPU = Debug|Any CPU
@@ -152,6 +154,10 @@ Global
 		{4E04E2AB-F946-4C70-845C-82D5D38D32FC}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{4E04E2AB-F946-4C70-845C-82D5D38D32FC}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{4E04E2AB-F946-4C70-845C-82D5D38D32FC}.Release|Any CPU.Build.0 = Release|Any CPU
+		{C4EAB623-C855-4BE6-84DE-8A9E0FB92337}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{C4EAB623-C855-4BE6-84DE-8A9E0FB92337}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{C4EAB623-C855-4BE6-84DE-8A9E0FB92337}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{C4EAB623-C855-4BE6-84DE-8A9E0FB92337}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE
@@ -178,6 +184,7 @@ Global
 		{C69CACC7-61D0-4FAE-9949-5C2A3E025FF7} = {D6A79253-4736-45BE-BC8A-38506A7E3539}
 		{79779CC1-1E7F-4FF1-8FF6-A2D740A41D12} = {02EA681E-C7D8-13C7-8484-4AC65E1B71E8}
 		{4E04E2AB-F946-4C70-845C-82D5D38D32FC} = {A9476561-6A58-4024-B4D7-21EE0B9A3E86}
+		{C4EAB623-C855-4BE6-84DE-8A9E0FB92337} = {D6A79253-4736-45BE-BC8A-38506A7E3539}
 	EndGlobalSection
 	GlobalSection(ExtensibilityGlobals) = postSolution
 		SolutionGuid = {0B8F0737-80FC-464C-92F9-0121C318EEF3}

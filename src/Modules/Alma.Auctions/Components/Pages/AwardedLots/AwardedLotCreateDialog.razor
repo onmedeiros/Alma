@@ -1,0 +1,97 @@
+@using Alma.Modules.Auctions.AwardedLots.Models
+@using Alma.Modules.Auctions.AwardedLots.Services
+@using Microsoft.Extensions.DependencyInjection
+
+@inject IDialogService DialogService
+@inject ISnackbar Snackbar
+@inject IServiceScopeFactory ScopeFactory
+
+<MudDialog>
+    <DialogContent>
+        @if(_model is not null)
+        {
+            <EditForm Model="_model" OnSubmit="Save">
+                <FluentValidationValidator @ref="_validator" />
+
+                <MudText Class="mb-2">Informações do lote arrematado:</MudText>
+                
+                <MudTextField @bind-Value="_model.Name" For="@(() => _model.Name)" Label="Nome" Class="mb-3" Variant="Variant.Outlined" Margin="Margin.Dense" />
+                
+                <MudTextField @bind-Value="_model.Description" For="@(() => _model.Description)" Label="Descrição" Class="mb-3" Variant="Variant.Outlined" Margin="Margin.Dense" Lines="3" />
+                
+                <MudTextField @bind-Value="_model.AuctionHouse" For="@(() => _model.AuctionHouse)" Label="Casa de leilão" Class="mb-3" Variant="Variant.Outlined" Margin="Margin.Dense" />
+                
+                <MudDatePicker @bind-Date="_model.AuctionDate" For="@(() => _model.AuctionDate)" Label="Data do leilão" Class="mb-3" Variant="Variant.Outlined" Margin="Margin.Dense" />
+                
+                <MudTextField @bind-Value="_model.AuctionLink" For="@(() => _model.AuctionLink)" Label="Link do leilão" Class="mb-3" Variant="Variant.Outlined" Margin="Margin.Dense" />
+                
+                <MudNumericField @bind-Value="_model.WinningBid" For="@(() => _model.WinningBid)" Label="Valor do lance vencedor" Class="mb-3" Variant="Variant.Outlined" Margin="Margin.Dense" Format="N2" />
+                
+                <MudNumericField @bind-Value="_model.WinningFees" For="@(() => _model.WinningFees)" Label="Valor das taxas" Class="mb-3" Variant="Variant.Outlined" Margin="Margin.Dense" Format="N2" />
+
+                <SubmitButton IsSaving="_isSaving" Class="mb-2"/>
+            </EditForm>
+        }
+    </DialogContent>
+</MudDialog>
+
+@code {
+    [CascadingParameter]
+    public IMudDialogInstance Dialog { get; set; } = null!;
+
+    private bool _isSaving = false;
+    private CreateAwardedLotModel _model = null!;
+    private FluentValidationValidator _validator = null!;
+
+    protected override void OnAfterRender(bool firstRender)
+    {
+        if (firstRender)
+        {
+            _model = new CreateAwardedLotModel
+            {
+                AuctionDate = DateTime.Now,
+                WinningBid = 0,
+                WinningFees = 0
+            };
+
+            StateHasChanged();
+        }
+    }
+
+    private async Task Save()
+    {
+        _isSaving = true;
+        StateHasChanged();
+
+        if (!await _validator!.ValidateAsync())
+        {
+            await DialogService.ShowErrorDialog("Erro de validação", "Alguns campos não estão preenchidos corretamente.");
+
+            _isSaving = false;
+            StateHasChanged();
+
+            return;
+        }
+
+        using var scope = ScopeFactory.CreateScope();
+        var service = scope.ServiceProvider.GetRequiredService<IAwardedLotService>();
+
+        try
+        {
+            var result = await service.CreateAsync(_model);
+
+            Snackbar.AddSuccess("Lote arrematado criado com sucesso.");
+
+            Dialog.Close(DialogResult.Ok(result));
+        }
+        catch (Exception ex)
+        {
+            await DialogService.ShowErrorDialog("Erro ao criar lote arrematado", ex.Message);
+        }
+        finally
+        {
+            _isSaving = false;
+            StateHasChanged();
+        }
+    }
+}
