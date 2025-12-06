@@ -31,9 +31,7 @@ using Serilog;
 using System.Text.Json.Serialization;
 using Alma.Workflows.Databases;
 
-// Logging
-Log.Logger = Logging.ConfigureLogger();
-Log.Logger.Information("Starting application.");
+// Logging is configured via builder.Host.UseSerilog below to avoid duplicate registrations.
 
 var builder = WebApplication.CreateBuilder(args);
 
@@ -213,12 +211,21 @@ builder.Services.AddControllers()
 // Registrar o filtro para DI
 builder.Services.AddScoped<ApiHostRestrictionFilter>();
 
-// Registro de m�dulos
+// Registro de módulos
+var externalModulesPath = builder.Configuration.GetValue<string>("Modules:ExternalModulesPath");
+var enableHotReload = builder.Configuration.GetValue<bool>("Modules:EnableHotReload");
+
 builder.Services.AddModules(options =>
 {
     // options.Register(typeof(Alma.Modules.Base.Module).Assembly);
     // options.Register(typeof(Alma.Modules.Workflows.Module).Assembly);
 })
+    // Load external modules from configured directory (before internal modules)
+    .LoadFromDirectory(externalModulesPath ?? "ExternalModules", options =>
+    {
+        options.EnableHotReload = enableHotReload;
+    })
+    // Internal modules
     .Register<Alma.Modules.Core.Module>()
     .Register<Alma.Modules.Integrations.Module>()
     .Register<Alma.Modules.Organizations.Module>()

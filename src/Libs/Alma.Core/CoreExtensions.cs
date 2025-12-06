@@ -9,11 +9,13 @@ using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.DependencyInjection.Extensions;
 using Serilog;
 using System.Reflection;
+using System.Runtime.Loader;
 
 namespace Alma.Core
 {
     public static class CoreExtensions
     {
+        private static readonly HashSet<string> s_registeredAssemblies = new();
         public static ModuleRegistryBuilder AddModules(this IServiceCollection services, Action<ModuleOptions> configure)
         {
             services.Configure(configure);
@@ -27,9 +29,29 @@ namespace Alma.Core
         {
             var moduleRegistry = endpoints.ServiceProvider.GetRequiredService<IModuleRegistry>();
 
-            foreach (var module in moduleRegistry.Modules)
+            // Avoid adding duplicate assemblies or the app's entry assembly, which is already registered.
+            var entryAssembly = Assembly.GetEntryAssembly();
+            var defaultAssemblies = AssemblyLoadContext.Default.Assemblies.ToList();
+
+            var additionalAssemblies = moduleRegistry.Modules
+                .Select(m => m.GetType().Assembly)
+                .Select(a =>
+                {
+                    // Prefer the assembly from Default context if a matching name exists
+                    var match = defaultAssemblies.FirstOrDefault(d => d.GetName().Name == a.GetName().Name);
+                    return match ?? a;
+                })
+                .Where(a => a != null && a != entryAssembly)
+                // Deduplicate by MVID (module version id) and FullName to avoid duplicates across contexts
+                .GroupBy(a => new { Name = a.FullName, Mvid = a.ManifestModule.ModuleVersionId })
+                .Select(g => g.First())
+                // Exclude assemblies we already registered in previous calls
+                .Where(a => s_registeredAssemblies.Add(a.FullName))
+                .ToArray();
+
+            if (additionalAssemblies.Length > 0)
             {
-                builder.AddAdditionalAssemblies(module.GetType().Assembly);
+                builder.AddAdditionalAssemblies(additionalAssemblies);
             }
 
             return builder;
